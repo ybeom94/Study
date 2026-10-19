@@ -1,4 +1,6 @@
+package Day;
 import java.util.Scanner;
+
 
 //자바 실행 순서
 // A.java -> javac(기계어로 변환, 컴파일) -> A.class -> java(한줄씩 읽어서 출력, 인터프리터) -> 실행

@@ -1,4 +1,4 @@
-
+package Day;
 
 
 public class Day1
