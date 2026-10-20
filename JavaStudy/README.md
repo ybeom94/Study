@@ -8,6 +8,9 @@
 | **Day 03** | 연산자 | 산술, 증감, 비교, 논리, 대입, 삼항, 비트·시프트 연산자 |
 | **Day 04** | 제어문 | `if`, `else if`, `switch`, `for`, `while`, `do-while`, `break`, `continue` |
 | **Day 05** | 제어문 심화 및 응용 | 중첩 반복문, 흐름 제어, 종합 실습 |
+| **Day 06** | 반복문 심화 및 활용 | `for`, `while`, `do-while`, 향상된 `for`, 중첩 반복문, `break`, `continue`, 배열 순회 |
+| **Day 07** | 반복 제어문, String과 배열 | `break`, `continue`, 라벨, `String`, 문자열 메서드, 1차원 배열, `Arrays` |
+
 
 </details>
 
@@ -748,3 +751,914 @@ public class Main {
 
 </details>
 
+
+## Day6. 반복문 심화 및 활용
+<details>
+
+### 🎯 학습 목표
+- 반복문의 종류와 실행 순서를 정확하게 이해한다.
+- `for`, `while`, `do-while`의 차이와 사용 상황을 구분한다.
+- 향상된 `for`문으로 배열의 요소를 순회할 수 있다.
+- `break`, `continue`를 활용하여 반복 흐름을 제어할 수 있다.
+- 중첩 반복문과 라벨을 이용한 반복문 제어를 이해한다.
+- 반복문을 활용하여 데이터의 합계, 검색 및 출력 작업을 수행할 수 있다.
+
+### 1. 반복문의 기본 개념
+
+- 반복문은 특정 조건에 따라 동일한 코드를 여러 번 실행하는 제어문이다.
+- 반복되는 코드를 줄여 프로그램의 효율성과 유지보수성을 높인다.
+- 기본적으로 초기값, 반복 조건, 상태 변화 등을 고려해야 한다.
+
+| 반복문 | 조건 검사 시점 | 최소 실행 횟수 | 주요 용도 |
+|---|---|:---:|---|
+| `for` | 실행 전 | 0회 | 반복 횟수가 명확할 때 |
+| `while` | 실행 전 | 0회 | 특정 조건이 참인 동안 반복 |
+| `do-while` | 실행 후 | 1회 | 최소 한 번 실행해야 할 때 |
+| 향상된 `for` | 요소 순회 | 0회 | 배열 및 컬렉션 데이터 처리 |
+
+### 2. for문 실행 원리
+
+- 반복 횟수나 범위가 정해져 있을 때 주로 사용한다.
+- 초기식, 조건식, 증감식을 하나의 구문으로 작성한다.
+- 초기식은 처음 한 번만 실행되며, 조건이 거짓이 되면 반복을 종료한다.
+
+**기본 형식**
+
+```java
+for (초기식; 조건식; 증감식) {
+    실행문;
+}
+```
+
+**실행 예제**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    System.out.println(i);
+}
+// 1 2 3 4 5 (각 줄에 출력)
+```
+
+**실행 순서**
+
+1. 초기식 실행 : `int i = 1`
+2. 조건식 검사 : `i <= 5`
+3. 조건이 참이면 실행문 수행
+4. 증감식 실행 : `i++`
+5. 조건식을 다시 검사하고 반복
+6. 조건이 거짓이면 반복 종료
+
+**다양한 증감식 활용**
+
+```java
+// 1부터 10까지 2씩 증가
+for (int i = 1; i <= 10; i += 2) {
+    System.out.print(i + " ");
+}
+// 1 3 5 7 9
+
+// 10부터 1까지 감소
+for (int i = 10; i >= 1; i--) {
+    System.out.print(i + " ");
+}
+// 10 9 8 7 6 5 4 3 2 1
+```
+
+**주의 : 반복 횟수를 설정할 때 `<`와 `<=`의 차이를 정확하게 구분해야 합니다.**
+
+### 3. while문 실행 원리
+
+- 조건식이 `true`인 동안 실행문을 반복한다.
+- 반복 횟수가 정해져 있지 않고 특정 조건을 만족할 때까지 실행할 경우 유용하다.
+- 조건을 먼저 검사하므로 처음부터 거짓이면 실행되지 않는다.
+
+```java
+int i = 1;
+
+while (i <= 5) {
+    System.out.println(i);
+    i++;
+}
+// 1 2 3 4 5 (각 줄에 출력)
+```
+
+**실행 순서**
+
+1. 조건식 검사
+2. 조건이 참이면 실행문 실행
+3. 반복문 내부에서 상태 변경
+4. 다시 조건식 검사
+5. 조건이 거짓이면 종료
+
+**주의 : 조건을 변경하는 증감식이나 종료 조건이 없다면 무한 루프가 발생할 수 있습니다.**
+
+### 4. do-while문 실행 원리
+
+- 조건을 검사하기 전에 실행문을 먼저 수행한다.
+- 조건이 처음부터 거짓이어도 최소 한 번은 실행된다.
+- 사용자 입력이나 메뉴 출력처럼 최초 실행이 필요한 상황에 적합하다.
+
+```java
+int i = 10;
+
+do {
+    System.out.println(i);
+    i++;
+} while (i <= 5);
+
+// 10
+```
+
+- `while` : 조건 검사 → 실행
+- `do-while` : 실행 → 조건 검사
+
+**주의 : do-while문은 마지막 `while(조건식)` 뒤에 반드시 세미콜론(`;`)을 작성해야 합니다.**
+
+### 5. 향상된 for문 (Enhanced for)
+
+- 배열이나 컬렉션에 저장된 요소를 순서대로 하나씩 처리한다.
+- 별도의 인덱스 변수나 증감식 없이 데이터를 순회할 수 있다.
+- 일반 `for`문보다 간결하게 작성할 수 있다.
+
+**기본 형식**
+
+```java
+for (데이터타입 변수명 : 배열또는컬렉션) {
+    실행문;
+}
+```
+
+**실행 예제**
+
+```java
+int[] scores = {80, 90, 75, 100};
+
+for (int score : scores) {
+    System.out.println(score);
+}
+// 80 90 75 100 (각 줄에 출력)
+```
+
+**일반 for문과 향상된 for문 비교**
+
+| 구분 | 일반 for문 | 향상된 for문 |
+|---|---|---|
+| 인덱스 사용 | 가능 | 직접 제공하지 않음 |
+| 배열 요소 접근 | `array[i]` | 요소를 변수로 받음 |
+| 반복 범위 | 직접 설정 가능 | 전체 요소 순회 |
+| 주요 용도 | 인덱스 제어, 값 변경 | 데이터 조회 및 순회 |
+
+**주의 : 기본형 배열의 요소를 향상된 for문의 반복 변수에 대입하여 변경해도 원본 배열의 값은 변경되지 않습니다.**
+
+### 6. break와 continue
+
+반복문 실행 도중 특정 조건에 따라 실행 흐름을 변경할 때 사용한다.
+
+| 구분 | `break` | `continue` |
+|---|---|---|
+| 의미 | 반복문 종료 | 현재 반복 건너뛰기 |
+| 실행 흐름 | 반복문 밖으로 이동 | 다음 반복 단계로 이동 |
+| 주요 용도 | 검색 종료, 종료 조건 | 특정 데이터 제외 |
+
+**break 예제**
+
+```java
+for (int i = 1; i <= 10; i++) {
+    if (i == 5) {
+        break;
+    }
+
+    System.out.print(i + " ");
+}
+// 1 2 3 4
+```
+
+- `i`가 5가 되면 반복문을 즉시 종료한다.
+- 일반 `break`는 가장 가까운 반복문을 종료한다.
+
+**continue 예제**
+
+```java
+for (int i = 1; i <= 10; i++) {
+    if (i % 2 == 0) {
+        continue;
+    }
+
+    System.out.print(i + " ");
+}
+// 1 3 5 7 9
+```
+
+- 짝수일 때 현재 반복의 나머지 코드를 건너뛴다.
+- `for`문에서는 증감식으로 이동한 후 조건을 다시 검사한다.
+- `while`문에서는 조건식으로 이동하므로 상태 변경 위치에 주의해야 한다.
+
+### 7. 라벨을 이용한 반복문 제어
+
+- 중첩 반복문에서 일반 `break`를 사용하면 가장 안쪽 반복문만 종료된다.
+- 라벨을 사용하면 지정한 바깥쪽 반복문까지 종료할 수 있다.
+
+```java
+outer:
+for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= 3; j++) {
+        if (i == 2 && j == 2) {
+            break outer;
+        }
+
+        System.out.println(i + ", " + j);
+    }
+}
+```
+
+**실행 결과**
+
+```text
+1, 1
+1, 2
+1, 3
+2, 1
+```
+
+- `outer:` : 바깥쪽 반복문에 이름 지정
+- `break outer;` : 해당 라벨이 지정된 반복문 종료
+
+**주의 : 라벨이 있는 break는 지정된 반복문 전체를 종료하지만, 일반 break는 가장 가까운 반복문 하나만 종료합니다.**
+
+### 8. 중첩 반복문 (Nested Loop)
+
+- 반복문 내부에 다른 반복문을 작성하는 구조이다.
+- 바깥쪽 반복문이 한 번 실행될 때 안쪽 반복문이 자신의 반복을 수행한다.
+- 구구단, 별 출력, 2차원 데이터 처리 등에 사용한다.
+
+**별 삼각형 출력**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    for (int j = 1; j <= i; j++) {
+        System.out.print("*");
+    }
+
+    System.out.println();
+}
+```
+
+**실행 결과**
+
+```text
+*
+**
+***
+****
+*****
+```
+
+- 바깥쪽 `i` : 출력할 줄의 개수
+- 안쪽 `j` : 한 줄에 출력할 별의 개수
+- `println()` : 줄바꿈 처리
+
+### 9. 반복문을 활용한 데이터 처리
+
+반복문은 데이터를 순차적으로 확인하고 계산하거나 특정 조건에 해당하는 값만 처리하는 데 사용된다.
+
+**1부터 100까지 합계 구하기**
+
+```java
+int sum = 0;
+
+for (int i = 1; i <= 100; i++) {
+    sum += i;
+}
+
+System.out.println(sum); // 5050
+```
+
+**짝수만 출력하기**
+
+```java
+for (int i = 1; i <= 10; i++) {
+    if (i % 2 != 0) {
+        continue;
+    }
+
+    System.out.print(i + " ");
+}
+// 2 4 6 8 10
+```
+
+**배열에서 최댓값 찾기**
+
+```java
+int[] numbers = {10, 40, 20, 50};
+
+int max = numbers[0];
+
+for (int num : numbers) {
+    if (num > max) {
+        max = num;
+    }
+}
+
+System.out.println(max); // 50
+```
+
+- 합계 계산 : 반복하면서 값을 누적
+- 조건 필터링 : 조건에 해당하는 값만 처리
+- 최대·최솟값 검색 : 현재 값을 기준값과 비교하면서 갱신
+- 배열 역순 처리 : 인덱스를 마지막부터 감소시키며 접근
+- 버블 정렬 : 중첩 반복문으로 인접 요소를 비교하고 교환
+
+### 10. 반복문 작성 시 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| 무한 루프 | 조건이 계속 참이면 종료되지 않으므로 상태 변화 확인 |
+| 반복 횟수 오류 | `<`, `<=`, `>`, `>=` 범위 확인 |
+| 증감식 누락 | 반복 변수가 변경되는지 확인 |
+| do-while 문법 오류 | 마지막 세미콜론(`;`) 확인 |
+| 빈 반복문 | 조건식 뒤에 불필요한 세미콜론이 있는지 확인 |
+| break 범위 오류 | 종료되는 반복문의 위치 확인 |
+| continue 사용 오류 | 건너뛴 뒤 상태가 올바르게 변경되는지 확인 |
+
+### ✅ Day6 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| `for` | 초기식 → 조건식 → 실행문 → 증감식 |
+| `while` | 조건이 참인 동안 반복 |
+| `do-while` | 실행 후 조건 검사, 최소 1회 실행 |
+| 향상된 `for` | 배열과 컬렉션 요소를 순서대로 처리 |
+| `break` | 가장 가까운 반복문 즉시 종료 |
+| `continue` | 현재 반복을 건너뛰고 다음 반복 진행 |
+| 라벨이 있는 `break` | 지정한 바깥쪽 반복문 종료 |
+| 중첩 반복문 | 반복문 내부에 다른 반복문 작성 |
+| 데이터 처리 | 합계, 필터링, 검색, 정렬 등에 활용 |
+
+- 반복문은 초기값, 종료 조건, 상태 변화가 중요하다.
+- `for`는 횟수 중심, `while`은 조건 중심으로 사용한다.
+- `do-while`은 반드시 한 번 실행해야 하는 작업에 적합하다.
+- 향상된 `for`문은 배열 및 컬렉션 순회에 유용하다.
+- `break`와 `continue`는 반복의 종료 여부가 다르다.
+- 중첩 반복문에서는 바깥쪽과 안쪽 반복문의 실행 순서를 이해해야 한다.
+- 조건식과 증감식을 잘못 설정하면 무한 루프나 반복 횟수 오류가 발생할 수 있다.
+
+</details>
+
+
+## Day7. 반복 제어문, String과 배열
+<details>
+
+### 🎯 학습 목표
+- `break`, `continue`, 라벨을 이용한 반복문 제어를 이해한다.
+- `String` 클래스의 특징과 문자열 불변성을 이해한다.
+- 문자열의 참조 비교와 내용 비교를 구분할 수 있다.
+- 주요 문자열 메서드의 기능과 사용법을 익힌다.
+- 1차원 배열의 선언, 생성, 초기화 방법을 이해한다.
+- 반복문을 이용하여 배열의 요소를 처리할 수 있다.
+- `Arrays` 클래스의 주요 메서드를 활용할 수 있다.
+
+### 1. 반복문 흐름 제어
+
+반복문의 실행 흐름을 변경하는 주요 명령어는 `break`, `continue`, 라벨이 있는 `break`이다.
+
+| 구분 | 역할 | 실행 결과 |
+|---|---|---|
+| `break` | 가장 가까운 반복문 종료 | 반복문 밖으로 이동 |
+| `continue` | 현재 반복의 나머지 실행문 생략 | 다음 반복 단계로 이동 |
+| `break label` | 지정한 반복문 종료 | 해당 반복문 밖으로 이동 |
+| `continue label` | 지정한 반복문의 현재 회차 종료 | 해당 반복문의 다음 회차 진행 |
+
+**break 예제**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        break;
+    }
+
+    System.out.println(i);
+}
+// 1 2
+```
+
+**continue 예제**
+
+```java
+for (int i = 1; i <= 5; i++) {
+    if (i == 3) {
+        continue;
+    }
+
+    System.out.println(i);
+}
+// 1 2 4 5
+```
+
+**주의 : while문에서 continue를 사용할 경우 반복 변수의 변경이 생략되면 무한 루프가 발생할 수 있습니다.**
+
+### 2. 라벨을 이용한 중첩 반복문 제어
+
+- 일반적인 `break`는 가장 안쪽 반복문만 종료한다.
+- 라벨을 사용하면 특정 바깥쪽 반복문까지 종료할 수 있다.
+- 중첩 반복문 전체를 종료해야 하는 상황에서 사용한다.
+
+```java
+outer:
+for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= 3; j++) {
+        if (i == 2 && j == 2) {
+            break outer;
+        }
+
+        System.out.println(i + ", " + j);
+    }
+}
+```
+
+실행 결과
+
+```text
+1, 1
+1, 2
+1, 3
+2, 1
+```
+
+- `outer:` : 바깥쪽 반복문에 라벨 지정
+- `break outer;` : 라벨이 지정된 반복문 종료
+- `continue outer;` : 바깥쪽 반복문의 다음 회차로 이동
+
+### 3. String 클래스의 특징
+
+`String`은 문자열을 저장하고 처리하기 위한 Java의 참조 타입 클래스이다.
+
+**주요 특징**
+
+- 문자열은 큰따옴표(`" "`)로 표현한다.
+- `String`은 기본 타입이 아닌 참조 타입이다.
+- 문자열은 여러 문자로 구성되며 인덱스로 각 위치에 접근할 수 있다.
+- `String` 객체는 불변(Immutable) 객체이다.
+
+**문자열 생성 방법**
+
+```java
+String str1 = "Java";
+String str2 = new String("Java");
+```
+
+| 생성 방법 | 특징 |
+|---|---|
+| 문자열 리터럴 | 문자열 풀(String Pool)의 객체를 참조 |
+| `new String()` | 새로운 String 객체 생성 |
+
+**문자열 불변성 (Immutability)**
+
+- `String` 객체는 생성된 이후 내부 문자열 내용을 변경할 수 없다.
+- 문자열을 변경하는 메서드는 기존 객체를 수정하지 않고 결과 문자열을 반환한다.
+
+```java
+String str = "Hello";
+
+str.concat(" Java");
+System.out.println(str); // Hello
+
+str = str.concat(" Java");
+System.out.println(str); // Hello Java
+```
+
+**주의 : 문자열 메서드의 결과를 사용하려면 반환값을 변수에 저장하거나 직접 활용해야 합니다.**
+
+### 4. 문자열 비교
+
+문자열 비교에서는 객체의 참조와 실제 문자열 내용을 구분해야 한다.
+
+| 구분 | 비교 대상 |
+|---|---|
+| `==` | 동일한 객체를 참조하는지 비교 |
+| **`equals()`** | 문자열 내용이 같은지 비교 |
+| `equalsIgnoreCase()` | 대소문자를 무시하고 내용 비교 |
+| **`compareTo()`** | 문자열의 사전식 순서 비교 |
+
+```java
+String str1 = "Java";
+String str2 = new String("Java");
+
+System.out.println(str1 == str2);      // false
+System.out.println(str1.equals(str2)); // true
+
+System.out.println(
+    str1.equalsIgnoreCase("JAVA")
+); // true
+```
+
+**compareTo() 예제**
+
+```java
+System.out.println("ABC".compareTo("ABC")); // 0
+System.out.println("ABC".compareTo("ABD")); // 음수
+System.out.println("ABD".compareTo("ABC")); // 양수
+```
+
+- 음수 : 비교 대상보다 사전식 순서가 앞선다.
+- 0 : 두 문자열의 내용이 같다.
+- 양수 : 비교 대상보다 사전식 순서가 뒤에 있다.
+
+**주의 : 문자열의 내용을 비교할 때는 `==` 대신 `equals()`를 사용하는 것이 일반적입니다.**
+
+### 5. 문자열 길이와 문자 추출
+
+문자열은 0부터 시작하는 인덱스를 이용하여 특정 문자에 접근할 수 있다.
+
+| 메서드 | 기능 | 반환 타입 |
+|---|---|---|
+| **`length()`** | 문자열 길이 반환 | int |
+| **`charAt(index)`** | 특정 위치의 문자 반환 | char |
+| `substring(begin)` | 시작 위치부터 끝까지 추출 | String |
+| **`substring(begin, end)`** | 지정된 범위의 문자열 추출 | String |
+
+```java
+String str = "Java Programming";
+
+System.out.println(str.length());       // 16
+System.out.println(str.charAt(0));      // J
+System.out.println(str.substring(5));   // Programming
+System.out.println(str.substring(5, 8)); // Pro
+```
+
+- 문자열 인덱스는 0부터 시작한다.
+- `substring(begin, end)`는 시작 인덱스를 포함한다.
+- 종료 인덱스는 포함하지 않는다.
+
+**주의 : 문자열의 인덱스가 유효한 범위를 벗어나면 StringIndexOutOfBoundsException이 발생합니다.**
+
+또한 `length()`는 UTF-16 코드 단위의 개수를 반환하므로, 모든 유니코드 문자가 반드시 길이 1로 계산되는 것은 아니다.
+
+### 6. 문자열 검색 및 포함 여부
+
+| 메서드 | 기능 |
+|---|---|
+| **`contains(str)`** | 특정 문자열 포함 여부 확인 |
+| **`indexOf(str)`** | 처음 발견된 위치 반환 |
+| `lastIndexOf(str)` | 마지막으로 발견된 위치 반환 |
+| `startsWith(str)` | 특정 문자열로 시작하는지 확인 |
+| `endsWith(str)` | 특정 문자열로 끝나는지 확인 |
+| `isEmpty()` | 문자열 길이가 0인지 확인 |
+| `isBlank()` | 비어 있거나 공백 문자만 있는지 확인 |
+
+```java
+String str = "Java Programming";
+
+System.out.println(str.contains("Pro")); // true
+System.out.println(str.indexOf("a"));    // 1
+System.out.println(str.lastIndexOf("a"));// 3
+
+System.out.println(str.startsWith("Java")); // true
+System.out.println(str.endsWith("ing"));    // true
+```
+
+- `contains()`는 포함 여부를 `boolean`으로 반환한다.
+- `indexOf()`는 해당 문자열의 시작 위치를 반환한다.
+- 검색에 실패하면 `indexOf()`와 `lastIndexOf()`는 `-1`을 반환한다.
+
+### 7. 문자열 변환과 공백 처리
+
+| 메서드 | 기능 |
+|---|---|
+| `toUpperCase()` | 대문자로 변환 |
+| `toLowerCase()` | 소문자로 변환 |
+| **`replace(old, new)`** | 문자열 또는 문자 치환 |
+| `trim()` | 양 끝의 일부 공백 제거 |
+| **`strip()`** | 양 끝의 유니코드 공백 제거 |
+| `stripLeading()` | 앞쪽 공백 제거 |
+| `stripTrailing()` | 뒤쪽 공백 제거 |
+| `String.valueOf()` | 값을 문자열로 변환 |
+
+```java
+String str = "Java";
+
+System.out.println(str.toUpperCase()); // JAVA
+System.out.println(str.toLowerCase()); // java
+System.out.println(str.replace("a", "o")); // Jovo
+```
+
+**공백 제거 예제**
+
+```java
+String text = "  Java  ";
+
+System.out.println(text.trim());  // Java
+System.out.println(text.strip()); // Java
+```
+
+- `trim()`은 전통적인 방식으로 제한된 범위의 공백을 제거한다.
+- `strip()`은 `Character.isWhitespace()` 기준으로 공백을 제거한다.
+- `strip()`은 Java 11부터 사용할 수 있다.
+
+### 8. 문자열 분리와 결합
+
+**split()**
+
+- 지정한 구분자를 기준으로 문자열을 분리한다.
+- 분리 결과는 `String[]` 배열로 반환한다.
+- 구분자는 정규 표현식(Regular Expression)으로 해석된다.
+
+```java
+String fruits = "사과,바나나,포도";
+
+String[] result = fruits.split(",");
+
+for (String fruit : result) {
+    System.out.println(fruit);
+}
+// 사과
+// 바나나
+// 포도
+```
+
+**join()**
+
+- 여러 문자열을 지정한 구분자로 연결한다.
+
+```java
+String date = String.join("-", "2026", "10", "20");
+
+System.out.println(date); // 2026-10-20
+```
+
+**주의 : split()에서 마침표(`.`), 파이프(`|`) 등 정규식 특수문자를 구분자로 사용할 경우 이스케이프 처리가 필요합니다.**
+
+### 9. StringBuilder와 문자열 연결
+
+- `String`은 불변 객체이므로 문자열을 반복적으로 결합할 때 중간 객체가 생성될 수 있다.
+- `StringBuilder`는 변경 가능한 문자 시퀀스를 제공한다.
+- 반복적인 문자열 수정 작업에서는 `StringBuilder`를 활용할 수 있다.
+
+```java
+StringBuilder sb = new StringBuilder();
+
+sb.append("Java");
+sb.append(" Programming");
+
+String result = sb.toString();
+
+System.out.println(result); // Java Programming
+```
+
+| 구분 | String | StringBuilder |
+|---|---|---|
+| 변경 가능 여부 | 불변 | 변경 가능 |
+| 문자열 수정 | 새로운 문자열 결과 생성 | 내부 문자 시퀀스 수정 |
+| 주요 용도 | 일반적인 문자열 처리 | 반복적인 문자열 결합 및 수정 |
+
+### 10. 1차원 배열의 개념
+
+배열(Array)은 동일한 타입의 여러 값을 하나의 변수명으로 관리하는 자료구조이다.
+
+**주요 특징**
+
+- 같은 타입의 데이터를 여러 개 저장한다.
+- 배열의 각 요소는 인덱스로 접근한다.
+- 인덱스는 0부터 시작한다.
+- 생성된 배열의 길이는 변경할 수 없다.
+- 배열은 참조 타입 객체이다.
+
+**배열 선언과 생성**
+
+```java
+int[] scores;
+scores = new int[5];
+```
+
+**선언과 생성 동시에 작성**
+
+```java
+int[] scores = new int[5];
+```
+
+**값을 직접 지정하여 초기화**
+
+```java
+int[] scores = {80, 90, 75, 85, 95};
+```
+
+- `int[]` : 정수 배열 타입
+- `scores` : 배열 객체를 참조하는 변수
+- `new int[5]` : 5개의 요소를 가지는 배열 생성
+
+### 11. 배열의 메모리 구조와 초기값
+
+- 배열 변수에는 배열 객체를 참조하는 값이 저장된다.
+- 실제 배열 요소는 생성된 배열 객체 내부에 저장된다.
+- 배열 객체는 힙(Heap) 영역에 생성된다.
+- `new`로 생성한 배열의 요소는 타입별 기본값으로 초기화된다.
+
+| 데이터 타입 | 기본값 |
+|---|---|
+| byte, short, int, long | 0 |
+| float, double | 0.0 |
+| char | '\u0000' |
+| boolean | false |
+| 참조 타입 | null |
+
+```java
+int[] numbers = new int[3];
+
+System.out.println(numbers[0]); // 0
+System.out.println(numbers[1]); // 0
+System.out.println(numbers[2]); // 0
+```
+
+**주의 : 배열의 요소는 자동 초기화되지만, 지역 변수로 선언한 배열 참조 변수는 사용 전에 반드시 초기화해야 합니다.**
+
+### 12. 배열 요소 접근과 길이
+
+배열은 인덱스를 이용해 요소를 조회하거나 수정할 수 있다.
+
+```java
+int[] scores = {80, 90, 70, 85, 95};
+
+// 요소 조회
+System.out.println(scores[0]); // 80
+
+// 요소 수정
+scores[1] = 100;
+
+// 배열 길이
+System.out.println(scores.length); // 5
+```
+
+- `scores[0]` : 첫 번째 요소
+- `scores.length` : 배열의 전체 요소 개수
+- 마지막 인덱스 : `scores.length - 1`
+
+**주의 사항**
+
+- 배열 길이는 메서드가 아닌 필드 `length`로 확인한다.
+- 문자열은 `length()` 메서드를 사용한다.
+- 잘못된 인덱스로 접근하면 `ArrayIndexOutOfBoundsException`이 발생한다.
+
+### 13. 배열과 반복문
+
+배열의 요소를 순회하는 방법에는 일반 `for`문과 향상된 `for`문이 있다.
+
+**일반 for문**
+
+```java
+int[] scores = {80, 90, 75};
+
+for (int i = 0; i < scores.length; i++) {
+    System.out.println(scores[i]);
+}
+```
+
+**향상된 for문**
+
+```java
+int[] scores = {80, 90, 75};
+
+for (int score : scores) {
+    System.out.println(score);
+}
+```
+
+| 구분 | 일반 for문 | 향상된 for문 |
+|---|---|---|
+| 인덱스 접근 | 가능 | 직접 제공하지 않음 |
+| 특정 요소 수정 | 가능 | 반복 변수에 대입해도 원본 요소는 바뀌지 않음 |
+| 역순 탐색 | 가능 | 기본적으로 순차 순회 |
+| 주요 용도 | 인덱스 기반 제어 | 전체 요소 조회 |
+
+**주의 : 기본형 배열의 향상된 for문에서 반복 변수 값을 변경해도 원본 배열은 수정되지 않습니다.**
+
+### 14. 배열을 활용한 데이터 처리
+
+**합계와 평균 계산**
+
+```java
+int[] scores = {80, 90, 70, 100};
+
+int sum = 0;
+
+for (int score : scores) {
+    sum += score;
+}
+
+double avg = (double) sum / scores.length;
+
+System.out.println(sum); // 340
+System.out.println(avg); // 85.0
+```
+
+**최댓값과 최솟값**
+
+```java
+int[] numbers = {45, 12, 89, 34, 67};
+
+int max = numbers[0];
+int min = numbers[0];
+
+for (int num : numbers) {
+    if (num > max) {
+        max = num;
+    }
+
+    if (num < min) {
+        min = num;
+    }
+}
+
+System.out.println(max); // 89
+System.out.println(min); // 12
+```
+
+- 최댓값과 최솟값은 첫 번째 요소를 기준으로 초기화할 수 있다.
+- 배열이 비어 있지 않은지 먼저 확인해야 한다.
+- 평균 계산 시 실수형으로 변환하면 정수 나눗셈에 따른 소수점 손실을 방지할 수 있다.
+
+### 15. Arrays 클래스
+
+`java.util.Arrays`는 배열을 처리하기 위한 유틸리티 메서드를 제공한다.
+
+| 메서드 | 기능 |
+|---|---|
+| `Arrays.toString()` | 배열 요소를 문자열 형태로 반환 |
+| `Arrays.sort()` | 배열 요소 정렬 |
+| `Arrays.copyOf()` | 배열 복사 |
+| `Arrays.binarySearch()` | 정렬된 배열에서 값 검색 |
+| `Arrays.equals()` | 두 배열의 요소 비교 |
+| `Arrays.fill()` | 배열 요소를 지정한 값으로 채움 |
+
+```java
+import java.util.Arrays;
+
+int[] numbers = {30, 10, 20};
+
+// 배열 출력
+System.out.println(Arrays.toString(numbers));
+// [30, 10, 20]
+
+// 배열 정렬
+Arrays.sort(numbers);
+System.out.println(Arrays.toString(numbers));
+// [10, 20, 30]
+
+// 배열 복사
+int[] copied = Arrays.copyOf(numbers, numbers.length);
+
+// 배열 내용 비교
+System.out.println(Arrays.equals(numbers, copied));
+// true
+```
+
+**주의 사항**
+
+- `Arrays.sort()`는 전달된 배열 자체를 정렬한다.
+- `Arrays.copyOf()`는 새로운 배열을 생성한다.
+- `Arrays.binarySearch()`는 정렬 상태가 전제되어야 올바른 검색 결과를 기대할 수 있다.
+- 일반적인 `==`는 배열의 내용이 아닌 참조 동일성을 비교한다.
+
+### 16. 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| 문자열을 `==`로 비교 | 내용 비교에는 `equals()` 사용 |
+| null 문자열에 메서드 호출 | NullPointerException 발생 가능 |
+| 문자열 불변성 간과 | 문자열 연산 결과를 다시 저장 |
+| 문자열 인덱스 오류 | 인덱스 범위 확인 |
+| 반복적인 문자열 결합 | 필요하면 StringBuilder 사용 |
+| 배열 인덱스 오류 | 0부터 length - 1까지 접근 |
+| 배열 길이 변경 시도 | 새로운 배열을 생성해야 함 |
+| 향상된 for문으로 값 수정 | 원본 수정에는 인덱스 기반 접근 |
+| 배열을 `==`로 비교 | 내용 비교에는 Arrays.equals() 사용 |
+| 배열 미초기화 | 참조 변수의 초기화 여부 확인 |
+| while문에서 continue | 증감식 실행 여부 확인 |
+
+### ✅ Day7 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| `break` | 가장 가까운 반복문 종료 |
+| `continue` | 현재 반복 건너뛰기 |
+| 라벨 | 중첩 반복문의 실행 흐름 제어 |
+| `String` | 문자열을 표현하는 불변 참조 타입 |
+| 문자열 비교 | 내용 비교는 equals() 사용 |
+| 문자열 추출 | charAt(), substring() |
+| 문자열 검색 | contains(), indexOf() |
+| 문자열 변환 | replace(), toUpperCase(), strip() |
+| 문자열 분리 | split()으로 String 배열 반환 |
+| 문자열 결합 | join(), StringBuilder |
+| 1차원 배열 | 동일 타입의 여러 데이터를 저장 |
+| 배열 길이 | length 필드 사용 |
+| 배열 순회 | 일반 for문, 향상된 for문 |
+| Arrays 클래스 | 출력, 정렬, 복사, 비교 등의 기능 제공 |
+
+- `String`은 불변 객체이므로 문자열 연산은 기존 객체의 내용을 직접 변경하지 않는다.
+- 문자열 내용 비교는 `equals()`를 사용하는 것이 일반적이다.
+- 문자열과 배열은 모두 0부터 시작하는 인덱스를 사용한다.
+- 문자열 길이는 `length()`, 배열 길이는 `length`로 확인한다.
+- 배열은 생성 후 크기를 변경할 수 없으며 요소는 기본값으로 초기화된다.
+- 배열 요소를 수정할 때는 일반 `for`문과 인덱스를 활용할 수 있다.
+- `Arrays` 클래스는 배열 처리에 필요한 다양한 유틸리티 메서드를 제공한다.
+- 참조 타입의 객체 비교와 실제 데이터 내용 비교를 구분해야 한다.
+
+</details>
