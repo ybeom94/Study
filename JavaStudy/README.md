@@ -10,6 +10,8 @@
 | **Day 05** | 제어문 심화 및 응용 | 중첩 반복문, 흐름 제어, 종합 실습 |
 | **Day 06** | 반복문 심화 및 활용 | `for`, `while`, `do-while`, 향상된 `for`, 중첩 반복문, `break`, `continue`, 배열 순회 |
 | **Day 07** | 반복 제어문, String과 배열 | `break`, `continue`, 라벨, `String`, 문자열 메서드, 1차원 배열, `Arrays` |
+| **Day 08** | String과 배열 심화 및 메서드 | `String`, `StringBuilder`, 메서드, 배열 참조, 얕은 복사·깊은 복사, `Arrays`, `ArrayList` |
+
 
 
 </details>
@@ -1662,3 +1664,697 @@ System.out.println(Arrays.equals(numbers, copied));
 - 참조 타입의 객체 비교와 실제 데이터 내용 비교를 구분해야 한다.
 
 </details>
+
+
+
+## Day8. String과 배열 심화 및 메서드
+<details>
+
+### 🎯 학습 목표
+- 메서드의 역할과 선언 및 호출 구조를 이해한다.
+- `String` 클래스의 불변성과 문자열 풀의 원리를 이해한다.
+- 문자열을 검색, 추출, 변환하는 주요 메서드를 활용할 수 있다.
+- `String`과 `StringBuilder`의 차이를 구분한다.
+- 배열의 메모리 구조와 참조 변수의 특징을 이해한다.
+- 배열의 얕은 복사와 깊은 복사의 차이를 이해한다.
+- 배열 복사 및 `Arrays` 유틸리티를 사용할 수 있다.
+- 배열과 `ArrayList`의 차이 및 사용 목적을 이해한다.
+
+### 1. 메서드의 개념과 구조
+
+메서드(Method)는 특정 기능을 수행하는 코드를 하나로 묶은 것으로, 필요할 때 호출하여 재사용할 수 있다.
+
+- 반복되는 코드를 줄이고 기능별로 분리할 수 있다.
+- 매개변수(Parameter)를 통해 외부 데이터를 전달받는다.
+- `return`을 통해 실행 결과를 반환할 수 있다.
+- 반환할 값이 없는 메서드는 `void`를 사용한다.
+
+**기본 구조**
+
+```java
+static int add(int a, int b) {
+    return a + b;
+}
+```
+
+| 구성 요소 | 설명 |
+|---|---|
+| `static` | 객체 생성 없이 클래스 이름으로 호출 가능 |
+| `int` | 반환 타입 |
+| `add` | 메서드 이름 |
+| `int a, int b` | 매개변수 |
+| `return` | 결과값 반환 및 메서드 종료 |
+
+**메서드 호출 예제**
+
+```java
+public class MethodExample {
+
+    static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        int result = add(10, 20);
+
+        System.out.println(result); // 30
+    }
+}
+```
+
+**실행 흐름**
+
+1. `add(10, 20)` 메서드 호출
+2. 매개변수 `a`, `b`에 값 전달
+3. 메서드 내부에서 `a + b` 계산
+4. `return`으로 결과 반환
+5. 호출한 위치에서 반환값 사용
+
+### 2. String 클래스와 불변성
+
+`String`은 문자열을 표현하고 처리하는 참조 타입 클래스이다.
+
+**주요 특징**
+
+- 문자열은 큰따옴표(`" "`)로 표현한다.
+- `String`은 기본 타입이 아닌 참조 타입이다.
+- `String` 객체는 불변(Immutable) 객체이다.
+- 문자열 처리 메서드는 기존 내용을 직접 수정하지 않는다.
+
+**문자열 불변성**
+
+```java
+String str = "Java";
+
+str.toUpperCase();
+System.out.println(str); // Java
+
+str = str.toUpperCase();
+System.out.println(str); // JAVA
+```
+
+- `toUpperCase()`는 대문자로 변환된 문자열을 반환한다.
+- 반환값을 사용하지 않으면 기존 변수의 값은 변경되지 않는다.
+
+**주의 : String 객체는 생성 후 내용을 변경할 수 없으므로, 문자열 연산의 결과를 사용하려면 반환값을 저장해야 합니다.**
+
+### 3. String Pool과 문자열 비교
+
+Java는 문자열 리터럴을 문자열 풀(String Pool)에서 관리한다.
+
+동일한 문자열 리터럴은 일반적으로 같은 `String` 객체를 공유한다.
+
+```java
+String s1 = "Java";
+String s2 = "Java";
+String s3 = new String("Java");
+
+System.out.println(s1 == s2);      // true
+System.out.println(s1 == s3);      // false
+System.out.println(s1.equals(s3)); // true
+```
+
+| 구분 | 특징 |
+|---|---|
+| 문자열 리터럴 | String Pool의 객체 참조 |
+| `new String()` | 새로운 String 객체 생성 |
+| `==` | 두 참조가 같은 객체를 가리키는지 비교 |
+| `equals()` | 문자열 내용이 같은지 비교 |
+
+- `s1`과 `s2`는 같은 문자열 리터럴 객체를 참조한다.
+- `s3`는 `new`로 생성한 별도의 객체를 참조한다.
+- 객체가 달라도 문자열 내용은 같을 수 있다.
+
+**주의 : 문자열의 실제 내용을 비교할 때는 일반적으로 `equals()`를 사용해야 합니다.**
+
+### 4. 문자열 검색과 추출
+
+`String` 클래스는 문자열의 길이, 특정 문자 및 문자열 위치를 확인하는 메서드를 제공한다.
+
+| 메서드 | 기능 |
+|---|---|
+| `length()` | 문자열 길이 반환 |
+| `charAt(index)` | 특정 인덱스의 문자 반환 |
+| `indexOf(str)` | 처음 등장하는 문자열의 위치 반환 |
+| `lastIndexOf(str)` | 마지막으로 등장하는 위치 반환 |
+| `contains(str)` | 특정 문자열 포함 여부 확인 |
+| `substring(begin)` | 지정 위치부터 끝까지 추출 |
+| `substring(begin, end)` | 지정된 범위의 문자열 추출 |
+
+**문자열 검색 예제**
+
+```java
+String str = "JavaSpring";
+
+System.out.println(str.length());       // 10
+System.out.println(str.charAt(0));      // J
+System.out.println(str.indexOf("v"));   // 2
+System.out.println(str.lastIndexOf("a"));// 3
+System.out.println(str.contains("Spring")); // true
+```
+
+**문자열 추출 예제**
+
+```java
+String str = "JavaSpring";
+
+System.out.println(str.substring(4));    // Spring
+System.out.println(str.substring(0, 4)); // Java
+```
+
+- 문자열 인덱스는 0부터 시작한다.
+- `substring(begin, end)`의 시작 인덱스는 포함한다.
+- 종료 인덱스는 포함하지 않는다.
+- 검색 실패 시 `indexOf()`는 `-1`을 반환한다.
+
+**주의 : 유효한 인덱스 범위를 벗어나면 StringIndexOutOfBoundsException이 발생합니다.**
+
+### 5. 문자열 변환과 정제
+
+문자열의 대소문자를 변환하거나 공백을 제거하는 등의 작업을 수행할 수 있다.
+
+| 메서드 | 기능 |
+|---|---|
+| `toUpperCase()` | 대문자로 변환 |
+| `toLowerCase()` | 소문자로 변환 |
+| `trim()` | 양 끝의 일부 공백 제거 |
+| `strip()` | 양 끝의 유니코드 공백 제거 |
+| `replace(old, new)` | 특정 문자열을 다른 문자열로 치환 |
+| `isEmpty()` | 길이가 0인지 확인 |
+| `isBlank()` | 비어 있거나 공백만 있는지 확인 |
+
+```java
+String str = "  Java  ";
+
+System.out.println(str.trim());  // Java
+System.out.println(str.strip()); // Java
+
+System.out.println("java".toUpperCase()); // JAVA
+System.out.println("JAVA".toLowerCase()); // java
+System.out.println("Java".replace("a", "o")); // Jovo
+```
+
+**trim()과 strip() 비교**
+
+- `trim()` : 전통적인 공백 제거 방식
+- `strip()` : 유니코드 공백 판별 기준 사용
+- `strip()`은 Java 11부터 지원한다.
+
+### 6. 문자열 분리와 결합
+
+**split()**
+
+- 특정 구분자를 기준으로 문자열을 분리한다.
+- 결과를 `String[]` 배열로 반환한다.
+
+```java
+String data = "apple,banana,orange";
+
+String[] fruits = data.split(",");
+
+for (String fruit : fruits) {
+    System.out.println(fruit);
+}
+// apple
+// banana
+// orange
+```
+
+**join()**
+
+- 여러 문자열을 지정된 구분자로 연결한다.
+
+```java
+String date = String.join("-", "2026", "10", "21");
+
+System.out.println(date); // 2026-10-21
+```
+
+**주의 : split()의 구분자는 정규 표현식으로 처리되므로, 정규식 특수문자를 사용할 때 이스케이프 처리가 필요합니다.**
+
+### 7. String과 StringBuilder
+
+`String`은 불변 객체이지만 `StringBuilder`는 내부 문자 시퀀스를 수정할 수 있다.
+
+| 구분 | String | StringBuilder |
+|---|---|---|
+| 객체 특성 | 불변 | 가변 |
+| 문자열 수정 | 기존 객체의 내용 수정 불가 | 내부 문자 시퀀스 수정 가능 |
+| 주요 사용 | 일반적인 문자열 처리 | 반복적인 문자열 수정 및 연결 |
+| 대표 메서드 | `concat()` | `append()` |
+
+**String 예제**
+
+```java
+String str = "Java";
+
+str = str.concat(" Programming");
+
+System.out.println(str); // Java Programming
+```
+
+**StringBuilder 예제**
+
+```java
+StringBuilder sb = new StringBuilder();
+
+sb.append("Java");
+sb.append(" Programming");
+
+System.out.println(sb.toString());
+// Java Programming
+```
+
+- `concat()`은 결합된 문자열을 반환한다.
+- `append()`는 기존 `StringBuilder`의 내용을 변경한다.
+- 반복적으로 많은 문자열을 연결할 때는 `StringBuilder`가 유리할 수 있다.
+
+### 8. 배열의 구조와 메모리
+
+배열(Array)은 동일한 타입의 여러 데이터를 하나의 배열 객체에 저장하는 자료구조이다.
+
+**주요 특징**
+
+- 배열은 참조 타입이다.
+- 배열의 인덱스는 0부터 시작한다.
+- 생성된 배열의 길이는 변경할 수 없다.
+- 배열 요소는 선언한 타입의 값만 저장할 수 있다.
+- 배열 객체는 힙(Heap) 영역에 생성된다.
+
+**배열 선언 및 생성**
+
+```java
+int[] numbers = {10, 20, 30, 40, 50};
+```
+
+**메모리 구조의 개념**
+
+```text
+numbers (참조 변수)
+    |
+    v
+int[] 배열 객체
++----+----+----+----+----+
+| 10 | 20 | 30 | 40 | 50 |
++----+----+----+----+----+
+   0    1    2    3    4
+```
+
+- 배열 변수는 배열 객체를 참조한다.
+- 각 요소는 인덱스를 이용하여 접근한다.
+- 배열의 전체 요소 개수는 `length` 필드로 확인한다.
+
+### 9. 배열 생성과 초기화
+
+배열은 여러 방법으로 생성하고 초기화할 수 있다.
+
+**선언과 동시에 초기화**
+
+```java
+int[] scores = {90, 80, 70};
+```
+
+**배열 크기 지정**
+
+```java
+int[] scores = new int[3];
+
+scores[0] = 90;
+scores[1] = 80;
+scores[2] = 70;
+```
+
+**new 연산자로 배열 초기화**
+
+```java
+int[] scores;
+scores = new int[]{90, 80, 70};
+```
+
+**배열 요소의 기본값**
+
+| 데이터 타입 | 기본값 |
+|---|---|
+| 정수 타입 | 0 |
+| 실수 타입 | 0.0 |
+| char | '\u0000' |
+| boolean | false |
+| 참조 타입 | null |
+
+- `new`로 생성한 배열의 요소는 타입에 따른 기본값으로 초기화된다.
+- 배열 참조 변수가 지역 변수라면 사용 전에 반드시 초기화해야 한다.
+
+### 10. 배열의 참조 공유
+
+배열은 참조 타입이므로 배열 변수를 다른 변수에 대입하면 같은 배열 객체를 공유한다.
+
+```java
+int[] a = {10, 20, 30};
+
+int[] b = a;
+
+b[0] = 999;
+
+System.out.println(a[0]); // 999
+System.out.println(b[0]); // 999
+```
+
+- `b = a`는 새로운 배열을 생성하지 않는다.
+- 두 변수는 동일한 배열 객체를 참조한다.
+- 한쪽에서 요소를 변경하면 다른 쪽에서도 변경된 값이 보인다.
+
+**주의 : 참조 변수의 단순 대입은 배열 복사가 아니라 참조값의 복사입니다.**
+
+### 11. 배열 복사 방법
+
+배열을 독립적으로 사용하려면 새로운 배열 객체를 생성해야 한다.
+
+| 복사 방법 | 특징 |
+|---|---|
+| `=` | 참조값만 복사, 같은 배열 공유 |
+| `clone()` | 같은 길이의 새 배열 생성 |
+| `Arrays.copyOf()` | 지정한 길이로 새 배열 생성 |
+| `System.arraycopy()` | 기존 배열의 특정 구간 복사 |
+| 일반 `for`문 | 요소를 직접 순회하며 복사 |
+
+**clone()**
+
+```java
+int[] original = {10, 20, 30};
+
+int[] copied = original.clone();
+
+copied[0] = 999;
+
+System.out.println(original[0]); // 10
+System.out.println(copied[0]);   // 999
+```
+
+**Arrays.copyOf()**
+
+```java
+import java.util.Arrays;
+
+int[] original = {10, 20, 30};
+
+int[] copied = Arrays.copyOf(original, original.length);
+```
+
+**System.arraycopy()**
+
+```java
+int[] source = {10, 20, 30, 40};
+int[] target = new int[3];
+
+System.arraycopy(source, 1, target, 0, 3);
+
+// target = {20, 30, 40}
+```
+
+`System.arraycopy()`의 인자 순서
+
+```java
+System.arraycopy(
+    원본배열, 원본시작인덱스,
+    대상배열, 대상시작인덱스,
+    복사개수
+);
+```
+
+### 12. 얕은 복사와 깊은 복사
+
+**얕은 복사 (Shallow Copy)**
+
+- 새로운 배열 객체는 생성하지만 내부 참조 요소는 공유할 수 있다.
+- 객체 배열이나 다차원 배열에서 주의해야 한다.
+
+**깊은 복사 (Deep Copy)**
+
+- 내부의 변경 가능한 객체나 중첩 배열까지 독립적으로 복사하는 방식이다.
+- 복사본을 수정해도 원본에 영향을 주지 않도록 구성한다.
+
+**다차원 배열 예제**
+
+```java
+int[][] original = {{1, 2}, {3, 4}};
+
+// 얕은 복사
+int[][] shallow = original.clone();
+
+shallow[0][0] = 99;
+
+System.out.println(original[0][0]); // 99
+```
+
+**내부 배열까지 복사**
+
+```java
+int[][] original = {{1, 2}, {3, 4}};
+
+int[][] deep = new int[original.length][];
+
+for (int i = 0; i < original.length; i++) {
+    deep[i] = original[i].clone();
+}
+
+deep[0][0] = 99;
+
+System.out.println(original[0][0]); // 1
+```
+
+**주의 : 기본형 1차원 배열은 clone()으로 요소값을 독립적으로 복사할 수 있지만, 객체 배열과 다차원 배열에서는 내부 참조까지 복사해야 하는지 확인해야 합니다.**
+
+### 13. 일반 for문과 향상된 for문
+
+| 구분 | 일반 for문 | 향상된 for문 |
+|---|---|---|
+| 인덱스 사용 | 가능 | 직접 제공하지 않음 |
+| 특정 요소 수정 | 가능 | 반복 변수 대입만으로는 원본 수정 불가 |
+| 역순 순회 | 가능 | 기본적으로 순차 순회 |
+| 주요 용도 | 인덱스 기반 처리 | 전체 요소 조회 |
+
+**일반 for문**
+
+```java
+int[] numbers = {10, 20, 30};
+
+for (int i = 0; i < numbers.length; i++) {
+    numbers[i] += 10;
+}
+```
+
+**향상된 for문**
+
+```java
+int[] numbers = {10, 20, 30};
+
+for (int num : numbers) {
+    System.out.println(num);
+}
+```
+
+**주의 : 기본형 배열에서 향상된 for문의 반복 변수 값을 변경하더라도 원본 배열의 요소는 변경되지 않습니다.**
+
+### 14. 배열을 이용한 데이터 처리
+
+**합계와 평균**
+
+```java
+int[] scores = {90, 80, 70, 100};
+
+int sum = 0;
+
+for (int score : scores) {
+    sum += score;
+}
+
+double avg = (double) sum / scores.length;
+
+System.out.println(sum); // 340
+System.out.println(avg); // 85.0
+```
+
+**최댓값과 최솟값**
+
+```java
+int[] numbers = {30, 10, 50, 20};
+
+int max = numbers[0];
+int min = numbers[0];
+
+for (int num : numbers) {
+    if (num > max) {
+        max = num;
+    }
+
+    if (num < min) {
+        min = num;
+    }
+}
+
+System.out.println(max); // 50
+System.out.println(min); // 10
+```
+
+**특정 값 검색**
+
+```java
+String[] names = {"김민수", "이영희", "박철수"};
+
+String target = "이영희";
+
+for (int i = 0; i < names.length; i++) {
+    if (names[i].equals(target)) {
+        System.out.println(i); // 1
+        break;
+    }
+}
+```
+
+- 평균 계산 시 정수 나눗셈을 주의해야 한다.
+- 최댓값과 최솟값은 배열의 첫 번째 요소로 초기화할 수 있다.
+- 배열이 비어 있는 경우를 먼저 확인해야 한다.
+
+### 15. Arrays 유틸리티 클래스
+
+`java.util.Arrays`는 배열을 처리하기 위한 다양한 정적 메서드를 제공한다.
+
+| 메서드 | 기능 |
+|---|---|
+| `Arrays.toString()` | 배열 요소를 문자열로 표현 |
+| `Arrays.sort()` | 배열 요소 정렬 |
+| `Arrays.fill()` | 배열 전체를 특정 값으로 채우기 |
+| `Arrays.copyOf()` | 새로운 배열로 복사 |
+
+```java
+import java.util.Arrays;
+
+int[] numbers = {30, 10, 50, 20};
+
+// 배열 출력
+System.out.println(Arrays.toString(numbers));
+// [30, 10, 50, 20]
+
+// 오름차순 정렬
+Arrays.sort(numbers);
+
+System.out.println(Arrays.toString(numbers));
+// [10, 20, 30, 50]
+
+// 특정 값으로 채우기
+Arrays.fill(numbers, 7);
+
+System.out.println(Arrays.toString(numbers));
+// [7, 7, 7, 7]
+```
+
+**주의 : Arrays.sort()와 Arrays.fill()은 전달된 배열의 내용을 직접 변경합니다.**
+
+### 16. 배열과 ArrayList의 차이
+
+배열은 크기가 고정된 자료구조이며, `ArrayList`는 요소 개수에 따라 내부 저장 공간을 조정하는 컬렉션이다.
+
+| 구분 | Array | ArrayList |
+|---|---|---|
+| 크기 | 생성 후 고정 | 필요에 따라 확장 |
+| 요소 접근 | `arr[index]` | `list.get(index)` |
+| 요소 개수 | `length` | `size()` |
+| 데이터 추가 | 크기 변경 불가 | `add()` 사용 |
+| 저장 타입 | 기본형, 참조형 | 참조형 |
+
+**배열 예제**
+
+```java
+String[] names = new String[3];
+
+names[0] = "Java";
+names[1] = "Spring";
+names[2] = "SQL";
+```
+
+**ArrayList 예제**
+
+```java
+import java.util.ArrayList;
+
+ArrayList<String> names = new ArrayList<>();
+
+names.add("Java");
+names.add("Spring");
+names.add("SQL");
+
+System.out.println(names.size()); // 3
+```
+
+- 데이터 개수가 고정되어 있다면 배열을 사용할 수 있다.
+- 데이터의 추가 및 삭제가 빈번하다면 `ArrayList`가 유용하다.
+- 컬렉션의 자세한 구조는 이후 Java 컬렉션 학습에서 다룬다.
+
+### 17. Java 웹 개발에서의 배열 활용
+
+배열은 웹 애플리케이션에서도 여러 데이터를 한 번에 처리할 때 사용한다.
+
+| 사용 사례 | 예시 |
+|---|---|
+| 검색 조건 | 여러 카테고리 및 관심 분야 |
+| 데이터 처리 | 여러 ID 또는 점수 처리 |
+| 통계 | 일별 방문자 수, 월별 매출 |
+| API | JSON 배열 형태의 데이터 수신 |
+| 설정값 | 고정된 수치나 코드 목록 |
+
+- 웹 API에서는 배열 형태의 JSON 데이터를 수신할 수 있다.
+- 고정된 개수의 데이터는 배열로 처리할 수 있다.
+- 크기가 변하는 목록은 일반적으로 `List` 등을 활용한다.
+- Spring Boot에서는 요청 데이터를 배열이나 컬렉션 형태로 전달받을 수 있다.
+
+### 18. 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| String 반환값 미사용 | 변환된 문자열을 변수에 저장 |
+| 문자열 `==` 비교 | 내용 비교 시 `equals()` 사용 |
+| 문자열 인덱스 오류 | `length()` 기준으로 범위 확인 |
+| 배열 인덱스 오류 | `0`부터 `length - 1`까지 접근 |
+| 배열 참조 공유 | 단순 대입은 객체를 복사하지 않음 |
+| 얕은 복사 문제 | 내부 객체의 참조 공유 여부 확인 |
+| 배열 크기 변경 | 새로운 배열 또는 ArrayList 사용 |
+| 향상된 for문 수정 | 원본 요소 변경 시 인덱스 접근 활용 |
+| 평균 계산 오류 | 정수 나눗셈과 빈 배열 주의 |
+| 배열 출력 | 내용 확인 시 Arrays.toString() 사용 |
+
+### ✅ Day8 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| 메서드 | 기능을 수행하는 재사용 가능한 코드 |
+| 매개변수 | 메서드에 전달되는 입력값을 받는 변수 |
+| return | 메서드 실행 결과 반환 |
+| String | 문자열을 표현하는 불변 객체 |
+| String Pool | 문자열 리터럴 객체 공유 |
+| equals() | 문자열 내용 비교 |
+| 문자열 메서드 | 검색, 추출, 변환, 분리 및 결합 |
+| StringBuilder | 변경 가능한 문자열 처리 |
+| 배열 | 같은 타입의 데이터를 여러 개 저장 |
+| 배열 참조 | 변수에는 배열 객체의 참조값 저장 |
+| 배열 복사 | clone(), copyOf(), arraycopy() 등 |
+| 얕은 복사 | 내부 참조 객체를 공유할 수 있음 |
+| 깊은 복사 | 내부 객체까지 독립적으로 복사 |
+| 일반 for문 | 인덱스를 이용한 배열 처리 |
+| 향상된 for문 | 배열 요소를 순서대로 조회 |
+| Arrays | 배열 출력, 정렬, 복사, 초기화 |
+| ArrayList | 크기를 동적으로 관리하는 컬렉션 |
+
+- 메서드는 기능별로 코드를 분리하여 재사용할 수 있게 한다.
+- `String`은 불변 객체이므로 기존 문자열 내용을 직접 수정할 수 없다.
+- 문자열의 내용 비교에는 `equals()`를 사용한다.
+- 반복적인 문자열 수정에는 `StringBuilder`가 유용하다.
+- 배열은 참조 타입이며 생성 후 길이가 고정된다.
+- 배열 변수의 단순 대입은 동일한 배열 객체를 공유한다.
+- 기본형 배열과 객체 배열은 복사 시 내부 참조 공유 여부가 다를 수 있다.
+- 배열을 처리할 때는 일반 for문과 향상된 for문의 특성을 구분해야 한다.
+- `Arrays` 클래스는 배열 처리에 필요한 주요 유틸리티를 제공한다.
+- 고정 크기 데이터에는 배열, 크기가 변하는 데이터에는 ArrayList를 활용할 수 있다.
+
+</details>
+
+
