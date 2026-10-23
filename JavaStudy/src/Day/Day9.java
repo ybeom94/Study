@@ -186,12 +186,6 @@ public class Day9
             // 자리 수 쪼개기
             inputNumber = Decomposition(input);
 
-            // 앞자리 수 0 확인
-            if (inputNumber[0] == 0)
-            {
-                System.out.println("앞자리는 0이 될 수 없습니다.");
-            }
-
             // 중복 확인
             if (CheckDuplicate(inputNumber))
             {
@@ -235,19 +229,17 @@ public class Day9
     // arr배열의 중복 숫자 확인
     public static boolean CheckDuplicate(int[] arr)
     {
-        boolean isDuplicate = false;
         for (int i = 0; i < arr.length; i++)
         {
             for (int j = i + 1; j < arr.length; j++)
             {
                 if (arr[i] == arr[j])
                 {
-                    isDuplicate = true;
-                    break;
+                    return true;
                 }
             }
         }
-        return isDuplicate;
+        return false;
     }
 
     // num을 각 자리수 마다 배열로 변환
