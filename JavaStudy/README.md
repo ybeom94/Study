@@ -13,6 +13,7 @@
 | **Day 08** | String과 배열 심화 및 메서드 | `String`, `StringBuilder`, 메서드, 배열 참조, 얕은 복사·깊은 복사, `Arrays`, `ArrayList` |
 | **Day 09** | 배열과 메서드 심화 | 메서드 선언·호출·반환, 배열 순회·탐색·정렬, String 메서드, 배열 참조, 얕은 복사·깊은 복사 |
 | **Day 10** | Java 기초 총정리 및 알고리즘 | 기본형·참조 타입, Enum, 배열, 메서드, 중첩 반복문, 탐색·정렬 알고리즘, Stack·Queue |
+| **Day 11** | Java 메서드 및 기초 문법 종합 | 메서드 선언·호출, 매개변수, 반환값, 오버로딩, static·인스턴스 메서드, 호출 스택, 웹 로직 |
 
 
 </details>
@@ -4022,5 +4023,758 @@ Java의 기본 문법을 학습한 이후에는 객체지향 프로그래밍(OOP
 - 알고리즘은 정답을 구하는 것뿐 아니라 시간 복잡도와 공간 복잡도를 고려해야 한다.
 - Stack과 Queue는 데이터가 처리되는 순서에 따라 구분된다.
 - 기본 문법과 참조 타입의 이해는 이후 객체지향 프로그래밍의 기반이 된다.
+
+</details>
+
+
+## Day11. Java 메서드 및 기초 문법 종합
+<details>
+
+### 🎯 학습 목표
+- Java 기초 문법이 실제 프로그램에서 어떻게 연결되는지 이해한다.
+- 메서드의 개념과 선언부, 구현부의 역할을 이해한다.
+- 매개변수와 인자의 차이 및 값 전달 과정을 이해한다.
+- 반환 타입과 `return`, `void`의 차이를 구분한다.
+- 메서드의 네 가지 기본 형태를 이해한다.
+- 메서드 호출 과정과 Stack 메모리의 동작 원리를 이해한다.
+- 메서드 오버로딩(Overloading)의 개념과 성립 조건을 이해한다.
+- 인스턴스 메서드와 `static` 메서드의 차이를 구분한다.
+- Java 내장 메서드를 활용하고 기능별로 코드를 분리할 수 있다.
+
+### 1. Java 기초 문법과 프로그램의 실행 흐름
+
+Java 프로그램은 변수, 연산자, 제어문, 배열, 문자열, 메서드 등을 조합하여 동작한다.
+
+| 구성 요소 | 역할 | 대표 문법 |
+|---|---|---|
+| 변수 | 데이터 저장 | `int`, `double`, `String` |
+| 연산자 | 계산 및 조건 판단 | `+`, `-`, `==`, `&&` |
+| 조건문 | 실행 흐름 분기 | `if`, `switch` |
+| 반복문 | 반복적인 데이터 처리 | `for`, `while` |
+| 배열 | 같은 타입의 데이터 관리 | `int[]`, `String[]` |
+| 문자열 | 문자 데이터 처리 | `String` |
+| 메서드 | 기능 분리 및 재사용 | 매개변수, `return` |
+
+**기본적인 데이터 처리 흐름**
+
+```text
+데이터 저장
+    ↓
+변수 / 배열
+    ↓
+데이터 계산 및 가공
+    ↓
+연산자 / String 메서드
+    ↓
+조건에 따른 판단
+    ↓
+if / switch
+    ↓
+반복적인 작업 처리
+    ↓
+for / while
+    ↓
+메서드로 기능 분리
+    ↓
+결과 반환 및 활용
+```
+
+**핵심**
+
+- 변수와 배열은 데이터를 저장한다.
+- 연산자와 문자열 메서드는 데이터를 가공한다.
+- 조건문과 반복문은 실행 흐름을 제어한다.
+- 메서드는 이러한 작업을 기능 단위로 묶어 관리한다.
+
+### 2. 메서드(Method)의 개념
+
+메서드는 특정 기능을 수행하는 코드의 집합으로, 필요한 시점에 호출하여 실행할 수 있다.
+
+**메서드를 사용하는 이유**
+
+- **재사용성(Reusability)** : 동일한 기능을 여러 곳에서 사용
+- **중복 제거** : 반복되는 코드를 하나의 메서드로 관리
+- **가독성(Readability)** : 기능을 이름으로 표현하여 코드 이해 향상
+- **유지보수성(Maintainability)** : 기능을 수정할 때 관련 코드를 한곳에서 관리
+- **모듈화(Modularity)** : 복잡한 프로그램을 작은 기능 단위로 분리
+
+**메서드 사용 전후 비교**
+
+```text
+[메서드로 분리하지 않은 경우]
+
+main()
+ ├── 데이터 입력
+ ├── 금액 계산
+ ├── 조건 검사
+ ├── 결과 출력
+ ├── 또 다른 금액 계산
+ └── 또 다른 조건 검사
+
+
+[메서드로 분리한 경우]
+
+main()
+ ├── calculateTotal()
+ ├── checkDiscount()
+ └── printResult()
+
+각 메서드가 담당 기능을 수행
+```
+
+메서드는 코드의 양을 무조건 줄이기보다는 **기능과 책임을 명확하게 분리하는 데 목적**이 있다.
+
+### 3. 메서드의 기본 구조
+
+Java 메서드는 선언부와 구현부로 구성된다.
+
+**기본 형식**
+
+```java
+접근제한자 static여부 반환타입 메서드명(매개변수) {
+    // 실행할 코드
+    return 반환값;
+}
+```
+
+**선언 예제**
+
+```java
+public static int add(int a, int b) {
+    int result = a + b;
+    return result;
+}
+```
+
+| 구성 요소 | 설명 |
+|---|---|
+| `public` | 메서드에 접근할 수 있는 범위 지정 |
+| `static` | 객체 생성 없이 클래스에 속한 메서드로 사용 |
+| `int` | 메서드가 반환하는 값의 타입 |
+| `add` | 메서드를 식별하는 이름 |
+| `int a, int b` | 외부에서 값을 전달받는 매개변수 |
+| `{ }` | 실제 명령을 작성하는 구현부 |
+| `return` | 결과 반환 및 메서드 종료 |
+
+**선언부(Method Declaration)**
+
+- 접근 제한자, 반환 타입, 메서드 이름, 매개변수 등을 정의한다.
+- 메서드를 어떻게 호출할 수 있는지 나타낸다.
+
+**구현부(Method Body)**
+
+- 메서드 호출 시 실행되는 코드이다.
+- 변수 선언, 연산, 조건문, 반복문 등을 작성한다.
+- 필요한 경우 `return`으로 결과를 반환한다.
+
+**주의**
+
+- 메서드는 일반적으로 클래스 내부에 선언한다.
+- Java에서는 메서드 내부에 다른 일반 메서드를 직접 선언할 수 없다.
+- `return`의 결과는 선언된 반환 타입에 적합해야 한다.
+
+### 4. 메서드의 호출과 실행 과정
+
+메서드는 호출하는 순간 실행되며, 작업을 마치면 호출한 위치로 실행 흐름이 돌아온다.
+
+```java
+public class MethodExample {
+
+    public static int add(int a, int b) {
+        int result = a + b;
+        return result;
+    }
+
+    public static void main(String[] args) {
+        int sum = add(10, 20);
+
+        System.out.println(sum); // 30
+    }
+}
+```
+
+**실행 흐름**
+
+```text
+main() 실행
+     │
+     ▼
+add(10, 20) 호출
+     │
+     ▼
+매개변수에 값 전달
+a = 10, b = 20
+     │
+     ▼
+result = a + b
+     │
+     ▼
+return 30
+     │
+     ▼
+호출한 main()으로 복귀
+     │
+     ▼
+sum = 30
+     │
+     ▼
+결과 출력
+```
+
+**핵심**
+
+1. 호출한 메서드로 실행 흐름이 이동한다.
+2. 전달된 인자로 매개변수가 초기화된다.
+3. 구현부의 코드를 실행한다.
+4. 반환값이 있다면 호출한 위치에 결과를 전달한다.
+5. 호출한 위치의 다음 코드를 실행한다.
+
+### 5. 매개변수(Parameter)와 인자(Argument)
+
+매개변수는 메서드가 값을 전달받기 위해 선언하는 변수이며, 인자는 실제 호출 시 전달하는 값이다.
+
+```java
+public static void printInfo(String name, int age) {
+    System.out.println(name + " : " + age);
+}
+```
+
+**호출**
+
+```java
+printInfo("Java", 20);
+```
+
+| 구분 | 예시 | 설명 |
+|---|---|---|
+| 매개변수 | `String name`, `int age` | 메서드 선언부의 변수 |
+| 인자 | `"Java"`, `20` | 호출 시 전달하는 값 |
+| 전달 순서 | name → "Java" | 선언 순서에 맞게 값 전달 |
+
+**매개변수의 특징**
+
+- 매개변수는 0개 이상 선언할 수 있다.
+- 전달되는 인자의 타입은 매개변수 타입과 호환되어야 한다.
+- 인자의 개수와 순서는 메서드 선언에 맞아야 한다.
+- 매개변수는 해당 메서드 내부에서 사용하는 지역 변수이다.
+
+**값에 의한 전달(Pass by Value)**
+
+Java는 기본형과 참조 타입 모두 값을 복사하여 전달한다.
+
+```java
+public static void change(int number) {
+    number = 100;
+}
+
+public static void main(String[] args) {
+    int value = 10;
+
+    change(value);
+
+    System.out.println(value); // 10
+}
+```
+
+- `value`의 값 10이 매개변수 `number`에 복사된다.
+- 메서드 내부에서 `number`를 수정해도 원본 변수는 변경되지 않는다.
+
+참조 타입은 객체가 아니라 **객체를 가리키는 참조값이 복사**되므로, 동일한 객체의 내부 데이터를 수정할 수 있다.
+
+### 6. 반환 타입(Return Type)과 return
+
+반환 타입은 메서드가 실행을 마친 뒤 호출한 위치로 전달하는 결과값의 타입이다.
+
+| 반환 타입 | 설명 |
+|---|---|
+| `void` | 값을 반환하지 않음 |
+| `int` | 정수 반환 |
+| `double` | 실수 반환 |
+| `boolean` | 참 또는 거짓 반환 |
+| `String` | 문자열 반환 |
+| 클래스 타입 | 해당 타입의 객체 참조 반환 |
+
+**반환값이 있는 메서드**
+
+```java
+public static int multiply(int a, int b) {
+    return a * b;
+}
+```
+
+```java
+int result = multiply(5, 3);
+
+System.out.println(result); // 15
+```
+
+**반환값이 없는 메서드**
+
+```java
+public static void printMessage() {
+    System.out.println("Hello Java");
+}
+```
+
+- `void`는 반환할 값이 없다는 의미이다.
+- `return 값;`은 결과를 반환하고 메서드를 종료한다.
+- `void` 메서드에서도 `return;`을 사용하여 즉시 종료할 수 있다.
+
+**return을 통한 실행 종료**
+
+```java
+public static int getMax(int a, int b) {
+    if (a > b) {
+        return a;
+    }
+
+    return b;
+}
+```
+
+- `return`이 실행되면 메서드가 종료된다.
+- 반환값이 필요한 메서드는 모든 정상적인 실행 경로에서 값을 반환해야 한다.
+
+### 7. 메서드의 네 가지 기본 형태
+
+메서드는 매개변수와 반환값의 유무에 따라 네 가지 형태로 구분할 수 있다.
+
+| 구분 | 매개변수 | 반환값 | 예시 |
+|---|:---:|:---:|---|
+| Type 1 | 없음 | 없음 | `void hello()` |
+| Type 2 | 있음 | 없음 | `void print(int n)` |
+| Type 3 | 없음 | 있음 | `int getNumber()` |
+| Type 4 | 있음 | 있음 | `int add(int a, int b)` |
+
+**Java 예제**
+
+```java
+public class MethodTypes {
+
+    // 1. 매개변수 X, 반환값 X
+    static void hello() {
+        System.out.println("Hello");
+    }
+
+    // 2. 매개변수 O, 반환값 X
+    static void print(int number) {
+        System.out.println(number);
+    }
+
+    // 3. 매개변수 X, 반환값 O
+    static int getNumber() {
+        return 100;
+    }
+
+    // 4. 매개변수 O, 반환값 O
+    static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        hello();
+        print(10);
+
+        int number = getNumber();
+        int result = add(10, 20);
+
+        System.out.println(number); // 100
+        System.out.println(result); // 30
+    }
+}
+```
+
+**핵심**
+
+- 데이터를 전달받아야 한다면 매개변수를 사용한다.
+- 계산된 결과를 호출한 곳에서 활용해야 한다면 반환값을 사용한다.
+- 단순 출력이나 상태 변경만 수행한다면 `void`를 사용할 수 있다.
+
+### 8. 메서드 호출과 Stack 메모리
+
+메서드가 실행되면 JVM은 해당 스레드의 Stack에 스택 프레임(Stack Frame)을 생성하여 실행 정보를 관리한다.
+
+**스택 프레임에 포함되는 정보**
+
+- 매개변수
+- 지역 변수
+- 중간 계산 결과
+- 메서드 실행과 복귀에 필요한 정보
+
+**호출 예제**
+
+```java
+public class StackExample {
+
+    static void display() {
+        int number = 10;
+        System.out.println(number);
+    }
+
+    public static void main(String[] args) {
+        display();
+    }
+}
+```
+
+**메서드 호출 시 메모리 변화**
+
+```text
+[1] main() 실행
+
+        Stack
+   ┌──────────────┐
+   │ main()       │
+   └──────────────┘
+
+
+[2] display() 호출
+
+        Stack
+   ┌──────────────┐
+   │ display()    │ ← 현재 실행
+   │ number = 10  │
+   ├──────────────┤
+   │ main()       │
+   └──────────────┘
+
+
+[3] display() 종료
+
+        Stack
+   ┌──────────────┐
+   │ main()       │ ← 실행 재개
+   └──────────────┘
+```
+
+**스택의 특징**
+
+- LIFO(Last In First Out) 구조로 동작한다.
+- 메서드를 호출하면 새로운 스택 프레임이 쌓인다.
+- 메서드가 정상적으로 종료되면 해당 프레임이 제거된다.
+- 지역 변수는 해당 메서드의 실행 범위에 속한다.
+- 일반적으로 각 스레드는 자신만의 JVM Stack을 가진다.
+
+**주의**
+
+- 메서드가 반환되어도 Heap에 생성된 객체가 즉시 제거되는 것은 아니다.
+- 메서드를 과도하게 재귀 호출하면 `StackOverflowError`가 발생할 수 있다.
+
+### 9. 메서드 오버로딩(Method Overloading)
+
+오버로딩은 **같은 클래스에서 동일한 이름의 메서드를 매개변수 구성을 다르게 하여 여러 개 선언하는 것**이다.
+
+**사용 목적**
+
+- 관련 기능을 동일한 이름으로 제공한다.
+- 전달되는 데이터 타입이나 개수에 따라 적절한 메서드를 선택할 수 있다.
+- 기능별 메서드 이름을 불필요하게 늘리지 않을 수 있다.
+
+**오버로딩 예제**
+
+```java
+public class Calculator {
+
+    static int add(int a, int b) {
+        return a + b;
+    }
+
+    static int add(int a, int b, int c) {
+        return a + b + c;
+    }
+
+    static double add(double a, double b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(add(10, 20));       // 30
+        System.out.println(add(10, 20, 30));   // 60
+        System.out.println(add(1.5, 2.5));     // 4.0
+    }
+}
+```
+
+**오버로딩 성립 조건**
+
+| 구분 | 오버로딩 가능 여부 |
+|---|:---:|
+| 매개변수 개수가 다름 | 가능 |
+| 매개변수 타입이 다름 | 가능 |
+| 매개변수 타입 순서가 다름 | 가능 |
+| 반환 타입만 다름 | 불가능 |
+| 매개변수 이름만 다름 | 불가능 |
+
+**메서드 시그니처(Method Signature)**
+
+Java에서 메서드 시그니처는 메서드 이름과 매개변수 타입들의 구성으로 결정된다.
+
+```java
+add(int a, int b)
+add(double a, double b)
+add(int a, int b, int c)
+```
+
+반환 타입은 메서드 시그니처에 포함되지 않는다.
+
+따라서 아래처럼 반환 타입만 다른 메서드들은 함께 선언할 수 없다.
+
+```java
+// 잘못된 오버로딩 예시
+int add(int a, int b) { return a + b; }
+double add(int a, int b) { return a + b; }
+```
+
+**주의 : 오버로딩은 동일한 이름을 사용하지만, 매개변수 구성이 구별되어야 합니다.**
+
+### 10. static 메서드와 인스턴스 메서드
+
+Java 메서드는 클래스에 속하는 정적 메서드와 객체에 속하는 인스턴스 메서드로 구분할 수 있다.
+
+| 구분 | static 메서드 | 인스턴스 메서드 |
+|---|---|---|
+| 소속 | 클래스 | 객체 |
+| 호출 | `클래스명.메서드()` | `객체명.메서드()` |
+| 객체 생성 | 필요 없음 | 필요 |
+| 인스턴스 필드 직접 접근 | 불가능 | 가능 |
+| 주요 용도 | 공통 계산 및 유틸리티 | 객체의 상태와 연관된 작업 |
+
+**static 메서드**
+
+```java
+public class Calculator {
+
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        int result = Calculator.add(10, 20);
+
+        System.out.println(result); // 30
+    }
+}
+```
+
+**인스턴스 메서드**
+
+```java
+public class Counter {
+
+    private int count = 0;
+
+    public void increase() {
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public static void main(String[] args) {
+        Counter counter = new Counter();
+
+        counter.increase();
+        counter.increase();
+
+        System.out.println(counter.getCount()); // 2
+    }
+}
+```
+
+**차이점**
+
+- `static` 메서드는 특정 객체의 생성 여부와 관계없이 호출할 수 있다.
+- 인스턴스 메서드는 객체를 통해 호출하며 해당 객체의 상태를 다룰 수 있다.
+- `static` 메서드는 객체의 인스턴스 필드와 메서드를 직접 사용할 수 없다.
+- 정적 필드는 인스턴스마다 존재하는 것이 아니라 클래스 단위로 관리된다.
+
+### 11. Java 표준 라이브러리의 주요 메서드
+
+Java는 문자열 처리, 수학 계산, 타입 변환 등을 위한 다양한 메서드를 제공한다.
+
+**String 클래스**
+
+| 메서드 | 기능 |
+|---|---|
+| `length()` | 문자열 길이 반환 |
+| `substring()` | 부분 문자열 추출 |
+| `equals()` | 문자열 내용 비교 |
+| `trim()` | 문자열 양쪽의 일부 공백 제거 |
+| `contains()` | 특정 문자열 포함 여부 확인 |
+
+```java
+String text = "  Hello Java  ";
+
+System.out.println(text.trim());           // Hello Java
+System.out.println(text.contains("Java")); // true
+System.out.println(text.substring(2, 7));  // Hello
+```
+
+**Math 클래스**
+
+```java
+int max = Math.max(10, 20);
+double random = Math.random();
+
+System.out.println(max); // 20
+```
+
+- `Math.max()`는 전달된 두 값 중 큰 값을 반환한다.
+- `Math.random()`은 0.0 이상 1.0 미만의 난수를 반환한다.
+- 두 메서드는 `static` 메서드이다.
+
+**타입 변환 메서드**
+
+```java
+int number = Integer.parseInt("100");
+String text = String.valueOf(100);
+
+System.out.println(number); // 100
+System.out.println(text);   // "100"
+```
+
+- `Integer.parseInt()` : 문자열을 정수로 변환
+- `String.valueOf()` : 전달된 값을 문자열로 변환
+- 변환할 수 없는 문자열을 `parseInt()`에 전달하면 `NumberFormatException`이 발생한다.
+
+### 12. 웹 개발에서의 메서드 활용
+
+웹 백엔드에서는 데이터를 저장하거나 조회하고, 조건에 따라 처리 결과를 반환하는 기능을 메서드로 분리할 수 있다.
+
+**대표적인 기능별 메서드**
+
+| 기능 | 메서드 예시 | 역할 |
+|---|---|---|
+| 로그인 판단 | `loginCheck()` | 로그인 관련 조건 확인 |
+| 주문 금액 계산 | `calculateTotal()` | 상품 금액 합산 |
+| 할인 대상 확인 | `checkDiscount()` | 할인 조건 확인 |
+| 게시글 저장 | `insertBoard()` | 게시글 저장 작업 |
+| 입력값 검증 | `validateInput()` | 입력 데이터 검사 |
+
+**메서드를 이용한 기능 분리**
+
+```text
+사용자 요청
+    ↓
+데이터 전달
+    ↓
+calculateTotal()
+    ↓
+주문 금액 계산
+    ↓
+checkDiscount()
+    ↓
+할인 조건 확인
+    ↓
+결과 반환
+```
+
+**장바구니 금액 계산 예제**
+
+```java
+public class ShoppingCart {
+
+    public static int calculateTotal(
+            int[] prices,
+            int[] quantities) {
+
+        int total = 0;
+
+        for (int i = 0; i < prices.length; i++) {
+            total += prices[i] * quantities[i];
+        }
+
+        return total;
+    }
+
+    public static boolean checkDiscount(int total) {
+        return total >= 100000;
+    }
+
+    public static void main(String[] args) {
+        int[] prices = {30000, 15000, 200000};
+        int[] quantities = {2, 1, 1};
+
+        int total = calculateTotal(prices, quantities);
+        boolean discount = checkDiscount(total);
+
+        System.out.println("총 주문 금액: " + total + "원");
+        System.out.println("할인 대상: " + discount);
+    }
+}
+```
+
+**실행 결과**
+
+```text
+총 주문 금액: 275000원
+할인 대상: true
+```
+
+**코드의 역할 분리**
+
+- `calculateTotal()` : 배열과 반복문을 사용하여 주문 금액 계산
+- `checkDiscount()` : 비교 연산자를 이용해 할인 조건 판단
+- `main()` : 메서드를 호출하고 결과 출력
+
+※ 위 코드는 메서드를 통한 기능 분리를 보여주는 기초 예제이다. 실제 웹 서비스에서는 데이터 검증, 인증, 저장 처리 등을 별도로 구현해야 한다.
+
+### 13. 메서드 설계 시 주의사항
+
+| 주의사항 | 설명 |
+|---|---|
+| 반환 타입 불일치 | 선언된 반환 타입에 맞는 값 반환 |
+| return 누락 | 값을 반환해야 하는 실행 경로 확인 |
+| 매개변수 불일치 | 전달할 값의 타입, 개수, 순서 확인 |
+| static 접근 오류 | 인스턴스 멤버의 직접 접근 여부 확인 |
+| 오버로딩 오류 | 반환 타입만 변경해서는 오버로딩 불가 |
+| 지역 변수 범위 | 선언된 블록 내에서만 사용 가능 |
+| 참조값 전달 | 객체 내부 상태가 변경될 수 있음 |
+| 메서드 중복 | 공통 기능은 재사용 가능한 메서드로 분리 |
+| 메서드 책임 | 서로 다른 작업을 하나의 메서드에 과도하게 집중하지 않기 |
+| 호출 스택 | 깊은 재귀 호출 시 StackOverflowError 주의 |
+
+**좋은 메서드 설계의 기본 원칙**
+
+- 메서드 이름만으로 수행하는 기능을 파악할 수 있어야 한다.
+- 하나의 메서드가 담당하는 작업을 명확히 한다.
+- 계산 결과가 필요하다면 적절한 반환 타입을 사용한다.
+- 데이터가 필요한 경우 매개변수를 통해 전달받는다.
+- 중복되는 로직은 별도 메서드로 분리하여 재사용한다.
+
+### ✅ Day11 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| 메서드 | 특정 기능을 수행하는 코드의 집합 |
+| 선언부 | 접근 제한자, 반환 타입, 이름, 매개변수 |
+| 구현부 | 실제 수행할 코드 |
+| 매개변수 | 메서드가 전달받는 값을 저장하는 변수 |
+| 인자 | 메서드 호출 시 전달하는 실제 값 |
+| Pass by Value | Java는 항상 값을 복사하여 전달 |
+| 반환 타입 | 메서드가 반환하는 값의 타입 |
+| return | 결과 반환 및 메서드 종료 |
+| void | 반환값이 없는 메서드 |
+| Stack Frame | 메서드 호출마다 생성되는 실행 정보 |
+| Overloading | 매개변수 구성이 다른 동일 이름의 메서드 선언 |
+| static 메서드 | 클래스에 속하는 메서드 |
+| 인스턴스 메서드 | 객체에 속하는 메서드 |
+| 표준 라이브러리 | Java에서 제공하는 공통 메서드 |
+| 기능 분리 | 복잡한 작업을 독립적인 메서드로 나누어 관리 |
+
+**최종 학습 정리**
+
+- 메서드는 코드의 재사용성과 가독성을 높이는 기본적인 기능 단위이다.
+- 메서드는 선언부와 구현부로 구성된다.
+- 매개변수는 메서드가 데이터를 전달받기 위한 변수이다.
+- `return`은 결과값을 반환하고 현재 메서드를 종료한다.
+- `void` 메서드는 반환값 없이 작업을 수행한다.
+- Java는 기본형과 참조 타입 모두 값에 의한 전달 방식을 사용한다.
+- 메서드가 호출되면 해당 스레드의 Stack에 새로운 스택 프레임이 생성된다.
+- 메서드 오버로딩은 매개변수 구성의 차이로 구분한다.
+- `static` 메서드는 클래스에 속하고 인스턴스 메서드는 객체에 속한다.
+- 복잡한 프로그램은 기능을 메서드로 나누어 관리하는 것이 좋다.
+- 메서드의 이해는 이후 클래스와 객체지향 프로그래밍을 학습하기 위한 핵심 기초이다.
 
 </details>
