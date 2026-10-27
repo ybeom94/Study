@@ -14,6 +14,7 @@
 | **Day 09** | 배열과 메서드 심화 | 메서드 선언·호출·반환, 배열 순회·탐색·정렬, String 메서드, 배열 참조, 얕은 복사·깊은 복사 |
 | **Day 10** | Java 기초 총정리 및 알고리즘 | 기본형·참조 타입, Enum, 배열, 메서드, 중첩 반복문, 탐색·정렬 알고리즘, Stack·Queue |
 | **Day 11** | Java 메서드 및 기초 문법 종합 | 메서드 선언·호출, 매개변수, 반환값, 오버로딩, static·인스턴스 메서드, 호출 스택, 웹 로직 |
+| **Day 12** | 메서드 심화 및 사용자 정의 클래스 | 클래스·객체, 필드, 생성자, this, static, 접근 제한자, 캡슐화, 오버로딩·오버라이딩, DTO·VO, record |
 
 
 </details>
@@ -4776,5 +4777,1187 @@ public class ShoppingCart {
 - `static` 메서드는 클래스에 속하고 인스턴스 메서드는 객체에 속한다.
 - 복잡한 프로그램은 기능을 메서드로 나누어 관리하는 것이 좋다.
 - 메서드의 이해는 이후 클래스와 객체지향 프로그래밍을 학습하기 위한 핵심 기초이다.
+
+</details>
+
+
+## Day12. 메서드 심화 및 사용자 정의 클래스
+<details>
+
+### 🎯 학습 목표
+- 메서드의 선언, 호출, 매개변수, 반환값을 이해한다.
+- 메서드 오버로딩과 오버라이딩의 차이를 구분한다.
+- 사용자 정의 클래스와 객체의 관계를 이해한다.
+- 필드, 생성자, 메서드의 역할을 구분한다.
+- 지역 변수, 인스턴스 변수, 정적 변수의 차이를 이해한다.
+- 생성자와 `this`를 이용하여 객체를 초기화할 수 있다.
+- 접근 제한자와 캡슐화의 필요성을 이해한다.
+- `static` 메서드와 인스턴스 메서드의 차이를 구분한다.
+- DTO와 VO의 목적 및 설계 방식의 차이를 이해한다.
+- `record`를 이용한 데이터 클래스의 특징을 이해한다.
+
+### 1. 메서드(Method)의 핵심 개념
+
+메서드는 특정 기능을 수행하는 코드를 하나의 단위로 묶어 재사용할 수 있게 하는 구조이다.
+
+**메서드의 주요 역할**
+
+- 코드 재사용 : 같은 기능을 여러 곳에서 호출
+- 기능 분리 : 복잡한 프로그램을 작은 작업으로 구분
+- 유지보수 : 기능 수정 시 관련 코드를 한곳에서 관리
+- 데이터 처리 : 매개변수를 전달받아 작업을 수행하고 결과 반환
+
+**메서드의 기본 구조**
+
+```java
+public static int add(int a, int b) {
+    int result = a + b;
+    return result;
+}
+```
+
+| 구성 요소 | 설명 |
+|---|---|
+| `public` | 접근 가능한 범위 지정 |
+| `static` | 클래스에 속하는 메서드 |
+| `int` | 반환 타입 |
+| `add` | 메서드 이름 |
+| `int a, int b` | 매개변수 |
+| `return` | 결과 반환 및 메서드 종료 |
+
+**메서드 실행 과정**
+
+```text
+add(10, 20) 호출
+       ↓
+매개변수에 값 전달
+a = 10, b = 20
+       ↓
+메서드 본문 실행
+result = a + b
+       ↓
+return 30
+       ↓
+호출한 위치로 복귀
+```
+
+메서드의 반환 타입은 실제 반환하는 값의 타입과 호환되어야 한다.
+
+### 2. 메서드의 반환값과 매개변수
+
+메서드는 반환값과 매개변수의 유무에 따라 네 가지 형태로 구분할 수 있다.
+
+| 매개변수 | 반환값 | 예시 |
+|---|---|---|
+| 없음 | 없음 | `void printMessage()` |
+| 있음 | 없음 | `void printName(String name)` |
+| 없음 | 있음 | `int getAge()` |
+| 있음 | 있음 | `int add(int a, int b)` |
+
+**반환 타입별 메서드**
+
+```java
+// 정수 반환
+static int getAge() {
+    return 20;
+}
+
+// 실수 반환
+static double getAverage() {
+    return 85.5;
+}
+
+// 문자열 반환
+static String getName() {
+    return "Java";
+}
+
+// 논리값 반환
+static boolean isAdult(int age) {
+    return age >= 19;
+}
+
+// 반환값 없음
+static void printMessage() {
+    System.out.println("Hello");
+}
+```
+
+**핵심 차이**
+
+- `void` : 값을 반환하지 않는 메서드
+- `return 값;` : 값을 반환하면서 메서드 종료
+- 매개변수 : 메서드에 필요한 외부 데이터를 전달받는 변수
+- 인자 : 메서드를 호출할 때 실제로 전달하는 값
+
+### 3. 메서드 오버로딩(Overloading)
+
+오버로딩은 동일한 이름의 메서드를 매개변수 구성을 다르게 하여 여러 개 선언하는 것이다.
+
+**오버로딩의 성립 조건**
+
+- 메서드 이름이 동일해야 한다.
+- 매개변수의 개수 또는 타입 구성이 달라야 한다.
+- 매개변수의 타입 순서가 달라도 구분할 수 있다.
+- 반환 타입만 다르게 선언하는 것은 오버로딩이 아니다.
+
+```java
+class Calculator {
+
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    int add(int a, int b, int c) {
+        return a + b + c;
+    }
+
+    double add(double a, double b) {
+        return a + b;
+    }
+}
+```
+
+**호출 예제**
+
+```java
+Calculator calc = new Calculator();
+
+System.out.println(calc.add(10, 20));     // 30
+System.out.println(calc.add(10, 20, 30)); // 60
+System.out.println(calc.add(1.5, 2.5));   // 4.0
+```
+
+**주의 : 반환 타입이나 매개변수 이름만 변경해서는 오버로딩할 수 없다.**
+
+### 4. 사용자 정의 클래스(Class)의 개념
+
+클래스는 관련된 데이터와 기능을 하나의 구조로 묶어 객체를 생성하기 위한 설계도이다.
+
+**클래스를 사용하는 이유**
+
+- 여러 데이터를 하나의 타입으로 관리한다.
+- 데이터와 관련된 기능을 함께 정의한다.
+- 동일한 구조의 객체를 여러 개 생성할 수 있다.
+- 프로그램을 역할별로 구분하여 유지보수성을 높인다.
+
+**기본 타입과 사용자 정의 타입**
+
+| 구분 | 설명 | 예시 |
+|---|---|---|
+| 기본 타입 | Java에서 제공하는 기본 자료형 | int, double, boolean |
+| 사용자 정의 클래스 | 개발자가 직접 정의하는 참조 타입 | Student, Product, Member |
+
+**클래스 선언**
+
+```java
+class Student {
+    String name;
+    int age;
+    double score;
+}
+```
+
+- `Student`는 개발자가 정의한 새로운 참조 타입이다.
+- `name`, `age`, `score`는 객체가 가지는 데이터이다.
+- 하나의 클래스에서 여러 객체를 생성할 수 있다.
+
+**클래스와 객체의 관계**
+
+```text
+          Student 클래스
+        ┌────────────────┐
+        │ name           │
+        │ age            │
+        │ score          │
+        └────────┬───────┘
+                 │
+           객체 생성
+                 │
+       ┌─────────┴─────────┐
+       ▼                   ▼
+
+   student1            student2
+┌─────────────┐      ┌─────────────┐
+│ name: 민수  │      │ name: 영희  │
+│ age: 20     │      │ age: 21     │
+│ score: 95.5 │      │ score: 88.0 │
+└─────────────┘      └─────────────┘
+```
+
+- 클래스(Class) : 객체의 구조와 기능을 정의한 설계도
+- 객체(Object) : 클래스를 기반으로 생성한 실체
+- 인스턴스(Instance) : 특정 클래스로부터 생성된 객체
+
+### 5. 클래스의 주요 구성 요소
+
+클래스는 주로 필드, 생성자, 메서드로 구성된다.
+
+| 구성 요소 | 역할 |
+|---|---|
+| 필드(Field) | 객체의 상태와 데이터 저장 |
+| 생성자(Constructor) | 객체 생성 시 초기화 수행 |
+| 메서드(Method) | 객체의 동작과 기능 정의 |
+| 접근 제한자 | 필드와 메서드의 접근 범위 제어 |
+
+**클래스 구조 예제**
+
+```java
+class Student {
+
+    // 필드 : 객체의 상태
+    private String name;
+    private int age;
+
+    // 생성자 : 객체 초기화
+    public Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // 메서드 : 객체의 기능
+    public void introduce() {
+        System.out.println(name + " : " + age);
+    }
+
+    public int getAge() {
+        return age;
+    }
+}
+```
+
+**핵심**
+
+- 필드는 객체가 가지는 상태를 표현한다.
+- 생성자는 객체의 초기 상태를 설정한다.
+- 메서드는 객체가 수행할 수 있는 기능을 표현한다.
+
+### 6. 객체 생성과 참조 변수
+
+Java에서 일반적인 클래스의 객체는 `new` 연산자를 통해 생성할 수 있다.
+
+**객체 생성**
+
+```java
+Student student1 = new Student("민수", 20);
+Student student2 = new Student("영희", 21);
+```
+
+**구문 분석**
+
+```text
+Student student1 = new Student("민수", 20);
+
+Student       : 클래스 타입
+student1      : 참조 변수
+new           : 새 객체 생성
+Student(...)  : 생성자 호출
+```
+
+**객체의 메서드 호출**
+
+```java
+student1.introduce();
+student2.introduce();
+
+System.out.println(student1.getAge()); // 20
+```
+
+**메모리 구조**
+
+```text
+참조 변수                     Heap
+
+student1 ────────────→ Student 객체 A
+                       name = "민수"
+                       age  = 20
+
+student2 ────────────→ Student 객체 B
+                       name = "영희"
+                       age  = 21
+```
+
+- 서로 다른 `new` 표현식으로 생성한 객체는 독립적인 객체이다.
+- 참조 변수에는 객체에 접근하기 위한 참조값이 저장된다.
+- 객체는 Heap 영역에 생성된다.
+- 참조 변수의 단순 대입은 새로운 객체를 생성하지 않는다.
+
+### 7. 변수의 세 가지 종류
+
+Java의 변수는 선언 위치와 소속에 따라 지역 변수, 인스턴스 변수, 정적 변수로 구분한다.
+
+| 구분 | 지역 변수 | 인스턴스 변수 | 정적 변수 |
+|---|---|---|---|
+| 선언 위치 | 메서드·생성자·블록 내부 | 클래스 내부 | 클래스 내부 |
+| static | 해당 없음 | 사용하지 않음 | 사용 |
+| 소속 | 실행 중인 블록 | 객체 | 클래스 |
+| 초기화 | 사용 전 명시적 초기화 필요 | 기본값 자동 초기화 | 기본값 자동 초기화 |
+| 주요 용도 | 임시 계산 값 | 객체별 상태 | 공유 데이터 |
+
+**Java 예제**
+
+```java
+class Student {
+
+    // 인스턴스 변수
+    String name;
+    int age;
+
+    // 정적 변수
+    static int count = 0;
+
+    Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+        count++;
+    }
+
+    void printInfo() {
+        // 지역 변수
+        String message = name + " : " + age;
+        System.out.println(message);
+    }
+}
+```
+
+**변수의 특징**
+
+1. 지역 변수
+   - 선언된 블록 안에서 사용한다.
+   - 사용하기 전에 초기화해야 한다.
+   - 해당 실행 범위를 벗어나면 접근할 수 없다.
+
+2. 인스턴스 변수
+   - 객체마다 별도로 존재한다.
+   - 객체의 개별적인 상태를 저장한다.
+   - 초기화하지 않으면 타입별 기본값이 설정된다.
+
+3. 정적 변수
+   - 클래스에 속한다.
+   - 같은 클래스의 모든 객체가 공유한다.
+   - `클래스명.변수명`으로 접근하는 것이 일반적이다.
+
+### 8. 인스턴스 변수와 정적 변수의 차이
+
+**인스턴스 변수**
+
+```java
+class Student {
+    String name;
+}
+```
+
+```java
+Student s1 = new Student();
+Student s2 = new Student();
+
+s1.name = "민수";
+s2.name = "영희";
+
+System.out.println(s1.name); // 민수
+System.out.println(s2.name); // 영희
+```
+
+각 객체는 서로 독립적인 `name` 필드를 가진다.
+
+**정적 변수**
+
+```java
+class Counter {
+    static int count = 0;
+
+    Counter() {
+        count++;
+    }
+}
+```
+
+```java
+Counter a = new Counter();
+Counter b = new Counter();
+
+System.out.println(Counter.count); // 2
+```
+
+두 객체를 생성해도 `count`는 클래스 단위로 하나만 존재한다.
+
+**메모리 공유 개념**
+
+```text
+      Counter 클래스
+    ┌─────────────────┐
+    │ static count = 2│
+    └────────┬────────┘
+             │
+       공유하는 데이터
+         ┌───┴───┐
+         │       │
+         ▼       ▼
+      객체 A   객체 B
+```
+
+**핵심 차이**
+
+- 인스턴스 변수 : 객체마다 서로 다른 값을 저장한다.
+- 정적 변수 : 모든 객체가 공유하는 하나의 값을 저장한다.
+
+### 9. 생성자(Constructor)
+
+생성자는 객체가 생성될 때 호출되어 초기 상태를 설정하는 특별한 구성 요소이다.
+
+**생성자의 특징**
+
+- 생성자 이름은 클래스 이름과 동일하다.
+- 반환 타입을 선언하지 않는다.
+- `new`를 이용해 객체를 생성할 때 호출된다.
+- 매개변수를 통해 초기값을 전달받을 수 있다.
+- 생성자도 오버로딩할 수 있다.
+
+**생성자 선언**
+
+```java
+class Product {
+
+    String name;
+    int price;
+
+    Product(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Product product = new Product("키보드", 30000);
+
+System.out.println(product.name);  // 키보드
+System.out.println(product.price); // 30000
+```
+
+**생성 과정**
+
+```text
+new Product("키보드", 30000)
+            │
+            ▼
+      새 객체 생성
+            │
+            ▼
+      생성자 실행
+            │
+            ▼
+  name  = "키보드"
+  price = 30000
+            │
+            ▼
+      객체 참조 반환
+```
+
+**기본 생성자(Default Constructor)**
+
+- 클래스에 생성자를 하나도 선언하지 않으면 컴파일러가 기본 생성자를 제공한다.
+- 기본 생성자는 매개변수가 없는 생성자이다.
+- 생성자를 직접 하나라도 선언하면 기본 생성자가 자동 제공되지 않는다.
+
+### 10. 생성자 오버로딩과 this
+
+생성자 오버로딩은 매개변수 구성이 다른 생성자를 여러 개 선언하는 것이다.
+
+```java
+class Product {
+
+    String name;
+    int price;
+
+    Product() {
+        this("이름 없음", 0);
+    }
+
+    Product(String name) {
+        this(name, 0);
+    }
+
+    Product(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Product p1 = new Product();
+Product p2 = new Product("마우스");
+Product p3 = new Product("키보드", 30000);
+```
+
+**this의 역할**
+
+| 표현 | 의미 |
+|---|---|
+| `this` | 현재 객체를 참조 |
+| `this.name` | 현재 객체의 name 필드 |
+| `this()` | 같은 클래스의 다른 생성자 호출 |
+
+**예제**
+
+```java
+Product(String name, int price) {
+    this.name = name;
+    this.price = price;
+}
+```
+
+- `this.name`은 객체의 인스턴스 필드이다.
+- 오른쪽의 `name`은 생성자 매개변수이다.
+- 이름이 같을 때 `this`로 구분할 수 있다.
+
+**주의 : Java 21 기준으로 `this()` 생성자 호출은 생성자 본문의 첫 번째 문장에 작성해야 한다.**
+
+### 11. 접근 제한자(Access Modifier)
+
+접근 제한자는 클래스, 필드, 생성자, 메서드 등에 접근할 수 있는 범위를 제어한다.
+
+| 접근 제한자 | 같은 클래스 | 같은 패키지 | 다른 패키지의 자식 클래스 | 그 외 |
+|---|:---:|:---:|:---:|:---:|
+| `public` | O | O | O | O |
+| `protected` | O | O | 조건부 O | X |
+| `default` | O | O | X | X |
+| `private` | O | X | X | X |
+
+※ `default`는 접근 제한자를 작성하지 않은 상태(package-private)를 의미한다. `protected`의 다른 패키지 접근에는 상속 관계 및 접근 방식에 따른 제약이 있다.
+
+**접근 제한자 예제**
+
+```java
+class Student {
+
+    public String name;
+    protected int age;
+    String school;
+    private double score;
+}
+```
+
+**주요 특징**
+
+- `public` : 외부에서 접근 가능한 공개 멤버
+- `protected` : 같은 패키지와 상속 관계에서 접근 허용
+- `default` : 같은 패키지 내부 접근 허용
+- `private` : 선언된 클래스 내부에서만 접근 허용
+
+**주의 : 접근 제한자는 무조건 public으로 설정하기보다 필요한 범위만 공개하는 것이 좋다.**
+
+### 12. 캡슐화(Encapsulation)
+
+캡슐화는 객체의 데이터와 기능을 하나로 묶고, 외부에서 내부 상태에 접근하는 방식을 제어하는 객체지향 원칙이다.
+
+**캡슐화의 주요 목적**
+
+- 데이터 보호
+- 잘못된 값의 저장 방지
+- 객체 상태의 일관성 유지
+- 내부 구현 변경의 영향 최소화
+
+**직접 접근 방식**
+
+```java
+class Student {
+    public int score;
+}
+```
+
+```java
+Student student = new Student();
+
+student.score = -100;
+```
+
+필드를 외부에 그대로 공개하면 유효하지 않은 값이 저장될 수 있다.
+
+**캡슐화 적용**
+
+```java
+class Student {
+
+    private int score;
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        if (score < 0 || score > 100) {
+            throw new IllegalArgumentException(
+                "점수는 0~100 사이여야 합니다."
+            );
+        }
+
+        this.score = score;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Student student = new Student();
+
+student.setScore(90);
+
+System.out.println(student.getScore()); // 90
+```
+
+**Getter와 Setter**
+
+| 구분 | 역할 |
+|---|---|
+| Getter | 객체 내부 데이터를 조회 |
+| Setter | 객체 내부 데이터를 변경 |
+| private 필드 | 외부의 직접 접근 제한 |
+
+- Getter는 일반적으로 `get필드명()` 형태로 작성한다.
+- Setter는 일반적으로 `set필드명()` 형태로 작성한다.
+- 모든 필드에 Setter를 제공할 필요는 없다.
+- 변경이 허용되지 않는 데이터는 Setter 없이 설계할 수 있다.
+
+### 13. static 메서드와 인스턴스 메서드
+
+메서드도 필드처럼 클래스에 속하는 정적 메서드와 객체에 속하는 인스턴스 메서드로 나뉜다.
+
+| 구분 | static 메서드 | 인스턴스 메서드 |
+|---|---|---|
+| 소속 | 클래스 | 객체 |
+| 선언 | static 사용 | static 사용하지 않음 |
+| 호출 | 클래스 이름으로 호출 | 객체를 통해 호출 |
+| 객체 생성 | 불필요 | 필요 |
+| 객체 필드 직접 접근 | 불가능 | 가능 |
+| 주요 용도 | 공통 계산, 유틸리티 | 객체 상태 조회·변경 |
+
+**static 메서드**
+
+```java
+class Calculator {
+
+    public static int add(int a, int b) {
+        return a + b;
+    }
+}
+```
+
+```java
+int result = Calculator.add(10, 20);
+System.out.println(result); // 30
+```
+
+**인스턴스 메서드**
+
+```java
+class Counter {
+
+    private int count = 0;
+
+    public void increase() {
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+```
+
+```java
+Counter counter = new Counter();
+
+counter.increase();
+counter.increase();
+
+System.out.println(counter.getCount()); // 2
+```
+
+**주의 사항**
+
+- `static` 메서드에서는 `this`를 사용할 수 없다.
+- `static` 메서드는 인스턴스 필드를 직접 참조할 수 없다.
+- 인스턴스 메서드는 자신의 객체 상태를 다룰 수 있다.
+
+### 14. 메서드 오버라이딩(Overriding)
+
+오버라이딩은 부모 클래스로부터 상속받은 인스턴스 메서드를 자식 클래스에서 재정의하는 것이다.
+
+**오버라이딩의 목적**
+
+- 부모 클래스의 기능을 자식 클래스에 맞게 변경
+- 상속 관계에서 공통 기능을 재사용
+- 다형성(Polymorphism)을 구현하기 위한 기반 제공
+
+**Java 예제**
+
+```java
+class Animal {
+
+    public void sound() {
+        System.out.println("동물 소리");
+    }
+}
+
+class Dog extends Animal {
+
+    @Override
+    public void sound() {
+        System.out.println("멍멍");
+    }
+}
+```
+
+**메서드 호출**
+
+```java
+Animal animal = new Animal();
+Animal dog = new Dog();
+
+animal.sound(); // 동물 소리
+dog.sound();    // 멍멍
+```
+
+- `extends`는 클래스 상속에 사용한다.
+- `@Override`는 메서드를 올바르게 재정의했는지 컴파일러가 확인하게 한다.
+- 부모 타입으로 참조해도 실제 객체에서 재정의한 메서드가 실행될 수 있다.
+
+**오버로딩 vs 오버라이딩**
+
+| 구분 | 오버로딩 | 오버라이딩 |
+|---|---|---|
+| 개념 | 같은 이름의 메서드를 여러 형태로 선언 | 상속받은 메서드를 재정의 |
+| 관계 | 같은 클래스에서도 가능 | 상속 관계 필요 |
+| 메서드명 | 동일 | 동일 |
+| 매개변수 | 구성이 달라야 함 | 동일해야 함 |
+| 반환 타입 | 구분 기준 아님 | 같거나 허용되는 공변 반환 타입 |
+| 주요 목적 | 다양한 인자 처리 | 상속된 동작 변경 |
+
+**주의 : 오버라이딩할 때 접근 제한자를 부모 메서드보다 더 좁게 변경할 수 없다.**
+
+### 15. Java의 값에 의한 전달(Pass by Value)
+
+Java는 메서드 호출 시 기본형과 참조 타입 모두 값을 복사하여 전달한다.
+
+**기본형 전달**
+
+```java
+static void change(int number) {
+    number = 100;
+}
+```
+
+```java
+int value = 10;
+
+change(value);
+
+System.out.println(value); // 10
+```
+
+- 기본형은 실제 값이 복사된다.
+- 매개변수를 변경해도 원본 변수는 변경되지 않는다.
+
+**참조 타입 전달**
+
+```java
+class Box {
+    int value;
+}
+```
+
+```java
+static void change(Box box) {
+    box.value = 100;
+}
+```
+
+```java
+Box box = new Box();
+box.value = 10;
+
+change(box);
+
+System.out.println(box.value); // 100
+```
+
+- 참조 타입은 객체를 참조하는 값이 복사된다.
+- 호출자와 매개변수가 같은 객체를 참조할 수 있다.
+- 매개변수를 통해 객체의 필드를 변경하면 원본 객체의 상태도 변경된다.
+
+**핵심**
+
+```text
+기본형 전달
+변수 값 복사 → 매개변수 수정 → 원본 유지
+
+참조 타입 전달
+참조값 복사 → 같은 객체 참조 → 객체 상태 변경 가능
+```
+
+Java에는 C++의 참조에 의한 전달과 같은 별도의 매개변수 전달 방식이 없다.
+
+### 16. 사용자 정의 클래스와 데이터 구조화
+
+여러 배열로 관련된 데이터를 관리하면 각 배열의 인덱스를 일치시켜야 하는 문제가 발생할 수 있다.
+
+**배열을 따로 사용하는 경우**
+
+```java
+String[] names = {"민수", "영희"};
+int[] ages = {20, 21};
+double[] scores = {95.5, 88.0};
+```
+
+동일한 학생의 데이터가 여러 배열에 분산되어 있다.
+
+**클래스로 구조화**
+
+```java
+class Student {
+
+    String name;
+    int age;
+    double score;
+
+    Student(String name, int age, double score) {
+        this.name = name;
+        this.age = age;
+        this.score = score;
+    }
+}
+```
+
+**객체 배열 활용**
+
+```java
+Student[] students = {
+    new Student("민수", 20, 95.5),
+    new Student("영희", 21, 88.0)
+};
+
+for (Student student : students) {
+    System.out.println(
+        student.name + " : " + student.score
+    );
+}
+```
+
+**핵심**
+
+- 클래스는 관련된 데이터를 하나의 객체로 묶는다.
+- 객체는 자신의 상태를 가진다.
+- 객체 배열을 이용하면 같은 형태의 여러 데이터를 관리할 수 있다.
+
+### 17. DTO(Data Transfer Object)
+
+DTO는 계층이나 시스템 사이에서 데이터를 전달하기 위한 객체이다.
+
+**DTO의 주요 특징**
+
+- 데이터를 묶어 전달하는 것이 주된 목적이다.
+- 일반적으로 복잡한 비즈니스 로직을 포함하지 않는다.
+- Controller, Service 등 계층 사이에서 사용한다.
+- 사용 목적에 따라 변경 가능한 클래스 또는 불변 객체로 설계할 수 있다.
+
+**DTO 클래스 예제**
+
+```java
+class MemberDTO {
+
+    private String name;
+    private String email;
+
+    public MemberDTO(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+```
+
+**DTO의 데이터 전달 흐름**
+
+```text
+Controller
+    │
+    │ MemberDTO
+    ▼
+ Service
+    │
+    │ 데이터 처리
+    ▼
+Repository / Database
+```
+
+- DTO는 필요한 데이터를 하나의 객체로 묶는다.
+- Getter를 통해 데이터를 조회할 수 있다.
+- 변경 가능한 DTO라면 Setter를 제공할 수 있다.
+- DTO가 반드시 Getter와 Setter를 모두 가져야 하는 것은 아니다.
+
+### 18. VO(Value Object)
+
+VO는 특정 값을 객체로 표현하는 자료형으로, 일반적으로 값 자체의 의미와 동등성을 중요하게 다룬다.
+
+**VO의 주요 특징**
+
+- 특정 값이나 개념을 하나의 객체로 표현한다.
+- 일반적으로 불변(Immutable) 객체로 설계한다.
+- 생성 시 데이터의 유효성을 검증할 수 있다.
+- 동일한 값을 가진 객체는 동등한 값으로 취급한다.
+- `equals()`와 `hashCode()`를 적절히 정의한다.
+
+**예시 : Money**
+
+```java
+record Money(long amount) {
+
+    public Money {
+        if (amount < 0) {
+            throw new IllegalArgumentException(
+                "금액은 음수일 수 없습니다."
+            );
+        }
+    }
+}
+```
+
+**객체 생성 및 비교**
+
+```java
+Money m1 = new Money(10000);
+Money m2 = new Money(10000);
+
+System.out.println(m1 == m2);      // false
+System.out.println(m1.equals(m2)); // true
+```
+
+- `m1`과 `m2`는 서로 다른 객체이다.
+- 두 객체의 금액이 같으므로 값으로서 동등하다.
+- `record`는 구성 요소에 기반한 `equals()`와 `hashCode()`를 자동 생성한다.
+
+### 19. DTO와 VO의 차이
+
+| 구분 | DTO | VO |
+|---|---|---|
+| 목적 | 데이터 전달 | 값 자체의 표현 |
+| 핵심 | 데이터 이동 | 값의 의미와 동등성 |
+| 변경 가능성 | 가변·불변 모두 가능 | 일반적으로 불변 |
+| 데이터 검증 | 전달 목적에 따라 수행 | 값의 유효성 보장 중시 |
+| 동등성 비교 | 목적에 따라 다름 | 값 기준 비교 |
+| 예시 | MemberDTO, BoardDTO | Money, Point |
+
+**쉽게 구분하기**
+
+```text
+DTO : 데이터를 전달하는 상자
+VO  : 의미 있는 값 자체를 표현하는 객체
+```
+
+- DTO는 데이터를 어디로 전달할 것인지에 초점을 둔다.
+- VO는 해당 데이터가 어떤 의미와 규칙을 가지는지에 초점을 둔다.
+- 같은 `record` 문법을 사용하더라도 사용 목적에 따라 DTO 또는 VO가 될 수 있다.
+
+### 20. record 클래스
+
+`record`는 데이터 중심 클래스를 간결하게 선언할 수 있도록 Java에서 제공하는 기능이다.
+
+Java 16부터 정식으로 지원하며 Java 21에서도 사용할 수 있다.
+
+**일반 클래스**
+
+```java
+class MemberDTO {
+
+    private final String name;
+    private final int age;
+
+    public MemberDTO(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+}
+```
+
+**record 사용**
+
+```java
+record MemberDTO(String name, int age) {
+}
+```
+
+**record 사용 예제**
+
+```java
+MemberDTO member = new MemberDTO("민수", 20);
+
+System.out.println(member.name()); // 민수
+System.out.println(member.age());  // 20
+```
+
+**record가 제공하는 기능**
+
+- 구성 요소에 대응하는 private final 필드
+- 생성자
+- 구성 요소 접근 메서드
+- `equals()`
+- `hashCode()`
+- `toString()`
+
+**주의 사항**
+
+- `record`는 일반적으로 데이터를 변경하지 않는 구조에 적합하다.
+- 구성 요소를 다시 대입할 수는 없지만 내부에 변경 가능한 객체가 있으면 완전한 깊은 불변성이 보장되는 것은 아니다.
+- 일반적인 Getter와 달리 `name()`처럼 구성 요소 이름으로 접근한다.
+
+### 21. 객체지향 클래스와 웹 백엔드 구조
+
+웹 백엔드에서는 클래스와 메서드를 이용해 요청 처리, 비즈니스 로직, 데이터 접근을 역할별로 구분한다.
+
+**Spring Boot에서의 대표적인 구조**
+
+```text
+사용자 요청
+    ↓
+Controller
+(HTTP 요청 처리)
+    ↓
+Service
+(비즈니스 로직 처리)
+    ↓
+Repository
+(데이터 접근)
+    ↓
+Database
+(데이터 저장 및 조회)
+```
+
+**데이터 전달 흐름**
+
+```text
+Database
+    ↓
+Repository
+    ↓
+Service
+    ↓
+DTO 생성
+    ↓
+Controller
+    ↓
+JSON 응답
+    ↓
+클라이언트 화면
+```
+
+**클래스와 메서드의 역할**
+
+| 구성 요소 | 역할 |
+|---|---|
+| Class | 관련 데이터와 기능을 하나의 구조로 관리 |
+| Field | 객체가 가진 데이터와 상태 |
+| Constructor | 객체 생성 시 초기화 |
+| Method | 특정 작업과 기능 수행 |
+| DTO | 계층 간 데이터 전달 |
+| VO | 의미 있는 값과 규칙 표현 |
+
+- Spring Boot에서 Service는 주로 비즈니스 로직을 담당한다.
+- Controller는 요청을 받아 필요한 Service 메서드를 호출한다.
+- Repository는 데이터 접근을 담당한다.
+- DTO는 계층 사이에 필요한 데이터를 전달하는 데 사용할 수 있다.
+
+### 22. 클래스와 메서드 작성 시 주의사항
+
+| 주의사항 | 설명 |
+|---|---|
+| 생성자 반환 타입 | 생성자에는 void를 포함한 반환 타입을 작성하지 않음 |
+| 생성자 이름 | 반드시 클래스 이름과 일치해야 함 |
+| 기본 생성자 | 다른 생성자를 선언하면 자동으로 제공되지 않음 |
+| this 사용 | static 문맥에서는 this 사용 불가 |
+| 지역 변수 | 사용 전 초기화 필요 |
+| static 변수 | 객체별 데이터가 아니라 클래스 공유 데이터 |
+| private 필드 | 외부에서 직접 접근할 수 없음 |
+| Getter / Setter | 필요한 접근 기능만 공개 |
+| 오버로딩 | 매개변수 구성이 달라야 함 |
+| 오버라이딩 | 상속 관계와 재정의 규칙 준수 |
+| 참조 타입 전달 | 객체의 상태가 변경될 수 있음 |
+| DTO | 데이터 전달 목적에 맞게 설계 |
+| VO | 값의 의미, 유효성, 동등성 고려 |
+| record | 내부 가변 객체까지 자동으로 보호하지는 않음 |
+
+### ✅ Day12 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| Method | 특정 기능을 수행하는 코드의 집합 |
+| Parameter | 메서드에서 전달받는 값을 저장하는 변수 |
+| Return | 값을 반환하고 메서드 종료 |
+| Overloading | 같은 이름, 다른 매개변수 구성 |
+| Class | 데이터와 기능을 정의하는 설계도 |
+| Object | 클래스로부터 생성된 객체 |
+| Instance | 특정 클래스에 속하는 객체 |
+| Field | 객체의 데이터 및 상태 |
+| Constructor | 객체 생성 시 초기화 수행 |
+| Local Variable | 블록 내부에서 사용하는 변수 |
+| Instance Variable | 객체마다 별도로 존재하는 변수 |
+| Static Variable | 클래스에 속하는 공유 변수 |
+| this | 현재 객체를 가리키는 참조 |
+| Access Modifier | 클래스 및 멤버의 접근 범위 제어 |
+| Encapsulation | 데이터 보호와 접근 통제 |
+| Getter / Setter | 객체 데이터 조회 및 변경 |
+| Static Method | 객체 생성 없이 클래스 이름으로 호출 가능 |
+| Instance Method | 객체를 통해 호출하는 메서드 |
+| Overriding | 상속받은 인스턴스 메서드 재정의 |
+| Pass by Value | 모든 인자를 값으로 복사하여 전달 |
+| DTO | 계층 간 데이터 전달 객체 |
+| VO | 값의 의미와 동등성을 표현하는 객체 |
+| record | 데이터 중심 클래스를 간결하게 정의 |
+| Spring Boot | 클래스와 메서드를 역할별로 구분한 백엔드 구조 |
+
+**최종 학습 정리**
+
+- 메서드는 기능을 분리하고 코드를 재사용하기 위한 기본 단위이다.
+- 클래스는 관련 데이터와 기능을 하나의 구조로 묶는 사용자 정의 타입이다.
+- 객체는 클래스를 기반으로 생성되며 각자의 상태를 가질 수 있다.
+- 필드는 데이터, 생성자는 초기화, 메서드는 기능을 담당한다.
+- 지역 변수는 블록 내부에서 사용하고, 인스턴스 변수는 객체별로 존재한다.
+- 정적 변수는 클래스에 소속되어 여러 객체가 공유한다.
+- `this`는 현재 객체를 참조하며 필드와 매개변수를 구분할 때 사용할 수 있다.
+- 접근 제한자와 캡슐화는 객체의 데이터를 안전하게 관리하는 데 중요하다.
+- 오버로딩은 매개변수 구성을 달리하는 것이고, 오버라이딩은 상속된 동작을 재정의하는 것이다.
+- Java의 매개변수 전달 방식은 기본형과 참조 타입 모두 값에 의한 전달이다.
+- DTO는 데이터 전달에, VO는 값 자체의 의미와 규칙을 표현하는 데 사용한다.
+- `record`는 불변 데이터 중심의 클래스를 간결하게 작성할 수 있게 한다.
+- 객체지향 프로그래밍에서는 각 클래스가 담당하는 역할과 책임을 명확히 구분하는 것이 중요하다.
 
 </details>

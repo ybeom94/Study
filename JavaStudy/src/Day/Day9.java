@@ -153,10 +153,11 @@ public class Day9
         //     }
         // }
         
+        final int level = 3;
         
         Scanner scanner = new Scanner(System.in);
-        int[] inputNumber = new int[3];
-        int[] randomNumber = new int[3];
+        int[] inputNumber = new int[level];
+        int[] randomNumber = new int[level];
 
         // 중복 없는 랜덤 숫자 생성
         while (true)
