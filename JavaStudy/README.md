@@ -15,6 +15,8 @@
 | **Day 10** | Java 기초 총정리 및 알고리즘 | 기본형·참조 타입, Enum, 배열, 메서드, 중첩 반복문, 탐색·정렬 알고리즘, Stack·Queue |
 | **Day 11** | Java 메서드 및 기초 문법 종합 | 메서드 선언·호출, 매개변수, 반환값, 오버로딩, static·인스턴스 메서드, 호출 스택, 웹 로직 |
 | **Day 12** | 메서드 심화 및 사용자 정의 클래스 | 클래스·객체, 필드, 생성자, this, static, 접근 제한자, 캡슐화, 오버로딩·오버라이딩, DTO·VO, record |
+| **Day 13** | Java 객체지향 프로그래밍 심화 | 객체지향 4대 원칙, 캡슐화, 상속, super, 오버라이딩, 다형성, 타입 변환, 추상 클래스, 인터페이스, 다중 구현 |
+
 
 
 </details>
@@ -5959,5 +5961,1326 @@ JSON 응답
 - DTO는 데이터 전달에, VO는 값 자체의 의미와 규칙을 표현하는 데 사용한다.
 - `record`는 불변 데이터 중심의 클래스를 간결하게 작성할 수 있게 한다.
 - 객체지향 프로그래밍에서는 각 클래스가 담당하는 역할과 책임을 명확히 구분하는 것이 중요하다.
+
+</details>
+
+
+## Day13. Java 객체지향 프로그래밍 심화
+<details>
+
+### 🎯 학습 목표
+- 객체지향 프로그래밍(OOP)의 개념과 4대 핵심 원칙을 이해한다.
+- 클래스와 객체, 생성자, 필드의 관계를 정리한다.
+- 캡슐화와 접근 제한자를 이용한 데이터 보호 방법을 이해한다.
+- 상속의 개념과 `extends`, `super`의 사용법을 익힌다.
+- 메서드 오버로딩과 오버라이딩의 차이를 구분한다.
+- 다형성과 자동 타입 변환, 강제 타입 변환을 이해한다.
+- 추상 클래스와 추상 메서드의 특징을 이해한다.
+- 인터페이스의 선언, 구현 및 다중 구현을 이해한다.
+- 추상 클래스와 인터페이스의 차이를 구분할 수 있다.
+- 객체지향 원칙을 활용한 프로그램 설계 구조를 이해한다.
+
+### 1. 객체지향 프로그래밍(OOP)의 개념
+
+객체지향 프로그래밍(Object-Oriented Programming)은 프로그램을 데이터와 기능을 가진 객체들의 상호작용으로 구성하는 프로그래밍 방식이다.
+
+**객체지향 프로그래밍의 주요 목적**
+
+- 관련된 데이터와 기능을 하나의 단위로 관리한다.
+- 복잡한 프로그램을 여러 객체로 나누어 구성한다.
+- 코드의 재사용성과 유지보수성을 높인다.
+- 변경과 확장에 유연한 프로그램을 설계한다.
+
+**클래스와 객체**
+
+| 구분 | 설명 |
+|---|---|
+| 클래스(Class) | 객체의 상태와 동작을 정의하는 설계도 |
+| 객체(Object) | 클래스를 기반으로 생성된 실체 |
+| 필드(Field) | 객체의 상태와 데이터를 저장하는 변수 |
+| 생성자(Constructor) | 객체 생성 과정에서 초기 상태 설정 |
+| 메서드(Method) | 객체가 수행하는 기능과 동작 |
+
+**클래스 선언과 객체 생성**
+
+```java
+class Car {
+    String color;
+    int speed;
+
+    void drive() {
+        System.out.println("자동차가 주행합니다.");
+    }
+}
+```
+
+```java
+Car car1 = new Car();
+Car car2 = new Car();
+
+car1.color = "빨강";
+car2.color = "파랑";
+
+car1.drive();
+```
+
+**클래스와 객체의 관계**
+
+```text
+          Car 클래스
+       ┌──────────────┐
+       │ color        │
+       │ speed        │
+       │ drive()      │
+       └──────┬───────┘
+              │
+         new Car()
+              │
+       ┌──────┴───────┐
+       ▼              ▼
+    car1 객체      car2 객체
+  ┌──────────┐   ┌──────────┐
+  │ 빨강     │   │ 파랑     │
+  │ speed: 0 │   │ speed: 0 │
+  └──────────┘   └──────────┘
+```
+
+- 하나의 클래스에서 여러 객체를 생성할 수 있다.
+- 각각의 객체는 독립적인 인스턴스 필드를 가진다.
+- 같은 클래스의 객체는 동일한 구조와 메서드 정의를 사용한다.
+
+### 2. 생성자와 변수의 종류
+
+**생성자(Constructor)**
+
+생성자는 객체가 생성될 때 호출되어 필드의 초기값을 설정하는 특별한 구성 요소이다.
+
+```java
+class Student {
+    String name;
+    int age;
+
+    Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+```java
+Student student = new Student("홍길동", 20);
+```
+
+**생성자의 특징**
+
+- 클래스 이름과 생성자 이름은 동일하다.
+- 반환 타입을 선언하지 않는다.
+- 객체 생성 과정에서 호출된다.
+- 매개변수 구성을 달리하여 오버로딩할 수 있다.
+- `this`는 현재 객체를 참조한다.
+
+**변수의 세 가지 종류**
+
+| 구분 | 지역 변수 | 인스턴스 변수 | 정적 변수 |
+|---|---|---|---|
+| 선언 위치 | 메서드 또는 블록 내부 | 클래스 내부 | 클래스 내부 |
+| 소속 | 실행 중인 블록 | 객체 | 클래스 |
+| 초기화 | 사용 전 초기화 필요 | 기본값 자동 초기화 | 기본값 자동 초기화 |
+| 데이터 공유 | 해당 실행 범위 | 객체별 독립 | 클래스 단위 공유 |
+
+```java
+class Student {
+    String name;                // 인스턴스 변수
+    static String school = "한국학교"; // 정적 변수
+
+    void printInfo() {
+        int age = 20;           // 지역 변수
+        System.out.println(name + age);
+    }
+}
+```
+
+- 지역 변수는 선언된 블록 내부에서만 사용할 수 있다.
+- 인스턴스 변수는 객체마다 별도로 존재한다.
+- 정적 변수는 클래스에 속하며 객체들이 공유한다.
+- `static` 멤버는 클래스 이름으로 접근하는 것이 일반적이다.
+
+### 3. Java 메모리 구조와 객체의 참조
+
+JVM은 프로그램 실행에 필요한 데이터를 여러 메모리 영역으로 나누어 관리한다.
+
+| 영역 | 주요 역할 |
+|---|---|
+| Stack | 메서드 실행 정보, 지역 변수 등 |
+| Heap | 객체 및 배열 저장 |
+| Method Area | 클래스 메타데이터, 메서드 관련 정보 등 관리 |
+
+**객체 생성 시 메모리 구조**
+
+```text
+         Stack                  Heap
+
+   ┌──────────────┐      ┌────────────────┐
+   │ Student s    │      │ Student 객체   │
+   │   참조값 ────┼─────>│ name: 홍길동   │
+   └──────────────┘      │ age: 20        │
+                         └────────────────┘
+```
+
+**참조 변수의 대입**
+
+```java
+Student s1 = new Student("홍길동", 20);
+Student s2 = s1;
+
+s2.age = 30;
+
+System.out.println(s1.age); // 30
+```
+
+- `s2 = s1`은 새로운 객체를 생성하지 않는다.
+- 두 변수는 같은 객체를 참조한다.
+- 한쪽에서 객체의 필드를 수정하면 다른 쪽에도 변경된 상태가 보인다.
+
+**가비지 컬렉션(Garbage Collection)**
+
+- JVM은 더 이상 도달할 수 없는 객체의 메모리를 자동으로 회수할 수 있다.
+- 참조 변수에 `null`을 대입해도 객체가 즉시 삭제되는 것은 아니다.
+- 객체의 실제 회수 시점은 가비지 컬렉터가 결정한다.
+
+※ 위 메모리 구조는 개념을 설명하기 위한 단순화된 모델이다.
+
+### 4. 객체지향의 4대 핵심 원칙
+
+객체지향 프로그래밍의 핵심 원칙은 캡슐화, 상속, 다형성, 추상화이다.
+
+| 원칙 | 핵심 개념 | 주요 목적 |
+|---|---|---|
+| 캡슐화(Encapsulation) | 데이터와 접근 방식 관리 | 상태 보호와 일관성 |
+| 상속(Inheritance) | 기존 클래스의 기능 확장 | 코드 재사용 |
+| 다형성(Polymorphism) | 동일한 호출, 다양한 동작 | 유연한 변경 및 확장 |
+| 추상화(Abstraction) | 핵심 기능을 정의하고 구현 세부사항 숨김 | 복잡성 감소 |
+
+**네 가지 원칙의 관계**
+
+```text
+       객체지향 프로그램
+              │
+     ┌────────┴────────┐
+     │                 │
+     ▼                 ▼
+  캡슐화              상속
+  데이터 보호         기능 재사용
+     │                 │
+     └────────┬────────┘
+              │
+     ┌────────┴────────┐
+     │                 │
+     ▼                 ▼
+   다형성             추상화
+  유연한 동작         공통 규칙
+```
+
+네 가지 원칙은 서로 독립적이면서도 함께 사용될 수 있다.
+
+### 5. 캡슐화(Encapsulation)
+
+캡슐화는 객체의 데이터와 기능을 묶고, 외부에서 내부 상태에 접근하거나 변경하는 방식을 제어하는 원칙이다.
+
+**캡슐화가 필요한 이유**
+
+- 외부에서 데이터를 임의로 변경하는 것을 방지한다.
+- 객체의 유효하지 않은 상태를 예방한다.
+- 상태 변경을 정해진 메서드를 통해 수행한다.
+- 내부 구현을 수정하더라도 외부 코드의 영향을 줄일 수 있다.
+
+**접근 제한자**
+
+| 접근 제한자 | 접근 가능 범위 |
+|---|---|
+| `public` | 접근 가능한 모든 위치 |
+| `protected` | 같은 패키지 및 다른 패키지의 상속 관계에서 조건부 접근 |
+| `default` | 같은 패키지 내부 |
+| `private` | 선언된 클래스 내부 |
+
+※ `default`는 접근 제한자를 명시하지 않은 상태를 의미한다.
+
+**캡슐화 예제**
+
+```java
+class BankAccount {
+
+    private int balance = 0;
+
+    public void deposit(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException(
+                "입금 금액은 양수여야 합니다."
+            );
+        }
+
+        balance += amount;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+BankAccount account = new BankAccount();
+
+account.deposit(10000);
+
+System.out.println(account.getBalance()); // 10000
+```
+
+- `balance`는 `private`이므로 외부에서 직접 수정할 수 없다.
+- `deposit()`은 입력값을 검증한 뒤 잔액을 변경한다.
+- `getBalance()`는 잔액 조회 기능만 제공한다.
+
+**주의**
+
+- 캡슐화는 단순히 모든 필드를 `private`으로 선언하는 것만을 의미하지 않는다.
+- 중요한 것은 객체의 상태를 올바른 규칙에 따라 관리하는 것이다.
+- 모든 필드에 Setter를 제공할 필요는 없다.
+
+### 6. 상속(Inheritance)
+
+상속은 기존 클래스의 필드와 메서드를 자식 클래스가 물려받아 새로운 클래스를 구성하는 기능이다.
+
+**상속을 사용하는 이유**
+
+- 여러 클래스에서 사용하는 공통 기능을 재사용한다.
+- 기존 기능을 확장하여 새로운 기능을 추가한다.
+- 관련된 클래스를 계층적으로 구성한다.
+- 다형성을 구현하기 위한 기반을 제공한다.
+
+**상속 선언**
+
+```java
+class Person {
+    String name;
+
+    void introduce() {
+        System.out.println("이름: " + name);
+    }
+}
+
+class Student extends Person {
+    int studentId;
+
+    void study() {
+        System.out.println("공부합니다.");
+    }
+}
+```
+
+**상속 구조**
+
+```text
+          Person
+        ┌──────────────┐
+        │ name         │
+        │ introduce()  │
+        └──────┬───────┘
+               │
+             extends
+               │
+               ▼
+          Student
+        ┌──────────────┐
+        │ studentId    │
+        │ study()      │
+        └──────────────┘
+```
+
+**사용 예제**
+
+```java
+Student student = new Student();
+
+student.name = "홍길동";
+student.studentId = 1001;
+
+student.introduce();
+student.study();
+```
+
+**상속의 특징**
+
+- 자식 클래스는 부모 클래스의 접근 가능한 기능을 사용할 수 있다.
+- 자식 클래스는 새로운 필드와 메서드를 추가할 수 있다.
+- 부모 클래스의 `private` 멤버는 자식 클래스에서도 직접 접근할 수 없다.
+- Java 클래스는 하나의 직접적인 부모 클래스만 상속할 수 있다.
+
+**주의 : 상속은 단순한 코드 재사용뿐 아니라 부모와 자식 사이에 적절한 IS-A 관계가 있을 때 사용하는 것이 좋다.**
+
+### 7. super와 부모 생성자
+
+`super`는 자식 클래스에서 부모 클래스의 구성 요소에 접근할 때 사용하는 키워드이다.
+
+| 표현 | 역할 |
+|---|---|
+| `this` | 현재 객체 참조 |
+| `this()` | 같은 클래스의 다른 생성자 호출 |
+| `super` | 부모 클래스의 접근 가능한 멤버 참조 |
+| `super()` | 부모 클래스의 생성자 호출 |
+
+**부모 생성자 호출**
+
+```java
+class Person {
+
+    protected String name;
+
+    Person(String name) {
+        this.name = name;
+    }
+}
+
+class Student extends Person {
+
+    private int studentId;
+
+    Student(String name, int studentId) {
+        super(name);
+        this.studentId = studentId;
+    }
+}
+```
+
+**생성자 실행 흐름**
+
+```text
+new Student("홍길동", 1001)
+             │
+             ▼
+      Student 생성자 진입
+             │
+             ▼
+        super(name)
+             │
+             ▼
+      Person 생성자 실행
+      name = "홍길동"
+             │
+             ▼
+      Student 생성자 계속
+      studentId = 1001
+             │
+             ▼
+       객체 초기화 완료
+```
+
+**핵심**
+
+- 자식 객체를 생성할 때 부모 클래스의 생성자도 실행된다.
+- 부모 생성자는 자식 클래스 고유의 초기화보다 먼저 실행된다.
+- 부모 클래스에 기본 생성자가 없다면 적절한 부모 생성자를 호출해야 한다.
+- Java 21 기준으로 명시적인 `super()` 호출은 생성자의 첫 번째 문장에 작성해야 한다.
+
+### 8. 오버로딩과 오버라이딩
+
+메서드 오버로딩(Overloading)과 오버라이딩(Overriding)은 이름이 비슷하지만 서로 다른 개념이다.
+
+**오버로딩(Overloading)**
+
+같은 이름의 메서드를 매개변수 구성을 다르게 하여 여러 개 선언하는 것이다.
+
+```java
+class Calculator {
+
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    int add(int a, int b, int c) {
+        return a + b + c;
+    }
+
+    double add(double a, double b) {
+        return a + b;
+    }
+}
+```
+
+**오버라이딩(Overriding)**
+
+부모 클래스의 인스턴스 메서드를 자식 클래스에서 재정의하는 것이다.
+
+```java
+class Animal {
+
+    void sound() {
+        System.out.println("동물 소리");
+    }
+}
+
+class Dog extends Animal {
+
+    @Override
+    void sound() {
+        System.out.println("멍멍");
+    }
+}
+```
+
+**비교**
+
+| 구분 | 오버로딩 | 오버라이딩 |
+|---|---|---|
+| 목적 | 다양한 매개변수 처리 | 상속된 동작 재정의 |
+| 상속 관계 | 필요 없음 | 필요 |
+| 메서드 이름 | 동일 | 동일 |
+| 매개변수 | 구성이 달라야 함 | 동일해야 함 |
+| 반환 타입 | 구분 기준 아님 | 같거나 허용된 공변 반환 타입 |
+| 주요 키워드 | 별도 키워드 없음 | `@Override` 권장 |
+
+**오버라이딩 주의사항**
+
+- 부모 메서드보다 접근 범위를 좁힐 수 없다.
+- `final` 메서드는 오버라이딩할 수 없다.
+- `private` 메서드는 자식 클래스에서 오버라이딩되지 않는다.
+- `static` 메서드는 오버라이딩이 아닌 메서드 숨김(Hiding)의 대상이다.
+
+### 9. 다형성(Polymorphism)
+
+다형성은 하나의 공통 타입을 통해 여러 종류의 객체를 다룰 수 있고, 실제 객체에 따라 서로 다른 동작을 수행할 수 있는 특성이다.
+
+**다형성의 핵심**
+
+- 부모 타입으로 자식 객체를 참조할 수 있다.
+- 같은 메서드를 호출해도 실제 객체에 따라 결과가 달라질 수 있다.
+- 코드 변경 없이 새로운 구현을 추가하기 쉬워진다.
+
+**Java 예제**
+
+```java
+class Animal {
+
+    void sound() {
+        System.out.println("동물 소리");
+    }
+}
+
+class Dog extends Animal {
+
+    @Override
+    void sound() {
+        System.out.println("멍멍");
+    }
+}
+
+class Cat extends Animal {
+
+    @Override
+    void sound() {
+        System.out.println("야옹");
+    }
+}
+```
+
+**다형성 적용**
+
+```java
+Animal a1 = new Dog();
+Animal a2 = new Cat();
+
+a1.sound(); // 멍멍
+a2.sound(); // 야옹
+```
+
+**실행 구조**
+
+```text
+           Animal 타입
+          ┌────────────┐
+          │  sound()   │
+          └──────┬─────┘
+                 │
+          실제 객체 확인
+           ┌─────┴─────┐
+           │           │
+           ▼           ▼
+        Dog 객체     Cat 객체
+           │           │
+           ▼           ▼
+         "멍멍"       "야옹"
+```
+
+**핵심**
+
+- 참조 변수의 타입은 `Animal`이다.
+- 실제 생성된 객체는 각각 `Dog`, `Cat`이다.
+- 재정의된 인스턴스 메서드는 실제 객체를 기준으로 실행된다.
+
+이러한 동작을 동적 메서드 디스패치(Dynamic Method Dispatch)라고 한다.
+
+### 10. 자동 타입 변환과 강제 타입 변환
+
+상속 관계에서는 부모와 자식 타입 사이에 참조 타입 변환이 발생할 수 있다.
+
+**자동 타입 변환(Upcasting)**
+
+```java
+Dog dog = new Dog();
+
+Animal animal = dog;
+```
+
+- 자식 타입의 객체를 부모 타입 변수에 대입할 수 있다.
+- 별도의 형변환 연산자가 필요하지 않다.
+- 부모 타입에서 선언된 멤버를 기준으로 접근할 수 있다.
+- 실제 객체가 자식 객체라는 사실은 변하지 않는다.
+
+**강제 타입 변환(Downcasting)**
+
+부모 타입 참조를 자식 타입으로 변환하는 작업이다.
+
+```java
+Animal animal = new Dog();
+
+Dog dog = (Dog) animal;
+
+dog.sound();
+```
+
+**잘못된 타입 변환**
+
+```java
+Animal animal = new Cat();
+
+// 실제 객체가 Cat이므로 실행 시 예외 발생
+Dog dog = (Dog) animal;
+```
+
+실제 객체와 호환되지 않는 타입으로 변환하면 `ClassCastException`이 발생한다.
+
+**instanceof를 이용한 확인**
+
+```java
+Animal animal = new Dog();
+
+if (animal instanceof Dog) {
+    Dog dog = (Dog) animal;
+    dog.sound();
+}
+```
+
+**핵심**
+
+- Upcasting : 자식 객체를 부모 타입으로 참조
+- Downcasting : 부모 타입 참조를 자식 타입으로 변환
+- `instanceof` : 객체가 특정 타입과 호환되는지 검사
+- 강제 타입 변환 전에는 실제 객체의 타입을 확인해야 한다.
+
+### 11. 추상화(Abstraction)
+
+추상화는 객체의 복잡한 내부 구현보다 외부에 필요한 공통 특성과 기능에 집중하는 설계 원칙이다.
+
+**추상화의 주요 목적**
+
+- 복잡한 내부 구현을 외부에 드러내지 않는다.
+- 공통적으로 필요한 기능을 정의한다.
+- 구현 세부사항과 사용하는 코드를 분리한다.
+- 시스템을 이해하고 확장하기 쉽게 만든다.
+
+**추상화 구조**
+
+```text
+         사용자 코드
+              │
+              ▼
+       공통 기능 호출
+              │
+              ▼
+     추상 클래스 / 인터페이스
+              │
+       ┌──────┴──────┐
+       │             │
+       ▼             ▼
+     구현 A        구현 B
+```
+
+Java에서는 추상 클래스와 인터페이스 등을 통해 추상화를 구현할 수 있다.
+
+### 12. 추상 클래스(Abstract Class)
+
+추상 클래스는 객체를 직접 생성할 수 없으며, 상속을 통해 공통 상태나 기능을 제공하기 위한 클래스이다.
+
+**추상 클래스의 특징**
+
+- `abstract` 키워드로 선언한다.
+- 일반 필드와 일반 메서드를 가질 수 있다.
+- 추상 메서드를 선언할 수 있다.
+- 생성자를 선언할 수 있다.
+- 추상 클래스 자체는 `new`로 인스턴스화할 수 없다.
+
+**추상 클래스 선언**
+
+```java
+abstract class Shape {
+
+    abstract double area();
+
+    void printInfo() {
+        System.out.println("도형입니다.");
+    }
+}
+```
+
+**구현 클래스**
+
+```java
+class Circle extends Shape {
+
+    private double radius;
+
+    Circle(double radius) {
+        this.radius = radius;
+    }
+
+    @Override
+    double area() {
+        return Math.PI * radius * radius;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Shape shape = new Circle(5);
+
+shape.printInfo();
+System.out.println(shape.area());
+```
+
+**추상 메서드(Abstract Method)**
+
+- 선언부만 있고 구현부가 없는 메서드이다.
+- 일반적으로 자식 클래스에서 구현해야 한다.
+- 구체적인 구현은 상속받는 클래스가 결정한다.
+
+```java
+abstract double area();
+```
+
+**주의 : 추상 메서드를 구현하지 않는 자식 클래스는 자신도 추상 클래스로 선언해야 한다.**
+
+### 13. 인터페이스(Interface)
+
+인터페이스는 클래스가 제공해야 하는 기능의 규칙 또는 계약을 정의하는 참조 타입이다.
+
+**인터페이스의 목적**
+
+- 서로 다른 클래스에 공통 기능 규약 제공
+- 구현 방식과 사용 코드를 분리
+- 다양한 구현체를 동일한 방식으로 사용
+- 유연한 변경과 확장이 가능한 구조 제공
+
+**인터페이스 선언**
+
+```java
+interface RemoteControl {
+    void turnOn();
+    void turnOff();
+}
+```
+
+**구현 클래스**
+
+```java
+class Television implements RemoteControl {
+
+    @Override
+    public void turnOn() {
+        System.out.println("TV 켜짐");
+    }
+
+    @Override
+    public void turnOff() {
+        System.out.println("TV 꺼짐");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+RemoteControl remote = new Television();
+
+remote.turnOn();  // TV 켜짐
+remote.turnOff(); // TV 꺼짐
+```
+
+**인터페이스의 주요 특징**
+
+- 인터페이스는 `interface` 키워드로 선언한다.
+- 클래스는 `implements`로 인터페이스를 구현한다.
+- 인터페이스 타입으로 구현 객체를 참조할 수 있다.
+- 구현 클래스는 필요한 추상 메서드를 구현해야 한다.
+- 인터페이스의 추상 메서드는 기본적으로 `public abstract`이다.
+
+**핵심**
+
+인터페이스는 어떤 기능을 제공해야 하는지 정의하고, 실제 동작 방식은 구현 클래스가 결정한다.
+
+### 14. 인터페이스의 구성 요소
+
+Java 인터페이스에는 상수, 추상 메서드, 디폴트 메서드, 정적 메서드 등을 선언할 수 있다.
+
+| 구성 요소 | 특징 |
+|---|---|
+| 상수 필드 | `public static final` |
+| 추상 메서드 | `public abstract` |
+| 디폴트 메서드 | `default`를 사용하고 구현부 포함 |
+| 정적 메서드 | `static`을 사용하며 인터페이스 이름으로 호출 |
+| private 메서드 | 인터페이스 내부 구현 재사용에 사용 가능 |
+
+**상수와 추상 메서드**
+
+```java
+interface RemoteControl {
+
+    int MAX_VOLUME = 100;
+
+    void turnOn();
+}
+```
+
+- `MAX_VOLUME`은 자동으로 `public static final`이다.
+- `turnOn()`은 자동으로 `public abstract`이다.
+
+**디폴트 메서드(Default Method)**
+
+```java
+interface Greeting {
+
+    default void hello() {
+        System.out.println("안녕하세요.");
+    }
+}
+```
+
+- 인터페이스 내부에 구현부를 가진 인스턴스 메서드이다.
+- 구현 클래스가 그대로 상속받아 사용할 수 있다.
+- 필요한 경우 구현 클래스에서 오버라이딩할 수 있다.
+
+**정적 메서드(Static Method)**
+
+```java
+interface Greeting {
+
+    static void info() {
+        System.out.println("Greeting 인터페이스");
+    }
+}
+```
+
+**호출**
+
+```java
+Greeting.info();
+```
+
+- 인터페이스 이름으로 호출한다.
+- 객체를 생성할 필요가 없다.
+- 인터페이스의 정적 메서드는 구현 클래스에 상속되지 않는다.
+
+### 15. 인터페이스 다중 구현
+
+Java 클래스는 하나의 직접적인 부모 클래스만 상속할 수 있지만, 여러 인터페이스를 동시에 구현할 수 있다.
+
+**다중 구현 예제**
+
+```java
+interface Flyable {
+    void fly();
+}
+
+interface Swimmable {
+    void swim();
+}
+```
+
+```java
+class Duck implements Flyable, Swimmable {
+
+    @Override
+    public void fly() {
+        System.out.println("날아갑니다.");
+    }
+
+    @Override
+    public void swim() {
+        System.out.println("수영합니다.");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Duck duck = new Duck();
+
+duck.fly();  // 날아갑니다.
+duck.swim(); // 수영합니다.
+```
+
+**구조**
+
+```text
+       Flyable          Swimmable
+      ┌────────┐        ┌────────┐
+      │ fly()  │        │ swim() │
+      └───┬────┘        └───┬────┘
+          │                 │
+          └────────┬────────┘
+                   │
+                implements
+                   │
+                   ▼
+                  Duck
+              ┌─────────┐
+              │ fly()   │
+              │ swim()  │
+              └─────────┘
+```
+
+**주의 사항**
+
+- 여러 인터페이스에서 동일한 시그니처의 추상 메서드를 선언할 수 있다.
+- 서로 충돌하는 디폴트 메서드가 있다면 구현 클래스에서 명시적으로 해결해야 한다.
+- Java는 클래스의 다중 상속을 지원하지 않지만 인터페이스의 다중 구현은 지원한다.
+
+### 16. 추상 클래스와 인터페이스의 차이
+
+추상 클래스와 인터페이스는 모두 추상화를 구현하는 데 사용되지만 목적과 구성 방식이 다르다.
+
+| 구분 | 추상 클래스 | 인터페이스 |
+|---|---|---|
+| 선언 | `abstract class` | `interface` |
+| 관계 | `extends` | `implements` |
+| 인스턴스 필드 | 가능 | 불가능 |
+| 생성자 | 가능 | 불가능 |
+| 일반 메서드 | 가능 | default/static/private 등 가능 |
+| 추상 메서드 | 가능 | 가능 |
+| 클래스의 다중 사용 | 단일 클래스 상속 | 여러 인터페이스 구현 |
+| 주요 목적 | 공통 상태와 기능 제공 | 기능 규칙과 계약 정의 |
+
+**추상 클래스를 사용하는 경우**
+
+- 여러 클래스가 공통 상태를 가진다.
+- 기본적으로 공유할 구현이 존재한다.
+- 부모와 자식 사이의 계층 관계를 표현한다.
+
+**인터페이스를 사용하는 경우**
+
+- 서로 다른 클래스가 같은 기능을 제공해야 한다.
+- 구현 방식은 다르지만 공통된 호출 규칙이 필요하다.
+- 구현체를 쉽게 교체하거나 확장해야 한다.
+
+**핵심**
+
+- 추상 클래스 : 공통 기반을 상속받는 구조
+- 인터페이스 : 공통 기능의 규칙을 구현하는 구조
+
+두 방식은 상호 배타적이지 않으며 함께 사용할 수 있다.
+
+### 17. 상속과 인터페이스의 통합 활용
+
+하나의 클래스는 다른 클래스를 상속하면서 동시에 인터페이스를 구현할 수 있다.
+
+**Java 예제**
+
+```java
+abstract class Animal {
+
+    protected String name;
+
+    Animal(String name) {
+        this.name = name;
+    }
+
+    void eat() {
+        System.out.println(name + "이(가) 먹습니다.");
+    }
+}
+```
+
+```java
+interface RunnableAnimal {
+    void run();
+}
+```
+
+```java
+class Dog extends Animal implements RunnableAnimal {
+
+    Dog(String name) {
+        super(name);
+    }
+
+    @Override
+    public void run() {
+        System.out.println(name + "이(가) 달립니다.");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Dog dog = new Dog("초코");
+
+dog.eat();
+dog.run();
+
+Animal animal = dog;
+RunnableAnimal runner = dog;
+
+animal.eat();
+runner.run();
+```
+
+**클래스 관계**
+
+```text
+        Animal (추상 클래스)
+               │
+             extends
+               │
+               ▼
+              Dog
+               ▲
+               │
+           implements
+               │
+       RunnableAnimal
+         (인터페이스)
+```
+
+**핵심**
+
+- 상속은 부모 클래스의 상태와 기능을 물려받는다.
+- 인터페이스 구현은 공통 기능의 규칙을 만족한다.
+- 하나의 객체를 여러 타입으로 참조할 수 있다.
+- 상속과 인터페이스는 함께 사용하여 유연한 구조를 만들 수 있다.
+
+### 18. 중첩 클래스(Nested Class)
+
+중첩 클래스는 클래스 또는 인터페이스 내부에 선언하는 클래스이다.
+
+**주요 목적**
+
+- 특정 클래스와 밀접한 관련이 있는 클래스를 묶는다.
+- 외부에 불필요한 구현을 숨긴다.
+- 관련된 기능을 논리적으로 정리한다.
+
+**멤버 내부 클래스 예제**
+
+```java
+class Outer {
+
+    private int value = 10;
+
+    class Inner {
+
+        void print() {
+            System.out.println(value);
+        }
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Outer outer = new Outer();
+Outer.Inner inner = outer.new Inner();
+
+inner.print(); // 10
+```
+
+**대표적인 중첩 클래스**
+
+| 종류 | 특징 |
+|---|---|
+| 인스턴스 멤버 클래스 | 외부 클래스의 객체와 연결 |
+| 정적 멤버 클래스 | 외부 객체 없이 생성 가능 |
+| 지역 클래스 | 메서드 또는 블록 내부에 선언 |
+| 익명 클래스 | 이름 없이 선언하고 객체 생성 |
+
+- 인스턴스 멤버 클래스는 외부 객체의 인스턴스 멤버에 접근할 수 있다.
+- 정적 멤버 클래스는 외부 객체 없이 사용할 수 있다.
+- 중첩 클래스는 관련 기능을 하나의 구조 안에 묶을 때 유용하다.
+
+### 19. 다형성을 활용한 결제 시스템
+
+결제 시스템은 인터페이스와 다형성을 이용해 구현체를 유연하게 교체할 수 있는 대표적인 예시이다.
+
+**인터페이스 정의**
+
+```java
+interface Payment {
+    void pay(int amount);
+}
+```
+
+**카드 결제 구현**
+
+```java
+class CardPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카드 결제: " + amount);
+    }
+}
+```
+
+**카카오페이 결제 구현**
+
+```java
+class KakaoPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카카오페이 결제: " + amount);
+    }
+}
+```
+
+**결제 서비스**
+
+```java
+class PaymentService {
+
+    public void process(Payment payment, int amount) {
+        payment.pay(amount);
+    }
+}
+```
+
+**사용 예제**
+
+```java
+PaymentService service = new PaymentService();
+
+service.process(new CardPayment(), 10000);
+service.process(new KakaoPayment(), 20000);
+```
+
+**실행 구조**
+
+```text
+           PaymentService
+                  │
+           process(Payment)
+                  │
+                  ▼
+          Payment 인터페이스
+               pay()
+                  │
+          ┌───────┴───────┐
+          │               │
+          ▼               ▼
+    CardPayment      KakaoPayment
+          │               │
+          ▼               ▼
+       카드 결제       카카오페이 결제
+```
+
+**핵심**
+
+- `PaymentService`는 구체적인 결제 클래스에 직접 의존하지 않는다.
+- `Payment` 인터페이스를 통해 결제 기능을 호출한다.
+- 새로운 결제 방식이 추가되어도 기존 서비스의 핵심 코드를 변경하지 않고 확장할 수 있다.
+
+이러한 구조는 프로그램의 유연성을 높이고 구현체 간 결합도를 낮추는 데 도움이 된다.
+
+### 20. 인터페이스를 활용한 알림 시스템
+
+서로 다른 알림 방식을 동일한 규칙으로 처리할 수 있다.
+
+**공통 인터페이스**
+
+```java
+interface Notification {
+    void send(String message);
+}
+```
+
+**이메일 알림**
+
+```java
+class EmailNotification implements Notification {
+
+    @Override
+    public void send(String message) {
+        System.out.println("이메일: " + message);
+    }
+}
+```
+
+**문자 알림**
+
+```java
+class SmsNotification implements Notification {
+
+    @Override
+    public void send(String message) {
+        System.out.println("SMS: " + message);
+    }
+}
+```
+
+**공통 처리 메서드**
+
+```java
+static void notifyUser(
+        Notification notification,
+        String message) {
+
+    notification.send(message);
+}
+```
+
+**호출 예제**
+
+```java
+notifyUser(new EmailNotification(), "가입 완료");
+notifyUser(new SmsNotification(), "인증번호 발송");
+```
+
+**핵심**
+
+- 이메일과 SMS의 실제 처리 과정은 서로 다르다.
+- 두 클래스 모두 `Notification` 인터페이스를 구현한다.
+- 호출하는 코드는 `send()`라는 공통 규칙만 알면 된다.
+- 인터페이스를 통해 기능 구현과 사용 코드를 분리할 수 있다.
+
+※ 위 예제는 알림 출력만 표현한 구조 설명용 코드이다. 실제 이메일과 SMS 전송에는 외부 서비스 연동이 필요하다.
+
+### 21. 객체지향 설계에서 각 원칙의 역할
+
+객체지향의 네 가지 원칙은 실무 시스템에서 함께 사용될 수 있다.
+
+**결제 시스템을 기준으로 한 구조**
+
+```text
+            결제 시스템
+                 │
+       ┌─────────┴─────────┐
+       │                   │
+       ▼                   ▼
+    캡슐화                상속
+  결제 정보 보호      공통 기능 재사용
+       │                   │
+       └─────────┬─────────┘
+                 │
+                 ▼
+            추상화
+       Payment 인터페이스
+                 │
+                 ▼
+            다형성
+      서로 다른 결제 방식 실행
+                 │
+        ┌────────┴────────┐
+        │                 │
+        ▼                 ▼
+     카드 결제         간편 결제
+```
+
+**객체지향 원칙별 적용 목적**
+
+| 원칙 | 실무 적용 예시 |
+|---|---|
+| 캡슐화 | 계좌 잔액, 주문 상태, 재고 수량 보호 |
+| 상속 | 공통 특성을 가진 클래스 확장 |
+| 다형성 | 여러 결제 방식, 알림 방식 처리 |
+| 추상화 | 결제 및 알림 기능의 공통 규칙 정의 |
+
+**설계 시 고려할 점**
+
+- 모든 클래스에 상속을 적용할 필요는 없다.
+- 공통 기능을 공유한다고 항상 상속이 적절한 것은 아니다.
+- 단순한 클래스 구조에는 인터페이스가 불필요할 수 있다.
+- 변경 가능성과 유지보수성을 고려해 적절한 원칙을 선택한다.
+
+### 22. 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| private 필드 직접 접근 | 공개 메서드를 통한 접근 사용 |
+| 생성자 이름 오류 | 클래스 이름과 일치해야 함 |
+| 부모 생성자 호출 누락 | 부모 생성자의 매개변수 확인 |
+| 상속 관계 오용 | 클래스 간 IS-A 관계 검토 |
+| 오버로딩과 오버라이딩 혼동 | 매개변수 변경과 메서드 재정의 구분 |
+| 잘못된 @Override | 부모 메서드의 시그니처 확인 |
+| 부모 타입의 멤버 접근 | 선언된 참조 타입에서 사용 가능한 멤버 확인 |
+| 잘못된 다운캐스팅 | instanceof로 실제 타입 확인 |
+| 추상 클래스 객체 생성 | 구체적인 자식 클래스 생성 |
+| 추상 메서드 미구현 | 구현하거나 자식 클래스도 abstract로 선언 |
+| 인터페이스 메서드 접근 제한 | 구현 시 public 접근 수준 유지 |
+| 인터페이스 중복 default 메서드 | 구현 클래스에서 충돌 해결 |
+| static 메서드 오버라이딩 | 정적 메서드는 오버라이딩되지 않음 |
+| 불필요한 상속 | 역할 분리 및 인터페이스 사용 검토 |
+
+### ✅ Day13 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| OOP | 객체를 중심으로 프로그램 구성 |
+| Class | 객체의 상태와 동작을 정의하는 설계도 |
+| Object | 클래스를 기반으로 생성된 실체 |
+| Constructor | 객체 생성 시 초기 상태 설정 |
+| Instance Variable | 객체마다 독립적인 데이터 |
+| Static Variable | 클래스에 속하는 공유 데이터 |
+| Stack / Heap | 메서드 실행 정보와 객체 관리 |
+| Encapsulation | 객체의 상태 보호와 접근 제어 |
+| Inheritance | 기존 클래스의 기능 상속 및 확장 |
+| extends | 클래스 상속 키워드 |
+| super | 부모 클래스의 멤버 참조 |
+| super() | 부모 생성자 호출 |
+| Overloading | 같은 이름, 다른 매개변수 구성 |
+| Overriding | 상속받은 인스턴스 메서드 재정의 |
+| Polymorphism | 동일한 호출, 실제 객체별 다른 동작 |
+| Upcasting | 부모 타입으로 자식 객체 참조 |
+| Downcasting | 자식 타입으로 참조 타입 변환 |
+| instanceof | 객체의 타입 호환성 확인 |
+| Abstraction | 공통 기능 정의 및 구현 세부사항 은닉 |
+| Abstract Class | 상속을 위한 추상 클래스 |
+| Abstract Method | 구현부가 없는 추상 메서드 |
+| Interface | 클래스가 구현할 기능의 규칙 |
+| implements | 인터페이스 구현 키워드 |
+| Default Method | 인터페이스에 구현된 인스턴스 메서드 |
+| Multiple Implementation | 여러 인터페이스 동시 구현 |
+| Nested Class | 클래스 내부에 선언된 클래스 |
+| 다형성 설계 | 인터페이스를 이용한 구현체 교체 및 확장 |
+
+**최종 학습 정리**
+
+- 객체지향 프로그래밍은 데이터와 기능을 가진 객체들의 관계로 프로그램을 구성한다.
+- 클래스는 설계도이며 객체는 클래스를 기반으로 생성된 실체이다.
+- 캡슐화는 객체의 상태를 보호하고 올바른 규칙을 통해 변경하도록 한다.
+- 상속은 부모 클래스의 공통 기능을 물려받아 재사용하고 확장한다.
+- `super()`는 부모 클래스의 생성자를 호출한다.
+- 오버로딩은 같은 이름의 메서드를 다양한 매개변수로 선언하는 것이다.
+- 오버라이딩은 부모 클래스의 메서드를 자식 클래스에서 재정의하는 것이다.
+- 다형성은 같은 타입으로 여러 객체를 다루며 실제 객체에 따라 다른 동작을 수행하는 특성이다.
+- 자동 타입 변환을 통해 부모 타입으로 자식 객체를 참조할 수 있다.
+- 강제 타입 변환은 실제 객체의 타입과 호환되는지 확인해야 한다.
+- 추상 클래스는 공통 상태와 기능을 제공하며 직접 객체를 생성할 수 없다.
+- 인터페이스는 클래스가 제공할 기능의 규칙을 정의한다.
+- Java는 클래스의 다중 상속은 지원하지 않지만 여러 인터페이스의 구현은 지원한다.
+- 추상 클래스와 인터페이스는 목적에 따라 선택하거나 함께 사용할 수 있다.
+- 객체지향의 핵심은 네 가지 원칙을 무조건 적용하는 것이 아니라 역할과 책임에 맞게 설계하는 것이다.
 
 </details>
