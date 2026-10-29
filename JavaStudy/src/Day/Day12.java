@@ -6,7 +6,7 @@ import java.util.Arrays;
 class StarRate
 {
     
-
+}
 class Movie
 {
     
