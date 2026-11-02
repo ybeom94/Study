@@ -17,6 +17,7 @@
 | **Day 13** | Java 객체지향 프로그래밍 심화 | 객체지향 4대 원칙, 캡슐화, 상속, super, 오버라이딩, 다형성, 타입 변환, 추상 클래스, 인터페이스, 다중 구현 |
 | **Day 14** | 클래스·객체·JVM 메모리 구조 | 클래스 구성, 생성자, 초기화 블록, 메서드 오버로딩, Stack·Heap·Method Area, 참조 변수, static, this, 캡슐화, 상속·구성 |
 | **Day 15** | 상속·다형성 및 JVM 메모리 심화 | 객체지향 핵심 원칙, extends, super, 생성자 초기화 순서, 부모·자식 객체 메모리, 참조 타입, 필드 숨김, 오버라이딩·오버로딩, 동적 바인딩, GC |
+| **Day 16** | Java 클래스 종류와 객체지향 설계 | package·import, 추상 클래스, 인터페이스, 템플릿 메서드 패턴, 내부 클래스 4종, Builder 패턴, 익명 클래스·람다식, 의존성 주입(DI), 예외 처리 |
 
 
 
@@ -9622,5 +9623,1706 @@ service.checkout(payment, 20000);
 - 가비지 컬렉션은 더 이상 도달할 수 없는 객체의 메모리를 회수한다.
 - 부모 생성자에서 오버라이딩 가능한 메서드를 호출하면 초기화되지 않은 자식 필드에 접근할 위험이 있다.
 - 다형성은 구현체에 직접 의존하지 않는 유연한 프로그램 설계의 기반이 된다.
+
+</details>
+
+
+## Day16. Java 클래스 종류와 객체지향 설계
+<details>
+
+### 🎯 학습 목표
+- Java 프로그램의 기본 구조와 `package`, `import`의 역할을 이해한다.
+- 패키지를 이용해 클래스를 체계적으로 관리할 수 있다.
+- 추상 클래스와 추상 메서드의 특징 및 사용 목적을 이해한다.
+- 인터페이스의 선언, 구현, 다형성 및 다중 구현을 이해한다.
+- 추상 클래스와 인터페이스의 차이를 구분한다.
+- 템플릿 메서드 패턴(Template Method Pattern)의 동작 원리를 이해한다.
+- 중첩 클래스와 내부 클래스의 종류 및 특징을 구분한다.
+- 인스턴스·정적·지역·익명 클래스의 차이를 이해한다.
+- Builder 패턴을 통한 객체 생성 방식과 장점을 이해한다.
+- 익명 클래스와 람다식(Lambda Expression)의 관계를 이해한다.
+- 인터페이스를 활용한 의존성 주입(DI)의 기본 원리를 이해한다.
+- 예외의 종류와 기본적인 예외 처리 방법을 이해한다.
+
+### 1. Java 프로그램의 기본 구조
+
+Java 프로그램은 패키지, import 선언, 클래스, 메서드 등을 조합하여 구성한다.
+
+**기본 구조**
+
+```java
+package com.example;
+
+import java.util.Scanner;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Hello Java");
+    }
+}
+```
+
+| 구성 요소 | 역할 |
+|---|---|
+| `package` | 클래스가 소속되는 패키지 지정 |
+| `import` | 다른 패키지의 타입을 간단한 이름으로 사용 |
+| `class` | 객체를 생성하기 위한 타입 선언 |
+| `main()` | 일반적인 Java 애플리케이션의 시작 메서드 |
+| `public` | 외부 접근 허용 |
+| `static` | 객체 생성 없이 클래스에 속한 메서드 사용 |
+| `void` | 반환값이 없음 |
+| `String[] args` | 프로그램 실행 시 전달받는 문자열 인자 |
+
+**Java 소스 파일의 일반적인 작성 순서**
+
+```text
+package 선언
+     ↓
+import 선언
+     ↓
+클래스 선언
+     ↓
+필드 / 생성자 / 메서드
+     ↓
+main() 또는 다른 메서드 실행
+```
+
+**main 메서드**
+
+```java
+public static void main(String[] args) {
+    System.out.println("프로그램 시작");
+}
+```
+
+- `public` : JVM에서 시작 메서드에 접근할 수 있도록 공개
+- `static` : 객체를 생성하지 않고 호출 가능
+- `void` : 반환값 없음
+- `main` : 프로그램 시작 메서드의 이름
+- `String[] args` : 실행 시 전달받는 문자열 인자 배열
+
+### 2. Package의 개념과 역할
+
+패키지(Package)는 관련된 클래스와 인터페이스 등을 논리적으로 묶어 관리하는 이름 공간이다.
+
+**패키지를 사용하는 이유**
+
+- 기능별로 클래스를 분류한다.
+- 서로 다른 패키지에 같은 이름의 클래스를 선언할 수 있다.
+- 접근 범위를 제어하는 기준으로 활용한다.
+- 대규모 프로젝트의 유지보수성을 높인다.
+
+**패키지 선언**
+
+```java
+package com.example.member;
+
+public class Member {
+
+    private String name;
+
+    public Member(String name) {
+        this.name = name;
+    }
+}
+```
+
+**패키지와 폴더 구조**
+
+```text
+src/
+└── com/
+    └── example/
+        ├── member/
+        │   └── Member.java
+        ├── product/
+        │   └── Product.java
+        └── order/
+            └── Order.java
+```
+
+패키지 이름은 일반적으로 소문자로 작성한다.
+
+**주의사항**
+
+- `package` 선언은 파일의 최상단에 작성한다. 주석은 앞에 올 수 있다.
+- 하나의 Java 소스 파일에는 하나의 패키지만 선언할 수 있다.
+- 일반적으로 패키지 이름과 디렉터리 구조를 일치시킨다.
+- 패키지를 선언하지 않으면 이름 없는 패키지(Unnamed Package)에 속한다.
+- 패키지는 논리적 이름 공간이므로 하위 패키지가 상위 패키지의 접근 권한을 자동으로 상속하지 않는다.
+
+### 3. Import의 개념과 종류
+
+`import`는 다른 패키지에 선언된 타입을 정규화된 이름(Fully Qualified Name) 대신 간단한 이름으로 사용하기 위한 선언이다.
+
+**import 없이 사용**
+
+```java
+java.util.Scanner scanner =
+    new java.util.Scanner(System.in);
+```
+
+**import 사용**
+
+```java
+import java.util.Scanner;
+
+Scanner scanner = new Scanner(System.in);
+```
+
+**import의 종류**
+
+| 종류 | 문법 | 역할 |
+|---|---|---|
+| 단일 타입 import | `import java.util.Scanner;` | 특정 타입 사용 |
+| 와일드카드 import | `import java.util.*;` | 해당 패키지의 접근 가능한 타입 사용 |
+| static import | `import static java.lang.Math.PI;` | 정적 멤버를 간단한 이름으로 사용 |
+
+**static import 예제**
+
+```java
+import static java.lang.Math.PI;
+import static java.lang.Math.max;
+
+public class Main {
+
+    public static void main(String[] args) {
+        System.out.println(PI);
+        System.out.println(max(10, 20));
+    }
+}
+```
+
+**주의사항**
+
+- `java.lang` 패키지의 타입은 자동으로 사용할 수 있다.
+- `import java.util.*;`은 하위 패키지의 타입까지 가져오는 것이 아니다.
+- `import`는 클래스를 복사하거나 객체를 생성하는 명령이 아니다.
+- 다른 패키지의 타입을 사용하려면 접근 제한자에 따른 접근 권한이 있어야 한다.
+- `static import`는 정적 필드나 정적 메서드를 간단한 이름으로 사용하는 데 활용한다.
+
+### 4. Java 클래스의 종류와 역할
+
+객체지향 설계에서는 클래스 간의 공통 기능, 규약, 관련성을 표현하기 위해 다양한 구조를 사용한다.
+
+이번 학습의 핵심은 다음 세 가지이다.
+
+| 구분 | 핵심 목적 | 대표 키워드 |
+|---|---|---|
+| 추상 클래스(Abstract Class) | 공통 상태와 기능 제공 | `abstract`, `extends` |
+| 인터페이스(Interface) | 기능의 계약과 규약 정의 | `interface`, `implements` |
+| 중첩·내부 클래스(Nested/Inner Class) | 밀접한 관련이 있는 클래스를 함께 관리 | 클래스 내부의 `class` 선언 |
+
+**구조별 역할**
+
+```text
+         객체지향 설계
+              │
+    ┌─────────┼─────────┐
+    │         │         │
+    ▼         ▼         ▼
+ 추상 클래스  인터페이스  중첩 클래스
+    │         │         │
+ 공통 기반  기능 규약  관련 코드 그룹화
+    │         │         │
+    ▼         ▼         ▼
+  상속      다형성      캡슐화
+```
+
+**핵심**
+
+- 추상 클래스는 공통 기능을 물려주기 위한 기반이다.
+- 인터페이스는 구현 클래스들이 지켜야 할 기능의 규칙을 정의한다.
+- 중첩 클래스는 특정 클래스와 관련된 코드를 논리적으로 묶는다.
+
+### 5. 추상 클래스(Abstract Class)
+
+추상 클래스는 직접 객체를 생성할 수 없으며, 자식 클래스들이 상속받아 사용할 공통 상태와 기능을 정의하는 클래스이다.
+
+**추상 클래스의 특징**
+
+- `abstract` 키워드를 사용한다.
+- 직접 인스턴스를 생성할 수 없다.
+- 일반 필드와 일반 메서드를 선언할 수 있다.
+- 추상 메서드를 선언할 수 있다.
+- 생성자를 선언할 수 있다.
+- 자식 클래스에서 공통 기능을 재사용할 수 있다.
+
+**추상 클래스 선언**
+
+```java
+abstract class Animal {
+
+    protected String name;
+
+    Animal(String name) {
+        this.name = name;
+    }
+
+    public void eat() {
+        System.out.println(name + "이(가) 먹습니다.");
+    }
+
+    public abstract void sound();
+}
+```
+
+**구현 클래스**
+
+```java
+class Dog extends Animal {
+
+    Dog(String name) {
+        super(name);
+    }
+
+    @Override
+    public void sound() {
+        System.out.println("멍멍!");
+    }
+}
+```
+
+**객체 생성 및 호출**
+
+```java
+Animal animal = new Dog("초코");
+
+animal.eat();
+animal.sound();
+```
+
+**실행 결과**
+
+```text
+초코이(가) 먹습니다.
+멍멍!
+```
+
+**추상 클래스의 핵심 구조**
+
+```text
+       Animal (abstract)
+    ┌─────────────────────┐
+    │ name                │
+    │ eat()               │ ← 일반 메서드
+    │ sound()             │ ← 추상 메서드
+    └──────────┬──────────┘
+               │
+             extends
+               │
+               ▼
+              Dog
+    ┌─────────────────────┐
+    │ sound() 구현        │
+    └─────────────────────┘
+```
+
+**핵심**
+
+- 공통된 상태와 기능은 부모 추상 클래스에 정의한다.
+- 클래스마다 다르게 동작할 기능은 추상 메서드로 선언한다.
+- 자식 클래스는 필요한 추상 메서드를 구현한다.
+
+### 6. 추상 메서드(Abstract Method)
+
+추상 메서드는 구현부 없이 선언부만 가지는 메서드이다.
+
+**기본 구조**
+
+```java
+public abstract void sound();
+```
+
+**일반 메서드와 비교**
+
+| 구분 | 일반 메서드 | 추상 메서드 |
+|---|---|---|
+| 구현부 | 있음 | 없음 |
+| abstract | 필요 없음 | 필요 |
+| 역할 | 실제 기능 실행 | 구현해야 할 기능 정의 |
+| 자식 클래스 | 필요 시 재정의 | 구체 클래스라면 구현 필요 |
+
+**추상 메서드의 규칙**
+
+- 추상 메서드는 추상 클래스 또는 인터페이스 등의 허용된 문맥에 선언한다.
+- 추상 메서드는 구현부를 작성하지 않는다.
+- 일반적인 구체 자식 클래스는 상속받은 추상 메서드를 구현해야 한다.
+- 추상 메서드를 구현하지 않는 자식 클래스는 자신도 추상 클래스로 선언해야 한다.
+
+**주의사항**
+
+```java
+// 추상 클래스의 직접 객체 생성 불가
+// Animal animal = new Animal("초코");
+```
+
+추상 클래스는 추상 메서드가 없어도 선언할 수 있다.
+
+```java
+abstract class Base {
+
+    public void print() {
+        System.out.println("공통 기능");
+    }
+}
+```
+
+따라서 추상 클래스는 반드시 추상 메서드를 가져야 하는 것은 아니다.
+
+### 7. 추상 클래스의 생성자와 공통 상태
+
+추상 클래스는 직접 인스턴스를 생성할 수 없지만 생성자를 가질 수 있다.
+
+생성자는 자식 객체가 생성되는 과정에서 부모의 상태를 초기화하는 역할을 한다.
+
+**Java 예제**
+
+```java
+abstract class Employee {
+
+    protected String name;
+
+    Employee(String name) {
+        this.name = name;
+        System.out.println("부모 생성자 실행");
+    }
+
+    abstract void work();
+}
+
+class Developer extends Employee {
+
+    Developer(String name) {
+        super(name);
+        System.out.println("자식 생성자 실행");
+    }
+
+    @Override
+    void work() {
+        System.out.println(name + " 개발 작업");
+    }
+}
+```
+
+**실행**
+
+```java
+Employee employee = new Developer("홍길동");
+
+employee.work();
+```
+
+**실행 결과**
+
+```text
+부모 생성자 실행
+자식 생성자 실행
+홍길동 개발 작업
+```
+
+**핵심**
+
+- 추상 클래스에도 필드와 생성자를 선언할 수 있다.
+- 자식 객체의 생성 과정에서 부모 생성자가 먼저 실행된다.
+- `super()`를 통해 부모 생성자에 초기값을 전달할 수 있다.
+- 추상 클래스는 공통된 객체 상태를 관리하는 데 적합하다.
+
+### 8. 템플릿 메서드 패턴(Template Method Pattern)
+
+템플릿 메서드 패턴은 **전체 작업의 실행 순서를 부모 클래스에서 정의하고, 일부 세부 단계만 자식 클래스에서 구현하도록 하는 설계 패턴**이다.
+
+**사용 목적**
+
+- 여러 클래스에서 동일한 작업 순서를 공유한다.
+- 중복되는 공통 로직을 부모 클래스에서 관리한다.
+- 세부적인 처리 방식만 자식 클래스에서 변경한다.
+- 작업 순서를 일관되게 유지한다.
+
+**결제 처리 구조**
+
+```text
+    AbstractPayment
+           │
+           ▼
+      pay(amount)
+           │
+           ▼
+       validate()
+      결제 금액 검증
+           │
+           ▼
+       process()
+      실제 결제 처리
+      (자식이 구현)
+           │
+           ▼
+         log()
+      처리 결과 기록
+```
+
+**추상 클래스**
+
+```java
+abstract class AbstractPayment {
+
+    public final void pay(int amount) {
+        validate(amount);
+        process(amount);
+        log();
+    }
+
+    private void validate(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException(
+                "결제 금액은 0보다 커야 합니다."
+            );
+        }
+    }
+
+    protected abstract void process(int amount);
+
+    private void log() {
+        System.out.println("결제 처리 완료");
+    }
+}
+```
+
+**카드 결제 클래스**
+
+```java
+class CardPayment extends AbstractPayment {
+
+    @Override
+    protected void process(int amount) {
+        System.out.println("카드 결제: " + amount);
+    }
+}
+```
+
+**계좌이체 결제 클래스**
+
+```java
+class BankPayment extends AbstractPayment {
+
+    @Override
+    protected void process(int amount) {
+        System.out.println("계좌이체: " + amount);
+    }
+}
+```
+
+**사용 예제**
+
+```java
+AbstractPayment payment = new CardPayment();
+
+payment.pay(10000);
+```
+
+**실행 결과**
+
+```text
+카드 결제: 10000
+결제 처리 완료
+```
+
+**코드의 핵심 구조**
+
+| 메서드 | 역할 |
+|---|---|
+| `pay()` | 전체 작업 순서 제어 |
+| `validate()` | 공통 검증 처리 |
+| `process()` | 자식별 실제 작업 |
+| `log()` | 공통 결과 기록 |
+
+**final 키워드를 사용하는 이유**
+
+```java
+public final void pay(int amount)
+```
+
+- `final` 메서드는 자식 클래스에서 오버라이딩할 수 없다.
+- 따라서 자식 클래스가 전체 처리 순서를 임의로 변경하지 못하도록 제한할 수 있다.
+- 반드시 고정되어야 하는 작업 순서를 보장할 때 유용하다.
+
+※ 위 코드는 강의자료의 템플릿 메서드 패턴을 설명하기 위한 간단한 예제이다. 실제 결제 성공 여부 및 오류 처리는 추가 구현이 필요하다.
+
+### 9. 인터페이스(Interface)의 개념
+
+인터페이스는 클래스가 제공해야 하는 기능의 규칙과 계약을 정의하는 참조 타입이다.
+
+**인터페이스를 사용하는 이유**
+
+- 서로 다른 클래스에 동일한 기능 규칙을 적용한다.
+- 실제 구현과 사용하는 코드를 분리한다.
+- 구현 객체를 쉽게 교체할 수 있다.
+- 다형성을 이용하여 유지보수성과 확장성을 높인다.
+- 여러 인터페이스를 하나의 클래스에서 구현할 수 있다.
+
+**인터페이스 선언**
+
+```java
+interface Payment {
+
+    void pay(int amount);
+}
+```
+
+**인터페이스 구현**
+
+```java
+class CardPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카드 결제: " + amount);
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Payment payment = new CardPayment();
+
+payment.pay(10000);
+```
+
+**핵심**
+
+- `interface`는 기능의 규칙을 선언한다.
+- `implements`는 인터페이스 구현을 의미한다.
+- 구현 클래스는 필요한 추상 메서드를 구현해야 한다.
+- 인터페이스 타입으로 실제 구현 객체를 참조할 수 있다.
+
+### 10. 인터페이스의 구성 요소
+
+Java 인터페이스에는 추상 메서드뿐 아니라 상수, 디폴트 메서드, 정적 메서드 등을 선언할 수 있다.
+
+| 구성 요소 | 특징 |
+|---|---|
+| 상수 필드 | 자동으로 `public static final` |
+| 추상 메서드 | 기본적으로 `public abstract` |
+| default 메서드 | 구현부를 가지는 기본 인스턴스 메서드 |
+| static 메서드 | 인터페이스 이름으로 호출 |
+| private 메서드 | 인터페이스 내부 구현 재사용 |
+
+**인터페이스 예제**
+
+```java
+interface RemoteControl {
+
+    int MAX_VOLUME = 100;
+
+    void turnOn();
+
+    default void reset() {
+        System.out.println("초기화");
+    }
+
+    static void info() {
+        System.out.println("리모컨 인터페이스");
+    }
+}
+```
+
+**구현 클래스**
+
+```java
+class Television implements RemoteControl {
+
+    @Override
+    public void turnOn() {
+        System.out.println("TV 켜짐");
+    }
+}
+```
+
+**호출**
+
+```java
+RemoteControl remote = new Television();
+
+remote.turnOn();
+remote.reset();
+
+RemoteControl.info();
+```
+
+**주의사항**
+
+- 인터페이스 추상 메서드를 구현할 때는 `public` 접근 수준을 유지해야 한다.
+- 인터페이스의 필드는 인스턴스 변수가 아니라 상수이다.
+- `default` 메서드와 `static` 메서드는 Java 8부터 지원한다.
+- `private` 메서드는 Java 9부터 지원한다.
+- 인터페이스의 정적 메서드는 구현 클래스에 상속되지 않는다.
+
+### 11. 인터페이스의 다중 구현
+
+Java 클래스는 하나의 직접적인 부모 클래스만 상속할 수 있지만 여러 인터페이스를 동시에 구현할 수 있다.
+
+**Java 예제**
+
+```java
+interface Flyable {
+
+    void fly();
+}
+
+interface Swimmable {
+
+    void swim();
+}
+```
+
+```java
+class Duck implements Flyable, Swimmable {
+
+    @Override
+    public void fly() {
+        System.out.println("날아갑니다.");
+    }
+
+    @Override
+    public void swim() {
+        System.out.println("수영합니다.");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Duck duck = new Duck();
+
+duck.fly();
+duck.swim();
+```
+
+**다중 구현 구조**
+
+```text
+       Flyable       Swimmable
+          │              │
+          │ implements   │
+          └──────┬───────┘
+                 │
+                 ▼
+                Duck
+          ┌────────────┐
+          │ fly()      │
+          │ swim()     │
+          └────────────┘
+```
+
+**핵심**
+
+- 클래스의 다중 상속은 지원하지 않는다.
+- 인터페이스의 다중 구현은 지원한다.
+- 서로 다른 기능의 규약을 하나의 클래스에서 구현할 수 있다.
+- 여러 인터페이스의 디폴트 메서드가 충돌하면 구현 클래스에서 충돌을 해결해야 한다.
+
+### 12. 추상 클래스와 인터페이스의 차이
+
+추상 클래스와 인터페이스는 모두 추상화와 다형성을 지원하지만 목적과 구성 방식에 차이가 있다.
+
+| 구분 | 추상 클래스 | 인터페이스 |
+|---|---|---|
+| 선언 | `abstract class` | `interface` |
+| 목적 | 공통 상태와 기능 제공 | 공통 기능의 계약 정의 |
+| 관계 | `extends` | `implements` |
+| 인스턴스 필드 | 가능 | 불가능 |
+| 생성자 | 가능 | 불가능 |
+| 일반 메서드 | 가능 | default/static/private 등 가능 |
+| 추상 메서드 | 가능 | 가능 |
+| 다중 관계 | 하나의 직접 부모 클래스 상속 | 여러 인터페이스 구현 |
+| 주요 활용 | 공통 처리 기반 | 구현체 교체 및 역할 정의 |
+
+**추상 클래스가 적합한 경우**
+
+- 여러 클래스가 공통 필드와 상태를 가진다.
+- 공통 로직을 부모 클래스에서 구현해야 한다.
+- 클래스 사이에 명확한 IS-A 관계가 있다.
+- 자식 클래스마다 일부 기능만 다르게 구현한다.
+
+**인터페이스가 적합한 경우**
+
+- 구현 클래스가 서로 다른 구조를 가진다.
+- 동일한 기능 규약이 필요하다.
+- 여러 구현체를 유연하게 교체해야 한다.
+- 사용하는 코드가 구체적인 구현 클래스에 의존하지 않도록 설계한다.
+
+**핵심 차이**
+
+```text
+추상 클래스
+    │
+    └── 무엇을 공유할 것인가?
+        → 공통 상태 / 공통 구현
+
+
+인터페이스
+    │
+    └── 어떤 기능을 제공할 것인가?
+        → 기능 계약 / 구현 규칙
+```
+
+**주의**
+
+- 추상 클래스와 인터페이스는 서로 대체 관계가 아니다.
+- 필요한 경우 하나의 프로그램에서 함께 사용할 수 있다.
+- 인터페이스 구현 관계는 주로 CAN-DO 성격의 기능 규약을 표현하며, HAS-A 관계는 일반적으로 객체를 포함하는 구성(Composition)을 의미한다.
+
+### 13. 추상 클래스와 인터페이스의 동시 사용
+
+추상 클래스는 인터페이스를 구현하면서 일부 기능만 제공하고, 나머지 기능을 자식 클래스에 위임할 수 있다.
+
+**설계 구조**
+
+```text
+        Payment 인터페이스
+           pay()
+              │
+           implements
+              │
+              ▼
+     AbstractPayment 추상 클래스
+       ├── validate()
+       ├── log()
+       └── process() 추상 메서드
+              │
+            extends
+              │
+              ▼
+        CardPayment 클래스
+          process() 구현
+```
+
+**설계상 장점**
+
+- 인터페이스는 외부에 제공할 기능을 정의한다.
+- 추상 클래스는 여러 구현체의 공통 로직을 재사용한다.
+- 구체적인 클래스는 자신에게 필요한 세부 동작만 구현한다.
+- 기능을 사용하는 코드는 인터페이스 타입에 의존할 수 있다.
+
+이 구조는 복잡한 비즈니스 로직에서 공통 처리 절차와 구현체 교체가 모두 필요할 때 유용하다.
+
+### 14. 중첩 클래스와 내부 클래스의 개념
+
+중첩 클래스(Nested Class)는 클래스 내부에 선언하는 클래스이다.
+
+**중첩 클래스를 사용하는 목적**
+
+- 서로 관련된 클래스를 논리적으로 묶는다.
+- 외부에 불필요한 구현을 숨긴다.
+- 특정 클래스 전용 보조 기능을 정의한다.
+- 클래스 간 관련성을 명확하게 표현한다.
+
+**중첩 클래스의 종류**
+
+| 종류 | 특징 | 대표 용도 |
+|---|---|---|
+| 인스턴스 멤버 클래스 | 외부 객체와 연결 | 객체 상태에 접근하는 보조 기능 |
+| 정적 중첩 클래스 | 외부 객체 없이 생성 가능 | Builder 패턴 |
+| 지역 클래스 | 블록 내부에 선언 | 특정 메서드 전용 처리 |
+| 익명 클래스 | 이름 없이 선언·생성 | 일회성 구현, 이벤트 처리 |
+
+**구조**
+
+```text
+            Outer 클래스
+                  │
+       ┌──────────┴──────────┐
+       │                     │
+       ▼                     ▼
+ 인스턴스 멤버 클래스     정적 중첩 클래스
+ (Inner Class)          (Static Nested)
+       │                     │
+ 외부 객체와 연결        독립적으로 생성
+```
+
+※ 엄밀한 Java 용어에서 `static` 중첩 클래스는 중첩 클래스이지만 내부 클래스(Inner Class)에는 포함되지 않는다. 내부 클래스에는 인스턴스 멤버 클래스, 지역 클래스, 익명 클래스가 포함된다.
+
+### 15. 인스턴스 내부 클래스(Instance Inner Class)
+
+인스턴스 내부 클래스는 외부 클래스의 객체와 연결되어 동작하는 중첩 클래스이다.
+
+**주요 특징**
+
+- 외부 클래스의 인스턴스와 연결된다.
+- 외부 클래스의 인스턴스 멤버에 접근할 수 있다.
+- 외부 클래스의 `private` 멤버에도 접근할 수 있다.
+- 일반적으로 외부 객체가 있어야 생성할 수 있다.
+
+**Java 예제**
+
+```java
+class Outer {
+
+    private int value = 100;
+
+    class Inner {
+
+        void print() {
+            System.out.println(value);
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Outer outer = new Outer();
+
+Outer.Inner inner = outer.new Inner();
+
+inner.print(); // 100
+```
+
+**객체 관계**
+
+```text
+        Outer 객체
+    ┌─────────────────┐
+    │ value = 100     │
+    │                 │
+    │ Inner 객체와    │
+    │ 연결됨          │
+    └────────┬────────┘
+             │
+             ▼
+         Inner 객체
+         print()
+             │
+             ▼
+      Outer.value 접근
+```
+
+**사용 목적**
+
+- 특정 객체에 종속적인 기능이 필요할 때 사용한다.
+- 외부 클래스의 상태를 활용해야 하는 보조 클래스를 구현할 수 있다.
+- 관련 구현을 외부로 공개하지 않고 내부에 배치할 수 있다.
+
+### 16. 정적 중첩 클래스(Static Nested Class)
+
+정적 중첩 클래스는 클래스 내부에 `static` 키워드로 선언하는 중첩 클래스이다.
+
+**주요 특징**
+
+- 외부 객체 없이 독립적으로 생성할 수 있다.
+- 외부 클래스의 인스턴스와 자동으로 연결되지 않는다.
+- 외부 클래스의 정적 멤버에 직접 접근할 수 있다.
+- 외부 클래스의 인스턴스 멤버를 사용하려면 별도의 객체 참조가 필요하다.
+
+**Java 예제**
+
+```java
+class Outer {
+
+    private static int count = 10;
+
+    static class Nested {
+
+        void print() {
+            System.out.println(count);
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Outer.Nested nested = new Outer.Nested();
+
+nested.print(); // 10
+```
+
+**인스턴스 내부 클래스와 비교**
+
+| 구분 | 인스턴스 내부 클래스 | 정적 중첩 클래스 |
+|---|---|---|
+| static 선언 | 없음 | 있음 |
+| 외부 객체 | 일반적으로 필요 | 불필요 |
+| 외부 인스턴스 연결 | 있음 | 없음 |
+| 외부 인스턴스 필드 직접 접근 | 가능 | 불가능 |
+| 주요 용도 | 외부 객체 상태와 연관된 기능 | 독립적인 보조 기능, Builder |
+
+**핵심**
+
+정적 중첩 클래스는 외부 객체의 인스턴스 상태에 의존하지 않는 관련 기능을 클래스 내부에 배치할 때 적합하다.
+
+### 17. 지역 클래스(Local Class)
+
+지역 클래스는 메서드나 생성자 등의 블록 내부에 선언하는 클래스이다.
+
+**주요 특징**
+
+- 선언된 블록 내부에서만 사용할 수 있다.
+- 특정 메서드 실행에 필요한 보조 타입으로 활용한다.
+- 외부 클래스의 접근 가능한 멤버를 사용할 수 있다.
+- 지역 변수를 참조할 때 해당 변수는 `final` 또는 사실상 final이어야 한다.
+
+**Java 예제**
+
+```java
+class Outer {
+
+    void execute() {
+
+        int number = 10;
+
+        class Local {
+
+            void print() {
+                System.out.println(number);
+            }
+        }
+
+        Local local = new Local();
+        local.print();
+    }
+}
+```
+
+**사실상 final(Effectively Final)**
+
+변수에 `final` 키워드를 명시하지 않았더라도 초기화 이후 값을 다시 대입하지 않으면 사실상 final로 취급할 수 있다.
+
+```java
+int number = 10;
+
+// number = 20; // 지역 클래스가 number를
+// 참조하는 경우 재대입하면 컴파일 오류
+```
+
+**핵심**
+
+- 지역 클래스는 특정 블록 내부에서만 사용하는 클래스이다.
+- 지역 변수를 캡처할 수 있다.
+- 캡처한 지역 변수는 `final` 또는 사실상 final이어야 한다.
+
+### 18. 익명 클래스(Anonymous Class)
+
+익명 클래스는 별도의 클래스 이름을 선언하지 않고, 클래스 상속이나 인터페이스 구현과 동시에 객체를 생성하는 방식이다.
+
+**익명 클래스를 사용하는 경우**
+
+- 일회성 기능 구현
+- 간단한 이벤트 처리
+- 특정 인터페이스의 임시 구현
+- 별도 클래스 파일이 불필요한 경우
+
+**인터페이스 선언**
+
+```java
+interface Greeting {
+
+    void hello();
+}
+```
+
+**익명 클래스 사용**
+
+```java
+Greeting greeting = new Greeting() {
+
+    @Override
+    public void hello() {
+        System.out.println("안녕하세요.");
+    }
+};
+
+greeting.hello();
+```
+
+**일반 클래스와의 차이**
+
+```text
+일반 클래스
+    │
+    ├── 클래스 선언
+    ├── 메서드 구현
+    └── 객체 생성
+
+
+익명 클래스
+    │
+    └── 선언과 객체 생성을
+        하나의 표현식으로 처리
+```
+
+**주의사항**
+
+- 익명 클래스는 이름이 없는 클래스이다.
+- 클래스 상속 또는 인터페이스 구현에 사용할 수 있다.
+- 일반적인 생성자를 직접 선언할 수 없다.
+- 여러 곳에서 반복 사용하는 구현은 별도 클래스로 분리하는 편이 적합할 수 있다.
+
+### 19. 익명 클래스와 람다식(Lambda Expression)
+
+람다식은 함수형 인터페이스의 구현을 간결하게 표현하기 위한 문법이다.
+
+**함수형 인터페이스(Functional Interface)**
+
+- 추상 메서드가 정확히 하나인 인터페이스이다.
+- `@FunctionalInterface`를 이용하여 컴파일러 검사를 받을 수 있다.
+- 디폴트 메서드와 정적 메서드가 존재할 수 있다.
+- 람다식과 메서드 참조를 이용하여 구현할 수 있다.
+
+**익명 클래스 방식**
+
+```java
+Runnable task = new Runnable() {
+
+    @Override
+    public void run() {
+        System.out.println("작업 실행");
+    }
+};
+```
+
+**람다식 방식**
+
+```java
+Runnable task =
+    () -> System.out.println("작업 실행");
+```
+
+**실행**
+
+```java
+Thread thread = new Thread(task);
+
+thread.start();
+```
+
+**비교**
+
+| 구분 | 익명 클래스 | 람다식 |
+|---|---|---|
+| 문법 | 클래스 본문 작성 | 함수형 인터페이스의 동작 표현 |
+| 코드 길이 | 상대적으로 김 | 상대적으로 간결 |
+| 대상 | 클래스 및 인터페이스 | 함수형 인터페이스 |
+| this | 익명 클래스 객체 참조 | 바깥쪽 문맥의 this |
+| 주요 용도 | 일회성 객체 구현 | 간결한 동작 전달 |
+
+**핵심**
+
+- 람다식은 Java 8부터 지원한다.
+- 함수형 인터페이스를 구현할 때 람다식을 사용할 수 있다.
+- 모든 인터페이스를 람다식으로 표현할 수 있는 것은 아니다.
+- 익명 클래스와 람다식은 비슷한 상황에서 활용되지만 동일한 문법이나 동일한 객체 모델은 아니다.
+
+### 20. Builder 패턴(Builder Pattern)
+
+Builder 패턴은 복잡한 객체를 단계적으로 생성할 수 있도록 구성하는 객체 생성 패턴이다.
+
+**Builder 패턴을 사용하는 이유**
+
+- 생성자 매개변수가 많을 때 가독성이 높아진다.
+- 각 값의 의미를 메서드 이름으로 표현한다.
+- 선택적인 데이터를 설정하기 편리하다.
+- 생성 시점에 입력 데이터를 검증할 수 있다.
+- 불변 객체 설계와 함께 사용하기 좋다.
+
+**일반 생성자 방식**
+
+```java
+Member member = new Member(
+    "홍길동",
+    "test@example.com",
+    25
+);
+```
+
+매개변수가 많아지면 값의 순서와 의미를 파악하기 어려울 수 있다.
+
+**Builder 패턴을 적용한 클래스**
+
+```java
+class Member {
+
+    private final String name;
+    private final String email;
+    private final int age;
+
+    private Member(Builder builder) {
+        this.name = builder.name;
+        this.email = builder.email;
+        this.age = builder.age;
+    }
+
+    public static class Builder {
+
+        private String name;
+        private String email;
+        private int age;
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Builder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public Member build() {
+            if (name == null || name.isBlank()) {
+                throw new IllegalStateException(
+                    "이름은 필수입니다."
+                );
+            }
+
+            return new Member(this);
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Member member = new Member.Builder()
+    .name("홍길동")
+    .email("test@example.com")
+    .age(25)
+    .build();
+```
+
+**Builder 패턴의 실행 구조**
+
+```text
+        Member.Builder
+              │
+              ▼
+         name() 설정
+              │
+              ▼
+         email() 설정
+              │
+              ▼
+          age() 설정
+              │
+              ▼
+           build()
+              │
+              ▼
+         입력값 검증
+              │
+              ▼
+        Member 객체 생성
+```
+
+**정적 중첩 클래스를 사용하는 이유**
+
+- Member 객체를 만들기 전에도 Builder를 생성할 수 있다.
+- 외부 Member 객체에 종속되지 않는다.
+- Member 클래스와 관련된 생성 로직을 내부에 묶어 관리한다.
+
+**주의**
+
+- `Member.Builder()`만으로는 객체가 생성되지 않는다.
+- 위 예제에서는 `new Member.Builder()`로 Builder를 생성한다.
+- Lombok의 `@Builder`는 Builder 구현을 생성해 주는 별도 라이브러리 기능이며 Java 기본 문법은 아니다.
+
+### 21. 내부 클래스 4종 비교
+
+| 종류 | 선언 위치 | 외부 객체 의존 | 주요 활용 |
+|---|---|---|---|
+| 인스턴스 멤버 클래스 | 클래스 내부 | 있음 | 외부 객체 상태 활용 |
+| 정적 중첩 클래스 | 클래스 내부 | 없음 | Builder, 보조 타입 |
+| 지역 클래스 | 메서드·블록 내부 | 문맥에 따라 다름 | 특정 작업 전용 |
+| 익명 클래스 | 객체 생성 표현식 | 문맥에 따라 다름 | 일회성 구현 |
+
+**생성 방법 비교**
+
+```java
+// 인스턴스 멤버 클래스
+Outer outer = new Outer();
+Outer.Inner inner = outer.new Inner();
+
+// 정적 중첩 클래스
+Outer.Nested nested = new Outer.Nested();
+```
+
+※ 위 두 표현식은 각각 `Outer`에 `Inner`, `Nested`가 선언되어 있다는 가정하에 작성한 생성 문법이다.
+
+**핵심**
+
+- 외부 객체의 상태가 필요하면 인스턴스 멤버 클래스를 고려한다.
+- 외부 객체와 독립적인 보조 기능이면 정적 중첩 클래스를 고려한다.
+- 특정 메서드에서만 필요한 타입이면 지역 클래스를 고려한다.
+- 한 번만 사용할 간단한 구현이면 익명 클래스를 고려한다.
+
+### 22. 인터페이스와 의존성 주입(DI)
+
+의존성 주입(Dependency Injection)은 객체가 필요로 하는 의존 객체를 직접 생성하지 않고 외부에서 전달받도록 구성하는 방식이다.
+
+**인터페이스를 이용한 의존성 분리**
+
+```text
+      NotificationService
+               │
+               ▼
+     NotificationSender
+          인터페이스
+               │
+       ┌───────┼───────┐
+       │       │       │
+       ▼       ▼       ▼
+     Email    SMS     Push
+     Sender  Sender   Sender
+```
+
+**인터페이스 선언**
+
+```java
+interface NotificationSender {
+
+    void send(String message);
+}
+```
+
+**이메일 구현**
+
+```java
+class EmailSender implements NotificationSender {
+
+    @Override
+    public void send(String message) {
+        System.out.println("Email: " + message);
+    }
+}
+```
+
+**문자 구현**
+
+```java
+class SmsSender implements NotificationSender {
+
+    @Override
+    public void send(String message) {
+        System.out.println("SMS: " + message);
+    }
+}
+```
+
+**서비스 클래스**
+
+```java
+class NotificationService {
+
+    private final NotificationSender sender;
+
+    public NotificationService(NotificationSender sender) {
+        this.sender = sender;
+    }
+
+    public void notifyUser(String message) {
+        sender.send(message);
+    }
+}
+```
+
+**구현체 주입**
+
+```java
+NotificationService service =
+    new NotificationService(new EmailSender());
+
+service.notifyUser("회원가입 완료");
+```
+
+**구현체 교체**
+
+```java
+NotificationService service =
+    new NotificationService(new SmsSender());
+
+service.notifyUser("인증번호 발송");
+```
+
+**핵심**
+
+- 서비스는 특정 구현 클래스가 아니라 인터페이스에 의존한다.
+- 실제 구현 객체는 생성자 등을 통해 외부에서 전달받는다.
+- 서비스 내부 코드를 변경하지 않고 구현체를 교체할 수 있다.
+- Spring Boot에서는 Spring 컨테이너가 객체의 생성과 의존 관계 구성을 지원한다.
+
+※ 위 코드는 Spring 없이 일반 Java에서 의존성 주입의 원리를 표현한 예제이다.
+
+### 23. JVM 메모리 구조와 다형성
+
+다형성에서는 참조 변수의 선언 타입과 실제 객체의 타입을 구분해야 한다.
+
+**Java 예제**
+
+```java
+Animal animal = new Dog("초코");
+
+animal.sound();
+```
+
+**메모리 구조**
+
+```text
+         JVM Stack
+    ┌────────────────┐
+    │ animal         │
+    │ Animal 타입    │
+    │ 참조값 ────────┼────────┐
+    └────────────────┘        │
+                              ▼
+                         JVM Heap
+                   ┌─────────────────┐
+                   │    Dog 객체     │
+                   │                 │
+                   │ Animal 상태     │
+                   │ Dog 상태        │
+                   └─────────────────┘
+```
+
+**핵심**
+
+- 참조 변수의 타입은 접근 가능한 멤버를 결정하는 기준이다.
+- 실제 객체의 타입은 오버라이딩된 인스턴스 메서드의 실행 구현을 결정한다.
+- 자식 객체에는 부모로부터 상속받은 인스턴스 상태가 포함된다.
+- 객체마다 메서드 코드가 독립적으로 복사되는 것은 아니다.
+
+### 24. 예외(Exception)의 개념과 종류
+
+예외는 프로그램 실행 과정에서 발생할 수 있는 비정상적인 상황을 객체로 표현한 것이다.
+
+Java는 `Throwable`을 중심으로 예외와 오류를 구분한다.
+
+**예외 계층 구조**
+
+```text
+           Throwable
+               │
+       ┌───────┴───────┐
+       │               │
+       ▼               ▼
+     Error          Exception
+                       │
+               ┌───────┴────────┐
+               │                │
+               ▼                ▼
+       Checked Exception  RuntimeException
+                                  │
+                                  ▼
+                         Unchecked Exception
+```
+
+**대표적인 종류**
+
+| 구분 | 예시 | 설명 |
+|---|---|---|
+| Error | `OutOfMemoryError` | 일반적인 애플리케이션에서 복구하기 어려운 오류 |
+| Checked Exception | `IOException`, `SQLException` | 컴파일러가 처리 또는 전파 선언을 요구 |
+| Unchecked Exception | `NullPointerException`, `ArithmeticException` | 컴파일러가 처리 강제하지 않음 |
+
+**핵심**
+
+- Checked Exception은 처리하거나 `throws`로 전파해야 한다.
+- Unchecked Exception은 컴파일러가 처리를 강제하지 않는다.
+- Error는 일반적인 예외 복구 대상으로 다루지 않는 것이 보통이다.
+- 예외 처리는 오류를 무조건 숨기는 것이 아니라 상황에 적절히 대응하기 위한 기능이다.
+
+### 25. try-catch-finally와 throw, throws
+
+**try-catch**
+
+```java
+try {
+    int result = 10 / 0;
+    System.out.println(result);
+} catch (ArithmeticException e) {
+    System.out.println("0으로 나눌 수 없습니다.");
+}
+```
+
+- `try` : 예외가 발생할 수 있는 코드
+- `catch` : 발생한 예외 처리
+
+**finally**
+
+```java
+try {
+    System.out.println("작업 시작");
+} catch (Exception e) {
+    System.out.println("예외 처리");
+} finally {
+    System.out.println("정리 작업");
+}
+```
+
+- `finally`는 일반적으로 예외 발생 여부와 관계없이 실행한다.
+- 다만 JVM이 강제 종료되는 등의 상황에서는 실행이 보장되지 않는다.
+
+**throw와 throws**
+
+| 구분 | 역할 |
+|---|---|
+| `throw` | 예외 객체를 발생시킴 |
+| `throws` | 메서드가 전달할 수 있는 예외를 선언 |
+
+**throw 예제**
+
+```java
+if (age < 0) {
+    throw new IllegalArgumentException(
+        "나이는 음수일 수 없습니다."
+    );
+}
+```
+
+**throws 예제**
+
+```java
+public static void readFile()
+        throws java.io.IOException {
+
+    java.io.FileReader reader =
+        new java.io.FileReader("test.txt");
+
+    reader.close();
+}
+```
+
+**try-with-resources**
+
+```java
+try (java.io.FileReader reader =
+         new java.io.FileReader("test.txt")) {
+
+    System.out.println(reader.read());
+
+} catch (java.io.IOException e) {
+    System.out.println("파일 처리 실패");
+}
+```
+
+- `AutoCloseable`을 구현한 자원을 자동으로 닫을 수 있다.
+- 파일과 네트워크 등의 자원 관리에 유용하다.
+- 외부 자원은 예외 발생 여부와 관계없이 적절하게 정리해야 한다.
+
+**사용자 정의 예외**
+
+```java
+class MemberNotFoundException
+        extends RuntimeException {
+
+    public MemberNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+사용자 정의 예외를 이용하면 프로그램의 업무 상황에 맞는 오류를 명확하게 표현할 수 있다.
+
+### 26. Spring Boot에서의 객체지향 설계
+
+강의자료에서는 추상 클래스, 인터페이스, 내부 클래스가 Spring Boot 아키텍처에서 활용되는 구조를 설명한다.
+
+**대표적인 패키지 구조**
+
+```text
+com.example.shop/
+│
+├── controller/
+│   └── MemberController.java
+│
+├── service/
+│   ├── MemberService.java
+│   └── impl/
+│       └── MemberServiceImpl.java
+│
+├── repository/
+│   └── MemberRepository.java
+│
+├── domain/
+│   └── AbstractEntity.java
+│
+└── dto/
+    └── MemberDto.java
+```
+
+**클래스별 역할**
+
+| 클래스 | 역할 | 관련 개념 |
+|---|---|---|
+| MemberController | HTTP 요청 처리 | 클래스와 메서드 |
+| MemberService | 서비스 기능 규약 | 인터페이스 |
+| MemberServiceImpl | 비즈니스 로직 구현 | 인터페이스 구현 |
+| MemberRepository | 데이터 접근 규약 | 인터페이스 |
+| AbstractEntity | 공통 엔티티 속성 | 추상 클래스·상속 |
+| MemberDto | 계층 간 데이터 전달 | 데이터 클래스·Builder |
+
+**아키텍처 구조**
+
+```text
+          Client
+             │
+             ▼
+    MemberController
+             │
+             ▼
+    MemberService
+       (Interface)
+             │
+             ▼
+   MemberServiceImpl
+             │
+             ▼
+   MemberRepository
+             │
+             ▼
+          Database
+```
+
+**핵심**
+
+- Controller는 요청을 처리한다.
+- Service는 비즈니스 로직을 담당한다.
+- Repository는 데이터 접근을 담당한다.
+- 인터페이스는 구현체 간 결합도를 낮추는 데 도움이 된다.
+- 추상 클래스는 공통 상태와 처리 로직을 재사용할 수 있게 한다.
+- 정적 중첩 클래스는 Builder와 같은 보조 기능을 구현하는 데 활용할 수 있다.
+
+※ 이는 강의자료에서 소개한 대표적인 설계 예시이다. 모든 Spring Boot 프로젝트가 반드시 동일한 패키지 구조나 인터페이스 구성을 사용해야 하는 것은 아니다.
+
+### 27. 객체지향 설계 도구 선택 기준
+
+| 상황 | 우선 고려할 구조 |
+|---|---|
+| 여러 클래스가 공통 상태와 구현을 공유 | 추상 클래스 |
+| 여러 구현체가 동일한 기능 규약을 제공 | 인터페이스 |
+| 전체 처리 순서가 같고 일부 단계만 다름 | 템플릿 메서드 패턴 |
+| 특정 객체의 상태에 연결된 보조 타입 필요 | 인스턴스 내부 클래스 |
+| 외부 객체 없이 사용하는 관련 보조 타입 필요 | 정적 중첩 클래스 |
+| 특정 메서드 안에서만 필요한 타입 | 지역 클래스 |
+| 일회성 클래스 구현 | 익명 클래스 |
+| 함수형 인터페이스의 간단한 동작 표현 | 람다식 |
+| 객체 생성 시 설정값이 많음 | Builder 패턴 |
+| 구현체를 유연하게 교체해야 함 | 인터페이스와 의존성 주입 |
+
+**설계 판단 흐름**
+
+```text
+          설계 시작
+              │
+              ▼
+   공통 상태와 구현이 필요한가?
+         │          │
+        Yes         No
+         │          │
+         ▼          ▼
+     추상 클래스   공통 기능 규약이
+                  필요한가?
+                   │       │
+                  Yes      No
+                   │       │
+                   ▼       ▼
+               인터페이스  내부 전용
+                          보조 타입인가?
+                            │
+                            ▼
+                        중첩 클래스
+```
+
+이 흐름은 기본적인 선택 기준이다. 실제 프로그램에서는 여러 방식을 조합하거나 일반 클래스를 사용하는 것이 더 적절할 수도 있다.
+
+### 28. 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| package 선언 위치 | import 및 클래스 선언보다 앞에 작성 |
+| 패키지 이름과 폴더 구조 불일치 | 일반적으로 패키지 경로에 맞게 디렉터리 구성 |
+| 하위 패키지 자동 import 오해 | 패키지마다 필요한 타입을 별도로 import |
+| 추상 클래스 직접 객체 생성 | 구체 자식 클래스를 생성 |
+| 추상 메서드 미구현 | 구현하거나 자식 클래스도 abstract로 선언 |
+| 추상 클래스 생성자 오해 | 추상 클래스도 생성자를 가질 수 있음 |
+| 인터페이스 생성자 선언 | 인터페이스에는 생성자 선언 불가 |
+| 인터페이스 메서드 접근 제한 | public 추상 메서드는 public으로 구현 |
+| 클래스 다중 상속 | Java는 클래스의 다중 상속 불가 |
+| 인터페이스 다중 구현 | 여러 인터페이스 구현 가능 |
+| 정적 중첩 클래스 생성 | 외부 객체 없이 Outer.Nested 형태로 생성 |
+| 인스턴스 내부 클래스 생성 | 일반적으로 외부 객체 필요 |
+| 지역 클래스의 변수 캡처 | final 또는 사실상 final 필요 |
+| 익명 클래스와 람다식 혼동 | 람다는 함수형 인터페이스에 적용 |
+| Builder 생성 문법 오류 | new Builder() 또는 제공된 팩토리 메서드 사용 |
+| DI와 인터페이스 혼동 | 인터페이스는 계약, DI는 의존 객체 전달 방식 |
+| 예외 처리 누락 | Checked Exception 처리 또는 전파 |
+| 예외 무조건 무시 | 적절한 처리, 기록 또는 전파 필요 |
+| finally에 대한 오해 | 모든 상황에서 실행이 보장되지는 않음 |
+| 자원 해제 누락 | try-with-resources 등으로 자원 정리 |
+
+### ✅ Day16 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| Package | 클래스의 소속과 이름 공간 관리 |
+| Import | 외부 패키지 타입을 간단한 이름으로 사용 |
+| Static Import | 정적 멤버의 이름 간소화 |
+| Abstract Class | 공통 상태와 구현을 제공하는 추상 클래스 |
+| Abstract Method | 구현부 없이 선언된 메서드 |
+| extends | 클래스 상속 |
+| Interface | 공통 기능의 계약 및 규약 |
+| implements | 인터페이스 구현 |
+| Default Method | 인터페이스의 기본 구현 메서드 |
+| Multiple Implementation | 여러 인터페이스 동시 구현 |
+| Template Method Pattern | 공통 실행 순서와 세부 구현 분리 |
+| Nested Class | 클래스 내부에 선언된 클래스 |
+| Instance Inner Class | 외부 객체와 연결된 내부 클래스 |
+| Static Nested Class | 외부 객체 없이 사용하는 정적 중첩 클래스 |
+| Local Class | 블록 내부에 선언하는 클래스 |
+| Anonymous Class | 이름 없이 선언하여 사용하는 클래스 |
+| Effectively Final | 재대입하지 않아 final처럼 취급되는 지역 변수 |
+| Lambda Expression | 함수형 인터페이스 구현 표현식 |
+| Functional Interface | 추상 메서드가 하나인 인터페이스 |
+| Builder Pattern | 단계적으로 객체를 생성하는 패턴 |
+| Dependency Injection | 의존 객체를 외부에서 전달받는 구조 |
+| Polymorphism | 공통 타입으로 다양한 구현 객체 사용 |
+| Checked Exception | 컴파일러가 처리 또는 전파를 요구하는 예외 |
+| Unchecked Exception | 컴파일러가 처리를 강제하지 않는 예외 |
+| try-catch-finally | 예외 처리 및 정리 작업 |
+| throw | 예외 객체 발생 |
+| throws | 예외 전파 가능성 선언 |
+| try-with-resources | AutoCloseable 자원 자동 정리 |
+
+**최종 학습 정리**
+
+- `package`는 클래스의 소속을 지정하고 `import`는 다른 패키지의 타입을 간편하게 사용하도록 한다.
+- 추상 클래스는 공통 상태와 기능을 제공하는 상속 기반 클래스이다.
+- 추상 클래스는 직접 객체를 생성할 수 없지만 생성자와 일반 메서드를 가질 수 있다.
+- 추상 메서드는 구현부 없이 선언하며 구체 자식 클래스에서 구현해야 한다.
+- 템플릿 메서드 패턴은 전체 실행 순서를 공통으로 정의하고 일부 단계만 자식에서 구현한다.
+- 인터페이스는 여러 구현 클래스가 지켜야 하는 기능의 규칙을 정의한다.
+- Java는 클래스의 다중 상속은 지원하지 않지만 여러 인터페이스를 구현할 수 있다.
+- 추상 클래스는 공통 상태와 구현을 공유할 때, 인터페이스는 기능 계약을 정의할 때 주로 사용한다.
+- 중첩 클래스는 관련된 클래스를 내부에 묶어 관리하는 구조이다.
+- 인스턴스 내부 클래스는 외부 객체와 연결되며 정적 중첩 클래스는 외부 객체 없이 생성할 수 있다.
+- 지역 클래스는 특정 블록에서만 사용하며 캡처한 지역 변수는 final 또는 사실상 final이어야 한다.
+- 익명 클래스는 이름 없이 일회성 구현을 생성하는 데 활용한다.
+- 람다식은 함수형 인터페이스를 간결하게 구현하는 표현식이다.
+- Builder 패턴은 생성자 매개변수가 많은 객체를 명확하게 생성하도록 돕는다.
+- 의존성 주입은 객체가 사용하는 의존 객체를 외부에서 전달받는 방식이다.
+- 예외 처리는 발생한 문제를 적절하게 처리하거나 전파하여 프로그램의 안정성을 높인다.
+- 객체지향 설계에서 중요한 것은 클래스의 종류를 외우는 것이 아니라 각 구조의 목적과 책임에 따라 적절하게 선택하는 것이다.
 
 </details>

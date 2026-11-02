@@ -1,4 +1,4 @@
-package Day;
+package Day.Day12_Practics;
 
 import java.util.Scanner;
 
