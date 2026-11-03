@@ -18,6 +18,7 @@
 | **Day 14** | 클래스·객체·JVM 메모리 구조 | 클래스 구성, 생성자, 초기화 블록, 메서드 오버로딩, Stack·Heap·Method Area, 참조 변수, static, this, 캡슐화, 상속·구성 |
 | **Day 15** | 상속·다형성 및 JVM 메모리 심화 | 객체지향 핵심 원칙, extends, super, 생성자 초기화 순서, 부모·자식 객체 메모리, 참조 타입, 필드 숨김, 오버라이딩·오버로딩, 동적 바인딩, GC |
 | **Day 16** | Java 클래스 종류와 객체지향 설계 | package·import, 추상 클래스, 인터페이스, 템플릿 메서드 패턴, 내부 클래스 4종, Builder 패턴, 익명 클래스·람다식, 의존성 주입(DI), 예외 처리 |
+| **Day 17** | Java 인터페이스 심화 및 예외 처리 | 인터페이스, 추상·default·static·private 메서드, 다중 구현·상속, 다형성, 결합도, 의존성 주입(DI), Mock 객체, 중첩 클래스, 예외 처리 |
 
 
 
@@ -11324,5 +11325,1822 @@ com.example.shop/
 - 의존성 주입은 객체가 사용하는 의존 객체를 외부에서 전달받는 방식이다.
 - 예외 처리는 발생한 문제를 적절하게 처리하거나 전파하여 프로그램의 안정성을 높인다.
 - 객체지향 설계에서 중요한 것은 클래스의 종류를 외우는 것이 아니라 각 구조의 목적과 책임에 따라 적절하게 선택하는 것이다.
+
+</details>
+
+
+## Day17. Java 인터페이스 심화 및 예외 처리
+<details>
+
+### 🎯 학습 목표
+- 인터페이스의 개념과 기능 규약으로서의 역할을 이해한다.
+- 인터페이스의 선언과 `implements`를 이용한 구현 방법을 익힌다.
+- 인터페이스의 상수 필드와 추상 메서드의 특징을 이해한다.
+- `default`, `static`, `private` 메서드의 차이를 구분한다.
+- 인터페이스의 다중 구현과 다중 상속 구조를 이해한다.
+- 인터페이스를 이용한 자동 타입 변환과 다형성을 이해한다.
+- 추상 클래스와 인터페이스의 차이 및 선택 기준을 이해한다.
+- 강한 결합과 느슨한 결합의 차이를 구분한다.
+- 인터페이스와 의존성 주입(DI)의 관계를 이해한다.
+- Mock 객체를 활용한 테스트 구조를 이해한다.
+- 중첩 클래스와 익명 객체의 주요 특징을 복습한다.
+- Checked Exception과 Unchecked Exception을 구분한다.
+- `try-catch-finally`, `throw`, `throws`의 사용법을 이해한다.
+- `try-with-resources`를 이용한 자원 관리 방법을 이해한다.
+- 사용자 정의 예외를 이용하여 의미 있는 오류를 표현할 수 있다.
+
+### 1. 인터페이스(Interface)의 개념
+
+인터페이스는 클래스가 제공해야 할 기능의 규칙과 계약을 정의하는 참조 타입이다.
+
+**인터페이스의 핵심 개념**
+
+- 어떤 기능을 제공해야 하는지 정의한다.
+- 해당 기능을 어떻게 구현할지는 구현 클래스가 결정한다.
+- 서로 다른 클래스가 동일한 기능 규약을 따를 수 있다.
+- 공통 타입으로 다양한 구현 객체를 처리할 수 있다.
+- 구현 세부사항을 사용하는 코드로부터 분리할 수 있다.
+
+**인터페이스의 역할**
+
+```text
+        인터페이스
+     (기능의 설계 규약)
+             │
+             ▼
+       Payment
+       ┌──────────┐
+       │ pay()    │
+       └────┬─────┘
+            │
+     ┌──────┴──────┐
+     │             │
+     ▼             ▼
+ CardPayment   KakaoPayment
+     │             │
+     ▼             ▼
+  카드 결제      간편 결제
+```
+
+- `Payment` : 결제 기능의 규약 정의
+- `CardPayment` : 카드 결제 방식 구현
+- `KakaoPayment` : 간편 결제 방식 구현
+
+**핵심 : 인터페이스는 구현 방법보다 외부에 제공하는 기능의 규약을 정의하는 데 목적이 있다.**
+
+### 2. 인터페이스의 기본 선언과 구현
+
+Java는 `interface` 키워드를 사용하여 인터페이스를 선언한다.
+
+**인터페이스 선언**
+
+```java
+interface Animal {
+    void sound();
+}
+```
+
+**인터페이스 구현**
+
+```java
+class Dog implements Animal {
+
+    @Override
+    public void sound() {
+        System.out.println("멍멍!");
+    }
+}
+```
+
+**객체 생성과 사용**
+
+```java
+Animal animal = new Dog();
+
+animal.sound(); // 멍멍!
+```
+
+**주요 키워드**
+
+| 키워드 | 역할 |
+|---|---|
+| `interface` | 인터페이스 선언 |
+| `implements` | 클래스의 인터페이스 구현 |
+| `extends` | 인터페이스 간 상속 |
+| `@Override` | 상속된 메서드의 올바른 재정의 여부 검사 |
+
+**실행 구조**
+
+```text
+interface Animal
+       │
+       │ sound() 선언
+       ▼
+class Dog implements Animal
+       │
+       │ sound() 구현
+       ▼
+new Dog()
+       │
+       ▼
+animal.sound()
+       │
+       ▼
+Dog.sound() 실행
+```
+
+**주의사항**
+
+- 인터페이스 자체는 직접 객체를 생성할 수 없다.
+- 구체 클래스는 필요한 추상 메서드를 구현해야 한다.
+- 인터페이스의 public 추상 메서드를 구현할 때는 반드시 `public`으로 선언해야 한다.
+- `@Override`는 필수 문법은 아니지만 사용하는 것이 권장된다.
+
+### 3. 인터페이스와 객체의 메모리 구조
+
+인터페이스는 직접 객체를 생성할 수 없지만 구현 객체를 참조하는 타입으로 사용할 수 있다.
+
+**잘못된 객체 생성**
+
+```java
+// 컴파일 오류
+// Animal animal = new Animal();
+```
+
+**올바른 객체 생성**
+
+```java
+Animal animal = new Dog();
+```
+
+**메모리 구조**
+
+```text
+       JVM Stack
+  ┌─────────────────┐
+  │ animal          │
+  │ 선언 타입 Animal│
+  │ 참조값 ─────────┼──────────┐
+  └─────────────────┘          │
+                               ▼
+                          JVM Heap
+                     ┌─────────────────┐
+                     │    Dog 객체     │
+                     │                 │
+                     │ sound() 구현    │
+                     └─────────────────┘
+```
+
+**핵심 원리**
+
+1. `new Dog()`는 Dog 객체를 생성한다.
+2. `animal` 변수의 선언 타입은 `Animal`이다.
+3. 참조 변수는 생성된 Dog 객체를 참조한다.
+4. `sound()`를 호출하면 실제 Dog 객체의 구현이 실행된다.
+
+**참조 타입과 실제 객체 타입**
+
+| 구분 | 타입 | 역할 |
+|---|---|---|
+| 참조 변수 타입 | Animal | 접근 가능한 멤버를 결정 |
+| 실제 객체 타입 | Dog | 오버라이딩된 인스턴스 메서드의 구현 결정 |
+
+※ 메모리 그림은 JVM의 논리적 동작을 단순화한 구조이며, 실제 객체 내부에 메서드 코드가 개별적으로 복사된다는 의미는 아니다.
+
+### 4. 인터페이스의 상수 필드
+
+인터페이스 내부에 선언하는 모든 필드는 자동으로 `public static final` 속성을 가진다.
+
+**인터페이스 상수 선언**
+
+```java
+interface Config {
+
+    int MAX = 100;
+}
+```
+
+위 코드는 다음과 같은 의미이다.
+
+```java
+interface Config {
+
+    public static final int MAX = 100;
+}
+```
+
+**상수 사용**
+
+```java
+System.out.println(Config.MAX); // 100
+```
+
+**상수의 특징**
+
+- `public` : 외부에서 접근 가능
+- `static` : 객체가 아닌 타입에 소속
+- `final` : 초기화된 필드에 다른 값을 재대입할 수 없음
+
+**잘못된 상수 변경**
+
+```java
+// 컴파일 오류
+// Config.MAX = 200;
+```
+
+| 구분 | 일반 클래스 필드 | 인터페이스 필드 |
+|---|---|---|
+| 인스턴스 필드 | 선언 가능 | 선언 불가 |
+| static 필드 | 선언 가능 | 상수 필드만 가능 |
+| final | 선택적으로 사용 | 자동 적용 |
+| 초기화 | 기본값 또는 명시적 초기화 | 명시적 초기화 필요 |
+
+**주의 : 인터페이스의 모든 필드는 상수이며, 객체별로 서로 다른 인스턴스 필드를 선언할 수 없다.**
+
+### 5. 인터페이스의 추상 메서드(Abstract Method)
+
+인터페이스의 일반적인 메서드 선언은 기본적으로 `public abstract` 속성을 가진다.
+
+**추상 메서드 선언**
+
+```java
+interface RemoteControl {
+
+    void powerOn();
+
+    void powerOff();
+}
+```
+
+다음과 같은 의미이다.
+
+```java
+interface RemoteControl {
+
+    public abstract void powerOn();
+
+    public abstract void powerOff();
+}
+```
+
+**구현 클래스**
+
+```java
+class Television implements RemoteControl {
+
+    @Override
+    public void powerOn() {
+        System.out.println("TV 켜짐");
+    }
+
+    @Override
+    public void powerOff() {
+        System.out.println("TV 꺼짐");
+    }
+}
+```
+
+**메서드의 특징**
+
+- 인터페이스 추상 메서드는 구현부가 없다.
+- 반환 타입, 메서드 이름, 매개변수 등을 정의한다.
+- 구현 클래스는 메서드의 실제 동작을 작성한다.
+- 구현 클래스가 필요한 추상 메서드를 구현하지 않으면 해당 클래스도 추상 클래스로 선언해야 한다.
+
+**주의 : 인터페이스에서 선언한 public 추상 메서드를 구현할 때 접근 제한자를 생략하면 package-private이 되므로 컴파일 오류가 발생한다.**
+
+### 6. 인터페이스 메서드의 종류
+
+Java 인터페이스에는 여러 종류의 메서드를 선언할 수 있다.
+
+| 종류 | 도입 버전 | 주요 특징 |
+|---|---|---|
+| 추상 메서드 | 기본 지원 | 구현 클래스가 구현할 기능 |
+| default 메서드 | Java 8 | 인터페이스의 기본 구현 |
+| static 메서드 | Java 8 | 인터페이스 소속 정적 기능 |
+| private 메서드 | Java 9 | 인터페이스 내부의 공통 처리 |
+
+**메서드 구조**
+
+```java
+interface Example {
+
+    // 추상 메서드
+    void execute();
+
+    // default 메서드
+    default void print() {
+        System.out.println("기본 기능");
+    }
+
+    // static 메서드
+    static void info() {
+        System.out.println("정적 기능");
+    }
+
+    // private 메서드
+    private void helper() {
+        System.out.println("내부 기능");
+    }
+}
+```
+
+- 추상 메서드 : 구현 클래스가 제공할 기능의 규약
+- default 메서드 : 구현 클래스에서 재사용할 수 있는 기본 동작
+- static 메서드 : 인터페이스와 관련된 공통 유틸리티
+- private 메서드 : 인터페이스 내부의 구현 코드 재사용
+
+### 7. default 메서드
+
+`default` 메서드는 인터페이스에 기본 구현을 제공하는 인스턴스 메서드이다.
+
+**사용 목적**
+
+- 여러 구현 클래스에서 공통 기능을 재사용한다.
+- 기존 인터페이스에 새로운 기능을 추가할 때 활용한다.
+- 구현 클래스가 필요한 경우 기본 동작을 재정의할 수 있다.
+
+**인터페이스 선언**
+
+```java
+interface RemoteControl {
+
+    void powerOn();
+
+    default void reset() {
+        System.out.println("기본 설정으로 초기화");
+    }
+}
+```
+
+**구현 클래스**
+
+```java
+class Television implements RemoteControl {
+
+    @Override
+    public void powerOn() {
+        System.out.println("TV 켜짐");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+RemoteControl remote = new Television();
+
+remote.powerOn();
+remote.reset();
+```
+
+**실행 결과**
+
+```text
+TV 켜짐
+기본 설정으로 초기화
+```
+
+**default 메서드 재정의**
+
+```java
+@Override
+public void reset() {
+    System.out.println("TV 전용 초기화");
+}
+```
+
+**주의사항**
+
+- `default` 메서드는 구현부가 있어야 한다.
+- 구현 클래스에서 반드시 재정의할 필요는 없다.
+- 필요한 경우 오버라이딩할 수 있다.
+- 서로 다른 인터페이스의 default 메서드가 충돌하면 명시적으로 해결해야 한다.
+
+### 8. static 메서드와 private 메서드
+
+**static 메서드**
+
+인터페이스 이름을 통해 직접 호출할 수 있는 정적 메서드이다.
+
+```java
+interface Calculator {
+
+    static int add(int a, int b) {
+        return a + b;
+    }
+}
+```
+
+**호출**
+
+```java
+int result = Calculator.add(10, 20);
+
+System.out.println(result); // 30
+```
+
+**특징**
+
+- 객체 생성이 필요 없다.
+- 인터페이스 이름으로 호출한다.
+- 구현 클래스에 정적 메서드가 상속되지 않는다.
+- 공통 계산이나 유틸리티 기능에 활용할 수 있다.
+
+**private 메서드**
+
+인터페이스 내부에서 공통적으로 사용하는 구현 코드를 분리할 때 사용한다.
+
+```java
+interface Logger {
+
+    default void info(String message) {
+        print("INFO", message);
+    }
+
+    default void error(String message) {
+        print("ERROR", message);
+    }
+
+    private void print(String level, String message) {
+        System.out.println(
+            "[" + level + "] " + message
+        );
+    }
+}
+```
+
+**특징**
+
+- 외부에서 직접 호출할 수 없다.
+- 구현 클래스에서도 직접 접근할 수 없다.
+- 인터페이스 내부의 메서드에서 재사용할 수 있다.
+- `private static` 메서드도 선언할 수 있다.
+
+**핵심 : default는 기본 동작 제공, static은 타입 소속 기능, private은 내부 구현 재사용에 사용한다.**
+
+### 9. 인터페이스의 다중 구현(Multiple Implementation)
+
+Java 클래스는 하나의 직접적인 부모 클래스만 상속할 수 있지만 여러 인터페이스를 동시에 구현할 수 있다.
+
+**다중 구현의 기본 구조**
+
+```java
+class 클래스명 implements 인터페이스A, 인터페이스B {
+    // 필요한 메서드 구현
+}
+```
+
+**인터페이스 선언**
+
+```java
+interface Printable {
+    void print();
+}
+
+interface Scannable {
+    void scan();
+}
+
+interface Faxable {
+    void fax();
+}
+```
+
+**다중 구현 클래스**
+
+```java
+class MultiFunctionPrinter
+        implements Printable, Scannable, Faxable {
+
+    @Override
+    public void print() {
+        System.out.println("인쇄");
+    }
+
+    @Override
+    public void scan() {
+        System.out.println("스캔");
+    }
+
+    @Override
+    public void fax() {
+        System.out.println("팩스 전송");
+    }
+}
+```
+
+**사용 예제**
+
+```java
+MultiFunctionPrinter printer =
+    new MultiFunctionPrinter();
+
+printer.print();
+printer.scan();
+printer.fax();
+```
+
+**다중 구현 구조**
+
+```text
+   Printable      Scannable      Faxable
+       │              │             │
+       └──────────────┼─────────────┘
+                      │
+                  implements
+                      │
+                      ▼
+           MultiFunctionPrinter
+           ┌───────────────────┐
+           │ print()           │
+           │ scan()            │
+           │ fax()             │
+           └───────────────────┘
+```
+
+**핵심**
+
+- 하나의 클래스가 여러 인터페이스의 규약을 구현한다.
+- 구현하는 각 인터페이스의 필요한 추상 메서드를 모두 구현해야 한다.
+- 같은 객체를 여러 인터페이스 타입으로 참조할 수 있다.
+- 클래스의 다중 상속과 인터페이스의 다중 구현은 서로 다른 개념이다.
+
+### 10. 인터페이스의 상속(extends)
+
+인터페이스는 다른 인터페이스를 상속하여 기능 규약을 확장할 수 있다.
+
+**인터페이스 상속**
+
+```java
+interface Animal {
+    void eat();
+}
+
+interface Flyable extends Animal {
+    void fly();
+}
+```
+
+**구현 클래스**
+
+```java
+class Bird implements Flyable {
+
+    @Override
+    public void eat() {
+        System.out.println("먹이를 먹습니다.");
+    }
+
+    @Override
+    public void fly() {
+        System.out.println("날아갑니다.");
+    }
+}
+```
+
+**구조**
+
+```text
+       Animal
+       eat()
+         │
+       extends
+         │
+         ▼
+       Flyable
+       fly()
+         │
+      implements
+         │
+         ▼
+        Bird
+     ┌────────┐
+     │ eat()  │
+     │ fly()  │
+     └────────┘
+```
+
+**여러 인터페이스 상속**
+
+```java
+interface A {
+    void methodA();
+}
+
+interface B {
+    void methodB();
+}
+
+interface C extends A, B {
+    void methodC();
+}
+```
+
+- 인터페이스는 여러 인터페이스를 동시에 상속할 수 있다.
+- 상속받은 추상 메서드도 구현 클래스에서 구현해야 한다.
+- 인터페이스 사이의 상속에는 `extends`를 사용한다.
+- 클래스가 인터페이스를 구현할 때는 `implements`를 사용한다.
+
+### 11. 인터페이스와 다형성(Polymorphism)
+
+다형성은 하나의 공통 타입으로 다양한 구현 객체를 참조하고 사용할 수 있는 특성이다.
+
+**공통 인터페이스**
+
+```java
+interface Payment {
+    void pay(int amount);
+}
+```
+
+**카드 결제**
+
+```java
+class CardPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카드 결제: " + amount);
+    }
+}
+```
+
+**간편 결제**
+
+```java
+class KakaoPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카카오페이 결제: " + amount);
+    }
+}
+```
+
+**다형성 사용**
+
+```java
+Payment payment = new CardPayment();
+
+payment.pay(10000);
+
+payment = new KakaoPayment();
+
+payment.pay(20000);
+```
+
+**실행 결과**
+
+```text
+카드 결제: 10000
+카카오페이 결제: 20000
+```
+
+**다형성의 동작 구조**
+
+```text
+         Payment 타입
+              │
+              │ pay() 호출
+              ▼
+        실제 객체 확인
+              │
+       ┌──────┴──────┐
+       │             │
+       ▼             ▼
+  CardPayment   KakaoPayment
+       │             │
+       ▼             ▼
+    카드 결제      간편 결제
+```
+
+**핵심 원리**
+
+- `Payment`는 공통 인터페이스 타입이다.
+- 실제 객체는 `CardPayment` 또는 `KakaoPayment`이다.
+- 동일한 `pay()` 호출이 서로 다른 구현을 실행한다.
+- 인터페이스를 이용하면 구현체가 달라도 공통된 방식으로 처리할 수 있다.
+
+### 12. 자동 타입 변환과 강제 타입 변환
+
+인터페이스 구현 객체는 자신이 구현한 인터페이스 타입으로 자동 변환될 수 있다.
+
+**자동 타입 변환(Upcasting)**
+
+```java
+CardPayment card = new CardPayment();
+
+Payment payment = card;
+```
+
+- 구현 객체를 인터페이스 타입으로 참조할 수 있다.
+- 별도의 형변환 연산자가 필요하지 않다.
+- 인터페이스에서 사용 가능한 멤버를 기준으로 접근한다.
+
+**강제 타입 변환(Downcasting)**
+
+```java
+Payment payment = new CardPayment();
+
+CardPayment card = (CardPayment) payment;
+```
+
+**instanceof를 이용한 확인**
+
+```java
+if (payment instanceof CardPayment card) {
+    card.pay(10000);
+}
+```
+
+**주의사항**
+
+- 인터페이스 타입에는 구현 클래스의 모든 고유 메서드가 노출되는 것이 아니다.
+- 실제 객체와 호환되지 않는 타입으로 강제 변환하면 `ClassCastException`이 발생한다.
+- `instanceof`를 사용하여 타입 호환성을 확인할 수 있다.
+
+### 13. 강한 결합과 느슨한 결합
+
+결합도(Coupling)는 클래스나 모듈이 다른 클래스나 모듈에 얼마나 의존하는지를 나타낸다.
+
+**강한 결합(Tight Coupling)**
+
+특정 구현 클래스에 직접 의존하는 구조이다.
+
+```java
+class OrderService {
+
+    private final CardPayment payment =
+        new CardPayment();
+
+    public void checkout(int amount) {
+        payment.pay(amount);
+    }
+}
+```
+
+**문제점**
+
+- `OrderService`가 `CardPayment` 구현에 직접 의존한다.
+- 다른 결제 방식으로 변경할 때 서비스 코드를 수정해야 할 수 있다.
+- 테스트에서 실제 구현을 대체하기 어려울 수 있다.
+
+**느슨한 결합(Loose Coupling)**
+
+구체적인 구현이 아닌 공통 인터페이스에 의존하는 구조이다.
+
+```java
+class OrderService {
+
+    private final Payment payment;
+
+    public OrderService(Payment payment) {
+        this.payment = payment;
+    }
+
+    public void checkout(int amount) {
+        payment.pay(amount);
+    }
+}
+```
+
+**구조 비교**
+
+```text
+[강한 결합]
+
+OrderService
+      │
+      │ 직접 의존
+      ▼
+CardPayment
+
+
+[느슨한 결합]
+
+OrderService
+      │
+      ▼
+ Payment 인터페이스
+      │
+  ┌───┴──────────┐
+  │              │
+  ▼              ▼
+CardPayment   KakaoPayment
+```
+
+**비교**
+
+| 구분 | 강한 결합 | 느슨한 결합 |
+|---|---|---|
+| 의존 대상 | 구체적인 구현 클래스 | 공통 인터페이스 |
+| 구현체 교체 | 기존 코드 수정 가능성 높음 | 비교적 용이 |
+| 확장성 | 구현에 강하게 영향받음 | 새로운 구현 추가에 유리 |
+| 테스트 | 실제 구현과 분리하기 어려울 수 있음 | Mock 구현으로 대체 가능 |
+| 유지보수 | 변경 영향이 커질 수 있음 | 변경 영향을 줄이기 쉬움 |
+
+**핵심 : 인터페이스를 활용하면 구체적인 구현에 대한 의존성을 줄이고 변경에 유연한 구조를 설계할 수 있다.**
+
+### 14. 의존성 주입(Dependency Injection)
+
+의존성 주입(DI)은 클래스가 필요한 객체를 직접 생성하지 않고 외부에서 전달받도록 구성하는 방식이다.
+
+**의존성 주입의 주요 목적**
+
+- 클래스 간 직접적인 결합도 감소
+- 객체 생성과 사용의 책임 분리
+- 구현체 교체 용이
+- 테스트 코드 작성 용이
+
+**생성자 주입(Constructor Injection)**
+
+```java
+class OrderService {
+
+    private final Payment payment;
+
+    public OrderService(Payment payment) {
+        this.payment = payment;
+    }
+
+    public void checkout(int amount) {
+        payment.pay(amount);
+    }
+}
+```
+
+**실제 구현 객체 주입**
+
+```java
+Payment cardPayment = new CardPayment();
+
+OrderService orderService =
+    new OrderService(cardPayment);
+
+orderService.checkout(10000);
+```
+
+**다른 구현체 주입**
+
+```java
+OrderService orderService =
+    new OrderService(new KakaoPayment());
+
+orderService.checkout(20000);
+```
+
+**의존성 주입 구조**
+
+```text
+         외부 조립 코드
+               │
+       구현 객체 선택 및 생성
+               │
+               ▼
+       CardPayment 객체
+               │
+               │ 생성자로 전달
+               ▼
+         OrderService
+               │
+               ▼
+        Payment 인터페이스
+               │
+               ▼
+           pay() 호출
+```
+
+**핵심**
+
+- `OrderService`는 `Payment` 인터페이스에 의존한다.
+- 실제 구현 객체는 외부에서 전달받는다.
+- 구현체를 교체해도 `OrderService`의 핵심 로직을 변경하지 않아도 된다.
+- Spring에서는 컨테이너가 객체 생성과 의존성 주입을 지원한다.
+
+**주의 : 인터페이스를 사용한다고 자동으로 의존성 주입이 적용되는 것은 아니다. 의존 객체를 외부에서 전달하도록 설계해야 한다.**
+
+### 15. 인터페이스와 테스트(Mock Object)
+
+Mock 객체는 테스트에서 실제 의존 객체를 대신하도록 만든 테스트용 객체이다.
+
+**Mock 객체를 사용하는 이유**
+
+- 실제 결제나 외부 API 호출 없이 테스트할 수 있다.
+- 데이터베이스나 네트워크 연결 없이 특정 로직을 검증할 수 있다.
+- 테스트에서 원하는 결과를 제어하기 쉽다.
+- 외부 환경에 따른 테스트 결과의 변동을 줄일 수 있다.
+
+**테스트용 구현 클래스**
+
+```java
+class MockPayment implements Payment {
+
+    private boolean called = false;
+
+    @Override
+    public void pay(int amount) {
+        called = true;
+        System.out.println("테스트 결제: " + amount);
+    }
+
+    public boolean isCalled() {
+        return called;
+    }
+}
+```
+
+**테스트 예제**
+
+```java
+MockPayment mock = new MockPayment();
+
+OrderService service = new OrderService(mock);
+
+service.checkout(10000);
+
+System.out.println(mock.isCalled()); // true
+```
+
+**실제 구현과 테스트 구현**
+
+```text
+          OrderService
+                │
+                ▼
+         Payment 인터페이스
+                │
+         ┌──────┴───────┐
+         │              │
+         ▼              ▼
+   RealPayment      MockPayment
+         │              │
+         ▼              ▼
+   실제 결제 처리    테스트 동작 기록
+```
+
+**핵심**
+
+- 테스트용 구현체도 동일한 인터페이스를 구현한다.
+- 서비스는 실제 구현과 테스트 구현을 구분할 필요가 없다.
+- 인터페이스와 DI를 함께 사용하면 테스트 대상을 독립적으로 검증하기 쉬워진다.
+
+※ 예제의 `MockPayment`는 직접 작성한 테스트 대역이며, Mockito 등의 라이브러리에서 제공하는 Mock 객체와는 구현 방식이 다를 수 있다.
+
+### 16. 추상 클래스와 인터페이스 비교
+
+추상 클래스와 인터페이스는 모두 추상화와 다형성을 지원하지만 설계 목적이 다르다.
+
+| 구분 | 추상 클래스 | 인터페이스 |
+|---|---|---|
+| 선언 | `abstract class` | `interface` |
+| 주요 목적 | 공통 상태와 구현 공유 | 기능의 규칙과 계약 정의 |
+| 클래스 관계 | `extends` | `implements` |
+| 인스턴스 필드 | 선언 가능 | 선언 불가 |
+| 생성자 | 선언 가능 | 선언 불가 |
+| 일반 메서드 | 선언 가능 | default/static/private 등 |
+| 추상 메서드 | 선언 가능 | 선언 가능 |
+| 다중 관계 | 단일 클래스 상속 | 여러 인터페이스 구현 |
+| 직접 객체 생성 | 불가능 | 불가능 |
+
+**추상 클래스가 적합한 경우**
+
+- 여러 클래스가 공통 상태를 공유해야 한다.
+- 공통 구현을 부모 클래스에서 제공해야 한다.
+- 명확한 IS-A 관계가 존재한다.
+- 공통 작업 과정 중 일부 단계만 자식 클래스에서 구현한다.
+
+**인터페이스가 적합한 경우**
+
+- 기능의 공통 규약이 필요하다.
+- 서로 다른 구현체를 동일한 방식으로 사용해야 한다.
+- 구현체를 유연하게 교체하고 싶다.
+- 다중 구현을 통해 여러 역할을 조합해야 한다.
+
+**선택 기준**
+
+```text
+       새로운 타입 설계
+              │
+              ▼
+     공통 상태와 구현을
+       공유해야 하는가?
+          │        │
+         Yes       No
+          │        │
+          ▼        ▼
+       추상 클래스  기능의 공통 규약이
+                   필요한가?
+                       │
+                       ▼
+                   인터페이스
+```
+
+**주의 : 인터페이스와 추상 클래스는 서로 배타적인 구조가 아니므로 하나의 설계에서 함께 사용할 수 있다.**
+
+### 17. 인터페이스를 활용한 Spring Boot 구조
+
+Spring Boot에서 인터페이스는 비즈니스 로직과 데이터 접근의 역할을 분리하는 데 활용할 수 있다.
+
+**대표적인 프로그램 구조**
+
+```text
+          HTTP Request
+                │
+                ▼
+          Controller
+                │
+                ▼
+       Service 인터페이스
+                │
+                ▼
+          ServiceImpl
+        (비즈니스 로직)
+                │
+                ▼
+      Repository 인터페이스
+                │
+                ▼
+       데이터 접근 구현
+                │
+                ▼
+            Database
+```
+
+**서비스 인터페이스**
+
+```java
+public interface MemberService {
+
+    String findMember(Long id);
+}
+```
+
+**서비스 구현 클래스**
+
+```java
+@Service
+public class MemberServiceImpl implements MemberService {
+
+    @Override
+    public String findMember(Long id) {
+        return "Member ID: " + id;
+    }
+}
+```
+
+**Controller에서 사용**
+
+```java
+@RestController
+public class MemberController {
+
+    private final MemberService memberService;
+
+    public MemberController(MemberService memberService) {
+        this.memberService = memberService;
+    }
+
+    @GetMapping("/members/{id}")
+    public String findMember(@PathVariable Long id) {
+        return memberService.findMember(id);
+    }
+}
+```
+
+**구조의 특징**
+
+- `MemberService` : 비즈니스 기능의 규약 정의
+- `MemberServiceImpl` : 비즈니스 기능 구현
+- `MemberController` : HTTP 요청 처리
+- 생성자 주입 : 필요한 서비스 객체를 외부에서 전달받음
+
+**핵심**
+
+- Controller는 구현 클래스보다 Service 인터페이스에 의존할 수 있다.
+- 구현을 교체해도 Controller의 변경을 줄일 수 있다.
+- Spring 컨테이너가 Bean을 생성하고 필요한 의존 객체를 주입할 수 있다.
+- 인터페이스를 통해 역할과 구현을 분리하면 테스트와 유지보수에 도움이 된다.
+
+※ 위 코드는 Spring Boot 의존성과 import가 필요한 구조 설명용 예제이다. 모든 서비스에 반드시 별도의 인터페이스와 구현 클래스를 만들어야 하는 것은 아니다.
+
+### 18. 중첩 클래스와 익명 객체 복습
+
+강의자료에서는 인터페이스와 함께 중첩 클래스 및 익명 객체의 특징도 복습한다.
+
+**중첩 클래스(Nested Class)**
+
+| 종류 | 특징 |
+|---|---|
+| 인스턴스 멤버 클래스 | 외부 객체와 연결 |
+| 정적 중첩 클래스 | 외부 객체 없이 사용 가능 |
+| 지역 클래스 | 메서드 또는 블록 내부 선언 |
+| 익명 클래스 | 이름 없는 클래스를 선언하며 객체 생성 |
+
+**인스턴스 멤버 클래스**
+
+```java
+class Outer {
+
+    private int number = 10;
+
+    class Inner {
+
+        void print() {
+            System.out.println(number);
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Outer outer = new Outer();
+
+Outer.Inner inner = outer.new Inner();
+
+inner.print(); // 10
+```
+
+**정적 중첩 클래스**
+
+```java
+class Outer {
+
+    static class Nested {
+
+        void print() {
+            System.out.println("정적 중첩 클래스");
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Outer.Nested nested = new Outer.Nested();
+
+nested.print();
+```
+
+**인터페이스의 익명 구현 객체**
+
+```java
+Animal animal = new Animal() {
+
+    @Override
+    public void sound() {
+        System.out.println("익명 객체의 동작");
+    }
+};
+
+animal.sound();
+```
+
+**주의사항**
+
+- 인터페이스 자체는 인스턴스화할 수 없지만, 익명 구현 클래스를 정의하면서 객체를 생성하는 것은 가능하다.
+- 정적 중첩 클래스는 외부 객체 없이 생성할 수 있다.
+- 지역 클래스에서 캡처하는 지역 변수는 `final` 또는 사실상 final이어야 한다.
+
+### 19. 예외(Exception)와 오류(Error)
+
+예외는 프로그램 실행 과정에서 발생하는 비정상적인 상황을 객체로 표현한 것이다.
+
+**Java 예외 계층 구조**
+
+```text
+             Throwable
+                 │
+        ┌────────┴────────┐
+        │                 │
+        ▼                 ▼
+      Error           Exception
+                          │
+                  ┌───────┴────────┐
+                  │                │
+                  ▼                ▼
+          Checked Exception  RuntimeException
+                                   │
+                                   ▼
+                           Unchecked Exception
+```
+
+**Exception과 Error 비교**
+
+| 구분 | Exception | Error |
+|---|---|---|
+| 의미 | 프로그램 실행 중 발생하는 예외 상황 | 심각한 시스템·JVM 수준 문제 등 |
+| 처리 | 상황에 따라 적절하게 처리·복구 | 일반적으로 애플리케이션에서 복구하기 어려움 |
+| 예시 | IOException, SQLException | OutOfMemoryError, StackOverflowError |
+
+**대표적인 예외**
+
+| 예외 | 발생 상황 |
+|---|---|
+| `ArithmeticException` | 0으로 정수 나눗셈 |
+| `NullPointerException` | null 참조의 부적절한 사용 |
+| `NumberFormatException` | 잘못된 문자열 숫자 변환 |
+| `ArrayIndexOutOfBoundsException` | 배열 인덱스 범위 초과 |
+| `IOException` | 입출력 처리 중 오류 |
+| `SQLException` | 데이터베이스 관련 오류 |
+
+**주의 : Exception과 Error는 모두 Throwable의 하위 타입이지만 일반적인 프로그램에서는 Error를 직접 처리하기보다 발생 원인을 해결하는 것이 중요하다.**
+
+### 20. Checked Exception과 Unchecked Exception
+
+Java 예외는 컴파일러가 예외 처리를 요구하는지에 따라 구분할 수 있다.
+
+| 구분 | Checked Exception | Unchecked Exception |
+|---|---|---|
+| 컴파일러의 처리 요구 | 있음 | 없음 |
+| 대표 계층 | RuntimeException을 제외한 Exception 하위 타입 | RuntimeException 및 Error 하위 타입 |
+| 대표 예시 | IOException, SQLException | NullPointerException, ArithmeticException |
+| 처리 방식 | catch 또는 throws 필요 | 선택적으로 처리 |
+
+**Checked Exception 예제**
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        try (FileReader reader =
+                 new FileReader("test.txt")) {
+
+            System.out.println(reader.read());
+
+        } catch (IOException e) {
+            System.out.println("파일 처리 실패");
+        }
+    }
+}
+```
+
+**Unchecked Exception 예제**
+
+```java
+int number = Integer.parseInt("abc");
+```
+
+위 코드는 실행 시 `NumberFormatException`이 발생한다.
+
+- Checked Exception은 컴파일러가 처리 또는 전파 선언을 요구한다.
+- Unchecked Exception은 컴파일러가 처리를 강제하지 않는다.
+- 예외가 발생하지 않도록 입력값과 프로그램 상태를 검증하는 것도 중요하다.
+
+### 21. try-catch-finally 예외 처리
+
+`try-catch-finally`는 예외 발생 가능성이 있는 코드를 실행하고, 예외 처리 및 정리 작업을 수행하는 구문이다.
+
+**기본 구조**
+
+```java
+try {
+    // 예외가 발생할 수 있는 코드
+} catch (Exception e) {
+    // 예외 처리
+} finally {
+    // 정리 작업
+}
+```
+
+**각 블록의 역할**
+
+| 블록 | 역할 |
+|---|---|
+| try | 예외가 발생할 수 있는 코드 실행 |
+| catch | 일치하는 예외를 처리 |
+| finally | 일반적으로 예외 발생 여부와 관계없이 실행되는 정리 작업 |
+
+**Java 예제**
+
+```java
+try {
+    int result = 10 / 0;
+
+    System.out.println(result);
+
+} catch (ArithmeticException e) {
+    System.out.println("0으로 나눌 수 없습니다.");
+
+} finally {
+    System.out.println("작업 종료");
+}
+```
+
+**실행 결과**
+
+```text
+0으로 나눌 수 없습니다.
+작업 종료
+```
+
+**실행 흐름**
+
+```text
+          try 실행
+             │
+             ▼
+       예외 발생 여부
+          │      │
+         정상    예외 발생
+          │      │
+          │      ▼
+          │   catch 검사
+          │      │
+          │      ▼
+          │   일치하는 예외 처리
+          │      │
+          └──┬───┘
+             │
+             ▼
+       finally 실행
+             │
+             ▼
+       이후 코드 진행
+```
+
+**주의사항**
+
+- 예외가 발생하면 해당 지점 이후의 try 블록 코드는 실행되지 않는다.
+- 일치하는 catch가 없으면 예외가 상위 호출자에게 전파될 수 있다.
+- finally는 일반적으로 실행되지만 JVM이 강제 종료되는 등의 상황에서는 보장되지 않는다.
+- 예외를 무조건 무시하는 빈 catch 블록은 피하는 것이 좋다.
+
+### 22. 다중 catch와 멀티 catch
+
+하나의 `try` 블록에서 여러 종류의 예외가 발생할 수 있다.
+
+**다중 catch**
+
+```java
+try {
+    int number = Integer.parseInt("abc");
+
+    int result = 100 / number;
+
+    System.out.println(result);
+
+} catch (NumberFormatException e) {
+    System.out.println("숫자 변환 오류");
+
+} catch (ArithmeticException e) {
+    System.out.println("산술 연산 오류");
+}
+```
+
+**멀티 catch**
+
+```java
+try {
+    int number = Integer.parseInt("abc");
+
+    System.out.println(100 / number);
+
+} catch (NumberFormatException | ArithmeticException e) {
+    System.out.println("숫자 처리 오류");
+}
+```
+
+**다중 catch와 멀티 catch 비교**
+
+| 구분 | 특징 |
+|---|---|
+| 다중 catch | 예외 종류별로 다른 처리 가능 |
+| 멀티 catch | 여러 예외를 하나의 catch에서 공통 처리 |
+| catch 순서 | 구체적인 예외를 상위 예외보다 먼저 작성 |
+
+**잘못된 catch 순서**
+
+```java
+// 컴파일 오류 예시
+
+// try {
+//     ...
+// } catch (Exception e) {
+//     ...
+// } catch (NumberFormatException e) {
+//     ...
+// }
+```
+
+- `Exception`을 먼저 처리하면 뒤의 `NumberFormatException` catch에 도달할 수 없다.
+- 자식 예외를 먼저 처리하고 부모 예외를 나중에 처리해야 한다.
+- 멀티 catch에서는 서로 상속 관계에 있는 예외 타입을 함께 선언할 수 없다.
+
+### 23. throw와 throws
+
+`throw`와 `throws`는 모두 예외와 관련된 문법이지만 역할이 다르다.
+
+| 구분 | throw | throws |
+|---|---|---|
+| 역할 | 예외를 직접 발생시킴 | 메서드에서 전파할 예외 선언 |
+| 위치 | 메서드 구현부 등 | 메서드 선언부 |
+| 사용 형태 | `throw new Exception()` | `throws Exception` |
+
+**throw 예제**
+
+```java
+public static void validateAge(int age) {
+
+    if (age < 0) {
+        throw new IllegalArgumentException(
+            "나이는 음수일 수 없습니다."
+        );
+    }
+}
+```
+
+**throws 예제**
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public static String readFile(String path)
+        throws IOException {
+
+    return Files.readString(Path.of(path));
+}
+```
+
+**호출 측 처리**
+
+```java
+try {
+    String text = readFile("test.txt");
+
+    System.out.println(text);
+
+} catch (IOException e) {
+    System.out.println("파일 읽기 실패");
+}
+```
+
+**예외 전파 구조**
+
+```text
+          main()
+             │
+             ▼
+         readFile()
+             │
+             ▼
+       IOException 발생
+             │
+             ▼
+       호출한 곳으로 전파
+             │
+             ▼
+        main()의 catch
+             │
+             ▼
+          예외 처리
+```
+
+**핵심**
+
+- `throw`는 예외 객체를 발생시킨다.
+- `throws`는 메서드가 예외를 호출자에게 전파할 수 있음을 선언한다.
+- Checked Exception은 적절한 처리나 전파 선언이 필요하다.
+- Unchecked Exception에도 `throws`를 작성할 수 있지만 필수는 아니다.
+
+### 24. try-with-resources와 자원 관리
+
+`try-with-resources`는 작업이 종료될 때 자원을 자동으로 닫기 위한 구문이다.
+
+**사용 목적**
+
+- 파일 및 데이터베이스 자원 관리
+- 예외 발생 시에도 자원 정리
+- 자원 해제 코드 중복 감소
+- 자원 누수(Resource Leak) 방지
+
+**Java 예제**
+
+```java
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        try (BufferedReader reader =
+                 new BufferedReader(
+                     new FileReader("test.txt"))) {
+
+            System.out.println(reader.readLine());
+
+        } catch (IOException e) {
+            System.out.println("파일 읽기 실패");
+        }
+    }
+}
+```
+
+**동작 과정**
+
+```text
+       자원 생성
+           │
+           ▼
+        try 실행
+           │
+           ▼
+      파일 읽기 작업
+           │
+           ▼
+    정상 종료 또는 예외
+           │
+           ▼
+       close() 호출
+           │
+           ▼
+       자원 정리
+```
+
+**주요 특징**
+
+- `AutoCloseable`을 구현한 객체를 사용할 수 있다.
+- try 블록을 벗어날 때 자원을 닫도록 처리한다.
+- 여러 자원을 선언한 경우 생성한 역순으로 닫는다.
+- 자원 종료 과정에서도 예외가 발생할 수 있다.
+
+**주의 : GC가 메모리를 회수한다고 파일이나 네트워크 연결 같은 외부 자원이 적절한 시점에 자동 정리되는 것은 아니므로, 명시적인 자원 관리가 필요하다.**
+
+### 25. 사용자 정의 예외(Custom Exception)
+
+사용자 정의 예외는 프로그램의 특정 업무 상황을 명확하게 표현하기 위해 직접 작성하는 예외 클래스이다.
+
+**사용자 정의 예외를 사용하는 이유**
+
+- 오류의 의미를 명확하게 표현한다.
+- 상황에 맞는 예외를 구분할 수 있다.
+- 공통적인 예외 처리 정책을 구성할 수 있다.
+- 호출한 곳에서 오류 종류에 따라 다르게 대응할 수 있다.
+
+**사용자 정의 예외 클래스**
+
+```java
+class StockException extends RuntimeException {
+
+    public StockException(String message) {
+        super(message);
+    }
+}
+```
+
+**예외 발생**
+
+```java
+class Product {
+
+    private int stock = 10;
+
+    public void purchase(int quantity) {
+
+        if (quantity <= 0) {
+            throw new IllegalArgumentException(
+                "구매 수량은 1 이상이어야 합니다."
+            );
+        }
+
+        if (quantity > stock) {
+            throw new StockException(
+                "재고가 부족합니다."
+            );
+        }
+
+        stock -= quantity;
+    }
+}
+```
+
+**예외 처리**
+
+```java
+Product product = new Product();
+
+try {
+    product.purchase(20);
+
+} catch (StockException e) {
+    System.out.println(e.getMessage());
+}
+```
+
+**실행 결과**
+
+```text
+재고가 부족합니다.
+```
+
+**핵심**
+
+- `RuntimeException`을 상속하면 Unchecked Exception이 된다.
+- `Exception`을 직접 상속하면 일반적으로 Checked Exception이 된다.
+- 예외 클래스 이름은 발생한 상황을 표현하도록 작성하는 것이 좋다.
+- 단순한 조건문으로 충분한 상황에 불필요하게 예외 클래스를 만드는 것은 피한다.
+
+### 26. 인터페이스의 실무 활용 분야
+
+인터페이스는 다양한 구현체를 하나의 공통 규약으로 처리해야 하는 시스템에서 활용된다.
+
+| 활용 분야 | 공통 인터페이스 | 구현체 예시 |
+|---|---|---|
+| 결제 | Payment | Card, Kakao, Bank |
+| 로그인 | Authentication | Google, Kakao, Apple |
+| 데이터베이스 | Repository | DB별 데이터 접근 구현 |
+| 파일 저장 | Storage | Local, AWS S3, Azure |
+| 알림 | Notification | Email, SMS, Push |
+| 외부 API | AIClient | OpenAI, Claude, Gemini |
+
+**공통 구조**
+
+```text
+           비즈니스 로직
+                 │
+                 ▼
+          공통 인터페이스
+                 │
+       ┌─────────┼─────────┐
+       │         │         │
+       ▼         ▼         ▼
+     구현 A    구현 B    구현 C
+```
+
+**실무에서 얻는 장점**
+
+- 인터페이스를 기준으로 역할을 명확하게 정의한다.
+- 새로운 구현체를 추가할 때 변경 범위를 줄일 수 있다.
+- 실제 외부 서비스 대신 테스트용 구현체를 주입할 수 있다.
+- 여러 개발자가 공통 규약을 바탕으로 기능을 나누어 개발할 수 있다.
+
+※ 모든 외부 서비스가 반드시 동일한 규약을 제공하는 것은 아니므로, 필요한 차이를 추상화하고 적절하게 구현해야 한다.
+
+### 27. 인터페이스 설계 시 주의사항
+
+**1. 추상 메서드 구현 누락**
+
+- 구체 클래스는 필요한 추상 메서드를 모두 구현해야 한다.
+- 구현하지 않으면 컴파일 오류가 발생한다.
+- 추상 클래스로 선언하는 경우에는 구현을 하위 클래스에 위임할 수 있다.
+
+**2. 접근 제한자 축소**
+
+```java
+interface Animal {
+    void sound();
+}
+```
+
+```java
+// 잘못된 구현
+
+// class Dog implements Animal {
+//     void sound() { }
+// }
+```
+
+- 인터페이스 추상 메서드는 기본적으로 public이다.
+- 구현 시 접근 범위를 좁힐 수 없다.
+
+**3. default 메서드 충돌**
+
+두 인터페이스가 같은 시그니처의 default 메서드를 제공하면 구현 클래스에서 충돌을 해결해야 한다.
+
+```java
+interface A {
+
+    default void hello() {
+        System.out.println("A");
+    }
+}
+
+interface B {
+
+    default void hello() {
+        System.out.println("B");
+    }
+}
+```
+
+**충돌 해결**
+
+```java
+class C implements A, B {
+
+    @Override
+    public void hello() {
+        A.super.hello();
+    }
+}
+```
+
+**4. 인터페이스 다중 상속과 클래스 다중 상속의 혼동**
+
+- 클래스는 하나의 직접적인 부모 클래스만 상속할 수 있다.
+- 인터페이스는 여러 인터페이스를 동시에 상속할 수 있다.
+- 클래스는 여러 인터페이스를 동시에 구현할 수 있다.
+
+**5. 인터페이스를 불필요하게 생성하는 문제**
+
+- 모든 클래스에 별도 인터페이스가 필요한 것은 아니다.
+- 실제로 역할 분리나 구현체 교체가 필요한지 검토해야 한다.
+- 추상화가 지나치면 구조를 이해하고 유지보수하기 어려워질 수 있다.
+
+### 28. 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| 인터페이스 직접 객체 생성 | 구현 객체를 생성해야 함 |
+| 추상 메서드 미구현 | 구체 클래스에서 구현하거나 abstract 사용 |
+| public 누락 | 인터페이스 추상 메서드는 public으로 구현 |
+| 인터페이스 필드 수정 | public static final 상수이므로 재대입 불가 |
+| default 메서드 충돌 | 구현 클래스에서 명시적으로 재정의 |
+| static 메서드 호출 | 인터페이스 이름으로 호출 |
+| private 메서드 접근 | 인터페이스 내부에서만 사용 가능 |
+| 클래스 다중 상속 | 여러 클래스를 동시에 상속할 수 없음 |
+| 인터페이스 다중 구현 | implements로 여러 인터페이스 구현 가능 |
+| 잘못된 강제 타입 변환 | instanceof로 호환성 확인 |
+| 인터페이스와 DI 혼동 | 기능 계약과 객체 주입 방식은 다른 개념 |
+| 강한 결합 | 구현체가 아닌 인터페이스에 의존하는 설계 검토 |
+| Mock 객체 사용 | 실제 구현 없이 테스트할 수 있도록 구성 |
+| Checked Exception 누락 | catch 또는 throws로 처리 |
+| catch 순서 오류 | 자식 예외를 부모 예외보다 먼저 처리 |
+| throw와 throws 혼동 | 예외 발생과 전파 선언 구분 |
+| 예외 무시 | 적절한 처리, 기록 또는 전파 필요 |
+| 자원 해제 누락 | try-with-resources 활용 |
+| 사용자 정의 예외 남용 | 명확한 업무 오류가 필요한지 검토 |
+
+### ✅ Day17 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| Interface | 기능의 규약과 계약 정의 |
+| implements | 클래스에서 인터페이스 구현 |
+| extends | 인터페이스 간 상속 |
+| Abstract Method | 구현 클래스에서 제공할 기능 선언 |
+| Interface Field | public static final 상수 |
+| default Method | 기본 구현을 제공하는 인스턴스 메서드 |
+| static Method | 인터페이스 이름으로 호출하는 정적 메서드 |
+| private Method | 인터페이스 내부 공통 구현 |
+| Multiple Implementation | 여러 인터페이스 동시 구현 |
+| Multiple Inheritance | 인터페이스 간 다중 상속 |
+| Polymorphism | 공통 타입으로 여러 구현 객체 사용 |
+| Upcasting | 인터페이스 타입으로 구현 객체 참조 |
+| Downcasting | 실제 구현 타입으로 참조 변환 |
+| instanceof | 실제 객체의 타입 호환성 검사 |
+| Abstract Class | 공통 상태와 구현을 제공하는 추상 클래스 |
+| Tight Coupling | 구체적인 구현에 강하게 의존 |
+| Loose Coupling | 추상화에 의존하여 변경 영향 감소 |
+| Dependency Injection | 의존 객체를 외부에서 전달받는 구조 |
+| Mock Object | 테스트에 사용하는 대체 구현 객체 |
+| Nested Class | 클래스 내부에 선언된 클래스 |
+| Anonymous Class | 이름 없는 클래스를 통한 객체 생성 |
+| Throwable | Java 예외 및 오류의 최상위 타입 |
+| Exception | 프로그램에서 발생하는 예외 |
+| Error | 일반적으로 복구하기 어려운 심각한 오류 |
+| Checked Exception | 컴파일러가 처리 또는 전파를 요구 |
+| Unchecked Exception | 컴파일러가 처리를 강제하지 않음 |
+| try-catch | 예외 감시 및 처리 |
+| finally | 일반적인 정리 작업 |
+| Multi-catch | 여러 예외의 공통 처리 |
+| throw | 예외 객체 발생 |
+| throws | 예외 전파 선언 |
+| try-with-resources | AutoCloseable 자원 자동 정리 |
+| Custom Exception | 프로그램의 업무 규칙을 표현하는 예외 |
+
+**최종 학습 정리**
+
+- 인터페이스는 클래스가 제공해야 하는 기능의 규약과 계약을 정의한다.
+- 구현 클래스는 `implements`를 사용하여 인터페이스를 구현한다.
+- 인터페이스는 직접 객체를 생성할 수 없지만 구현 객체를 참조하는 타입으로 사용할 수 있다.
+- 인터페이스의 필드는 자동으로 `public static final` 상수이다.
+- 인터페이스의 추상 메서드는 기본적으로 `public abstract`이다.
+- `default` 메서드는 기본 동작을 제공하고 `static` 메서드는 인터페이스 이름으로 호출한다.
+- `private` 메서드는 인터페이스 내부에서 구현 코드를 재사용하기 위해 사용한다.
+- Java는 클래스의 다중 상속을 지원하지 않지만 인터페이스의 다중 구현과 다중 상속을 지원한다.
+- 다형성을 이용하면 하나의 인터페이스 타입으로 서로 다른 구현 객체를 처리할 수 있다.
+- 참조 변수의 선언 타입은 접근 가능한 멤버를 결정하고 실제 객체 타입은 재정의된 인스턴스 메서드의 실행 구현을 결정한다.
+- 추상 클래스는 공통 상태와 구현을 공유하고, 인터페이스는 기능의 규칙을 정의하는 데 적합하다.
+- 인터페이스에 의존하면 구체적인 구현체에 대한 결합도를 줄일 수 있다.
+- 의존성 주입은 필요한 구현 객체를 외부에서 전달받아 사용하는 방식이다.
+- Mock 객체를 이용하면 외부 서비스에 실제로 접근하지 않고도 프로그램을 테스트할 수 있다.
+- 예외는 프로그램 실행 중 발생하는 비정상적인 상황을 표현하며 Checked와 Unchecked로 구분할 수 있다.
+- `try-catch-finally`는 예외 처리와 정리 작업에 사용한다.
+- `throw`는 예외 발생, `throws`는 예외 전파 가능성을 선언한다.
+- `try-with-resources`는 파일과 같은 외부 자원을 안전하게 관리하는 데 사용한다.
+- 사용자 정의 예외를 이용하면 프로그램의 업무 상황에 맞는 오류를 명확하게 표현할 수 있다.
+- 인터페이스 설계의 핵심은 무조건 인터페이스를 많이 만드는 것이 아니라 역할을 명확하게 분리하고 변경에 유연한 구조를 구성하는 것이다.
 
 </details>
