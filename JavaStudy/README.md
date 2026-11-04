@@ -19,6 +19,7 @@
 | **Day 15** | 상속·다형성 및 JVM 메모리 심화 | 객체지향 핵심 원칙, extends, super, 생성자 초기화 순서, 부모·자식 객체 메모리, 참조 타입, 필드 숨김, 오버라이딩·오버로딩, 동적 바인딩, GC |
 | **Day 16** | Java 클래스 종류와 객체지향 설계 | package·import, 추상 클래스, 인터페이스, 템플릿 메서드 패턴, 내부 클래스 4종, Builder 패턴, 익명 클래스·람다식, 의존성 주입(DI), 예외 처리 |
 | **Day 17** | Java 인터페이스 심화 및 예외 처리 | 인터페이스, 추상·default·static·private 메서드, 다중 구현·상속, 다형성, 결합도, 의존성 주입(DI), Mock 객체, 중첩 클래스, 예외 처리 |
+| **Day 18** | Java 예외 처리 및 실무 활용 | Exception·Error, Checked·Unchecked, try-catch-finally, 다중 catch, 예외 정보·전파, throw·throws, try-with-resources, 사용자 정의 예외, Spring Boot 전역 예외 처리 |
 
 
 
@@ -13142,5 +13143,1720 @@ class C implements A, B {
 - `try-with-resources`는 파일과 같은 외부 자원을 안전하게 관리하는 데 사용한다.
 - 사용자 정의 예외를 이용하면 프로그램의 업무 상황에 맞는 오류를 명확하게 표현할 수 있다.
 - 인터페이스 설계의 핵심은 무조건 인터페이스를 많이 만드는 것이 아니라 역할을 명확하게 분리하고 변경에 유연한 구조를 구성하는 것이다.
+
+</details>
+
+
+## Day18. Java 예외 처리 및 실무 활용
+<details>
+
+### 🎯 학습 목표
+- 예외 처리(Exception Handling)의 목적과 필요성을 이해한다.
+- `Exception`과 `Error`의 차이 및 예외 클래스 계층을 이해한다.
+- Checked Exception과 Unchecked Exception의 차이를 구분한다.
+- `try-catch-finally`의 구조와 실행 흐름을 이해한다.
+- 예외 객체에서 메시지와 Stack Trace를 확인하는 방법을 익힌다.
+- 다중 catch와 멀티 catch의 차이 및 작성 규칙을 이해한다.
+- 메서드 호출 과정에서 예외가 전파되는 원리를 이해한다.
+- `throw`와 `throws`의 역할을 구분한다.
+- `try-with-resources`와 `AutoCloseable`을 이용한 자원 관리를 이해한다.
+- 사용자 정의 예외(Custom Exception)를 직접 작성할 수 있다.
+- 예외를 이용해 비즈니스 규칙 위반을 표현할 수 있다.
+- 예외 처리 과정에서 피해야 할 안티 패턴을 이해한다.
+- Spring Boot의 전역 예외 처리 구조를 이해한다.
+- Java 기본 문법과 객체지향 개념이 예외 처리 및 웹 개발에 연결되는 구조를 정리한다.
+
+### 1. 예외 처리(Exception Handling)의 개념
+
+예외 처리란 프로그램 실행 중 발생한 비정상적인 상황을 감지하고 적절하게 대응하여 프로그램의 실행 흐름을 관리하는 기능이다.
+
+**예외 처리가 필요한 이유**
+
+- 예상하지 못한 문제로 인한 프로그램의 비정상 종료 방지
+- 발생한 오류의 원인 파악
+- 사용자에게 적절한 오류 정보 전달
+- 정상적인 프로그램 흐름의 유지 또는 안전한 종료
+- 파일, 데이터베이스 등 외부 자원의 안전한 관리
+
+**예외 처리를 하지 않은 경우**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        int result = 10 / 0;
+
+        System.out.println(result);
+        System.out.println("프로그램 종료");
+    }
+}
+```
+
+**실행 결과**
+
+```text
+Exception in thread "main"
+java.lang.ArithmeticException: / by zero
+```
+
+- 정수를 0으로 나누면 `ArithmeticException`이 발생한다.
+- 발생한 예외를 처리하지 않으면 호출 스택을 따라 전파된다.
+- 최종적으로 처리되지 않은 예외는 해당 스레드의 비정상 종료로 이어질 수 있다.
+- 예외 발생 이후의 일반적인 실행 흐름은 계속되지 않는다.
+
+**예외 처리 후**
+
+```java
+try {
+    int result = 10 / 0;
+
+    System.out.println(result);
+
+} catch (ArithmeticException e) {
+    System.out.println("0으로 나눌 수 없습니다.");
+}
+
+System.out.println("프로그램 종료");
+```
+
+**실행 결과**
+
+```text
+0으로 나눌 수 없습니다.
+프로그램 종료
+```
+
+**핵심**
+
+예외 처리는 모든 오류를 없애는 것이 아니라, 오류가 발생했을 때 적절하게 처리하거나 상위 호출자에게 전달하여 실행 흐름을 관리하는 것이다.
+
+### 2. Java 예외 클래스의 계층 구조
+
+Java의 예외와 오류는 `Throwable` 클래스를 최상위 타입으로 하는 계층 구조를 가진다.
+
+**예외 클래스 구조**
+
+```text
+                   Object
+                      │
+                      ▼
+                  Throwable
+                      │
+           ┌──────────┴──────────┐
+           │                     │
+           ▼                     ▼
+         Error                Exception
+           │                     │
+           │             ┌───────┴────────┐
+           │             │                │
+           ▼             ▼                ▼
+  OutOfMemoryError   IOException    RuntimeException
+  StackOverflowError SQLException         │
+                                          ├── NullPointerException
+                                          ├── ArithmeticException
+                                          ├── NumberFormatException
+                                          └── IllegalArgumentException
+```
+
+**Throwable**
+
+- Java에서 발생시키고 처리할 수 있는 예외 및 오류 객체의 최상위 클래스이다.
+- 오류 메시지와 Stack Trace 등의 정보를 제공한다.
+- `Exception`과 `Error`가 상속받는 공통 부모 클래스이다.
+
+**Exception과 Error의 차이**
+
+| 구분 | Exception | Error |
+|---|---|---|
+| 의미 | 프로그램 실행 중 발생하는 예외 상황 | JVM 또는 시스템 수준의 심각한 문제 등 |
+| 대응 | 적절한 처리·복구·전파 가능 | 일반적으로 애플리케이션에서 복구하기 어려움 |
+| 대표 클래스 | IOException, SQLException | OutOfMemoryError, StackOverflowError |
+| 주요 목적 | 예상 가능한 실패 상황 관리 | 심각한 오류 상태 표현 |
+
+**주의사항**
+
+- `Error`도 `Throwable`의 하위 클래스이므로 문법적으로 처리할 수는 있다.
+- 하지만 일반적인 프로그램에서는 `Error`를 이용한 복구에 의존하지 않는 것이 좋다.
+- `Exception`이 발생한다고 모든 경우에 프로그램을 계속 실행해야 하는 것은 아니다.
+- 복구할 수 없는 상황에서는 오류 정보를 남기고 적절하게 종료하거나 호출자에게 전파해야 한다.
+
+### 3. Checked Exception과 Unchecked Exception
+
+Java의 예외는 컴파일러가 예외 처리 여부를 검사하는지에 따라 구분한다.
+
+**Checked Exception**
+
+컴파일러가 예외의 처리 또는 전파 선언을 요구하는 예외이다.
+
+**Unchecked Exception**
+
+컴파일러가 예외의 처리 또는 전파 선언을 강제하지 않는 예외이다.
+
+| 구분 | Checked Exception | Unchecked Exception |
+|---|---|---|
+| 컴파일러 검사 | 처리 또는 전파 선언 요구 | 강제하지 않음 |
+| 대표 계층 | RuntimeException을 제외한 Exception 하위 타입 | RuntimeException 및 하위 타입 |
+| 대표 예외 | IOException, SQLException | NullPointerException, ArithmeticException |
+| 발생 상황 예시 | 파일 입출력, DB 작업 | 잘못된 인덱스, null 참조 |
+| 처리 | catch 또는 throws 필요 | 필요에 따라 처리 |
+
+※ `Error` 및 그 하위 타입 역시 컴파일러가 처리를 강제하지 않지만, 일반적인 예외 분류에서는 `RuntimeException` 계층을 Unchecked Exception의 대표 유형으로 설명한다.
+
+**Checked Exception 예제**
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        try (FileReader reader =
+                new FileReader("test.txt")) {
+
+            System.out.println(reader.read());
+
+        } catch (IOException e) {
+            System.out.println("파일 처리 오류");
+        }
+    }
+}
+```
+
+- 파일을 찾지 못하거나 읽는 과정에서 문제가 발생할 수 있다.
+- `IOException`은 Checked Exception이다.
+- 따라서 예외를 처리하거나 `throws`로 전파해야 한다.
+
+**Unchecked Exception 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        int number = Integer.parseInt("abc");
+    }
+}
+```
+
+**실행 결과**
+
+```text
+java.lang.NumberFormatException
+```
+
+- `"abc"`는 정수로 변환할 수 없는 문자열이다.
+- `NumberFormatException`은 `RuntimeException`의 하위 클래스이다.
+- 컴파일러는 예외 처리 코드를 강제하지 않는다.
+
+**핵심**
+
+- Checked Exception : 컴파일러가 예외 처리 또는 전파를 요구한다.
+- Unchecked Exception : 컴파일러가 예외 처리를 강제하지 않는다.
+- 실제 예외 처리 전략은 해당 문제를 복구할 수 있는지에 따라 결정해야 한다.
+
+### 4. Java에서 자주 발생하는 예외
+
+| 예외 클래스 | 발생 원인 |
+|---|---|
+| `NullPointerException` | null 참조를 잘못 사용 |
+| `ArithmeticException` | 0으로 정수 나눗셈 등 |
+| `NumberFormatException` | 숫자로 변환할 수 없는 문자열 |
+| `ArrayIndexOutOfBoundsException` | 배열의 인덱스 범위를 초과 |
+| `ClassCastException` | 호환되지 않는 참조 타입으로 강제 변환 |
+| `IllegalArgumentException` | 메서드에 부적절한 인자 전달 |
+| `IllegalStateException` | 현재 객체 상태에서 허용되지 않는 작업 |
+| `IOException` | 파일이나 스트림 입출력 오류 |
+| `SQLException` | 데이터베이스 관련 처리 오류 |
+
+**NullPointerException**
+
+```java
+String text = null;
+
+// 실행 시 NullPointerException
+System.out.println(text.length());
+```
+
+**ArithmeticException**
+
+```java
+int result = 10 / 0;
+```
+
+**NumberFormatException**
+
+```java
+int number = Integer.parseInt("Java");
+```
+
+**ArrayIndexOutOfBoundsException**
+
+```java
+int[] numbers = {10, 20, 30};
+
+// 인덱스 범위는 0~2
+System.out.println(numbers[3]);
+```
+
+**핵심**
+
+예외가 발생한 뒤 처리하는 것도 중요하지만, 입력값 검증과 올바른 프로그램 설계를 통해 불필요한 예외가 발생하지 않도록 예방하는 것이 더 중요할 수 있다.
+
+### 5. try-catch의 기본 구조
+
+`try-catch`는 예외가 발생할 가능성이 있는 코드를 실행하고, 발생한 예외를 적절하게 처리하는 구문이다.
+
+**기본 문법**
+
+```java
+try {
+    // 예외 발생 가능 코드
+
+} catch (ExceptionType e) {
+    // 예외 처리 코드
+}
+```
+
+**Java 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        try {
+            int result = 10 / 0;
+
+            System.out.println(result);
+
+        } catch (ArithmeticException e) {
+            System.out.println("산술 연산 오류");
+        }
+
+        System.out.println("다음 작업 실행");
+    }
+}
+```
+
+**실행 결과**
+
+```text
+산술 연산 오류
+다음 작업 실행
+```
+
+**실행 흐름**
+
+```text
+          try 시작
+              │
+              ▼
+       코드 실행 중 예외
+              │
+              ▼
+         예외 객체 발생
+              │
+              ▼
+       일치하는 catch 검색
+              │
+              ▼
+         catch 블록 실행
+              │
+              ▼
+       try-catch 이후 실행
+```
+
+**중요한 특징**
+
+- 예외가 발생하면 해당 지점 이후의 `try` 블록 코드는 실행되지 않는다.
+- 발생한 예외와 호환되는 `catch` 블록이 실행된다.
+- 일치하는 `catch`가 없으면 예외가 상위 호출자로 전파된다.
+- 예외가 발생하지 않으면 `catch` 블록은 실행되지 않는다.
+
+**주의 : 예외를 처리했다고 해서 예외가 발생했던 명령으로 돌아가 다시 실행되는 것은 아니다.**
+
+### 6. finally 블록과 실행 흐름
+
+`finally`는 예외 처리 여부와 관계없이 일반적으로 실행되는 정리 작업용 블록이다.
+
+**기본 구조**
+
+```java
+try {
+    // 작업 수행
+
+} catch (Exception e) {
+    // 예외 처리
+
+} finally {
+    // 정리 작업
+}
+```
+
+**Java 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        try {
+            System.out.println("1. 작업 시작");
+
+            int result = 10 / 0;
+
+        } catch (ArithmeticException e) {
+            System.out.println("2. 예외 처리");
+
+        } finally {
+            System.out.println("3. 정리 작업");
+        }
+
+        System.out.println("4. 다음 작업");
+    }
+}
+```
+
+**실행 결과**
+
+```text
+1. 작업 시작
+2. 예외 처리
+3. 정리 작업
+4. 다음 작업
+```
+
+**정상 실행과 예외 발생 비교**
+
+| 상황 | try | catch | finally |
+|---|---|---|---|
+| 예외 없음 | 실행 | 실행 안 함 | 실행 |
+| 일치하는 예외 발생 | 예외 지점까지 실행 | 실행 | 실행 |
+| 처리되지 않은 예외 발생 | 예외 지점까지 실행 | 일치하는 catch 없음 | 일반적으로 실행 후 예외 전파 |
+| try에서 return 실행 | 실행 | 상황에 따라 다름 | 반환 전에 일반적으로 실행 |
+
+**주의사항**
+
+- `finally`는 JVM 강제 종료 등 일부 상황에서는 실행이 보장되지 않는다.
+- `finally` 내부에서 `return`을 사용하면 기존 반환값이나 예외가 가려질 수 있다.
+- 파일이나 DB 연결과 같은 자원 정리에는 가능하면 `try-with-resources`를 사용한다.
+
+### 7. 예외 객체의 주요 메서드
+
+Java의 예외 객체는 발생한 문제의 메시지와 호출 경로를 확인할 수 있는 메서드를 제공한다.
+
+| 메서드 | 기능 |
+|---|---|
+| `getMessage()` | 예외의 상세 메시지 반환 |
+| `toString()` | 예외 타입과 메시지를 문자열로 표현 |
+| `printStackTrace()` | 예외 발생 위치와 호출 경로 출력 |
+| `getCause()` | 예외의 원인 객체 반환 |
+| `getStackTrace()` | Stack Trace 요소 배열 반환 |
+
+**Java 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        try {
+            int number = Integer.parseInt("abc");
+
+        } catch (NumberFormatException e) {
+
+            System.out.println(e.getMessage());
+            System.out.println(e.toString());
+
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+**메서드별 특징**
+
+**getMessage()**
+
+- 예외 생성 시 설정되었거나 예외 구현이 제공하는 상세 메시지를 반환한다.
+
+**toString()**
+
+- 예외 클래스 이름과 메시지를 확인할 수 있다.
+
+**printStackTrace()**
+
+- 예외가 발생한 위치와 메서드 호출 경로를 출력한다.
+- 디버깅 시 문제의 원인을 추적하는 데 활용한다.
+- 기본적으로 표준 오류 출력 스트림을 사용한다.
+
+**핵심 : 예외가 발생하면 단순히 오류가 발생했다는 사실뿐 아니라 어디에서 어떤 원인으로 발생했는지 추적하는 것이 중요하다.**
+
+### 8. 다중 catch(Multiple Catch)
+
+하나의 `try` 블록에서 여러 종류의 예외가 발생할 수 있다.
+
+다중 catch는 예외 종류에 따라 서로 다른 방식으로 처리할 때 사용한다.
+
+**Java 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args) {
+
+        try {
+            String input = "abc";
+
+            int number = Integer.parseInt(input);
+            int result = 100 / number;
+
+            System.out.println(result);
+
+        } catch (NumberFormatException e) {
+            System.out.println("숫자 형식 오류");
+
+        } catch (ArithmeticException e) {
+            System.out.println("산술 연산 오류");
+
+        } catch (Exception e) {
+            System.out.println("기타 예외 발생");
+        }
+    }
+}
+```
+
+**catch 검색 순서**
+
+```text
+       예외 발생
+           │
+           ▼
+  NumberFormatException
+           │
+       일치 여부
+           │
+           ▼
+   ArithmeticException
+           │
+       일치 여부
+           │
+           ▼
+       Exception
+           │
+           ▼
+       예외 처리
+```
+
+**주의사항**
+
+- 여러 catch 중 발생한 예외와 일치하는 첫 번째 catch가 실행된다.
+- 구체적인 자식 예외를 먼저 작성해야 한다.
+- 더 포괄적인 부모 예외를 뒤쪽에 작성해야 한다.
+- 앞의 catch 때문에 도달할 수 없는 catch가 있으면 컴파일 오류가 발생한다.
+
+### 9. catch 블록의 작성 순서
+
+Java의 예외는 상속 관계를 가지므로 catch 블록의 작성 순서가 중요하다.
+
+**잘못된 예제**
+
+```java
+// 컴파일 오류
+
+try {
+    int number = Integer.parseInt("abc");
+
+} catch (Exception e) {
+    System.out.println("전체 예외");
+
+} catch (NumberFormatException e) {
+    System.out.println("숫자 오류");
+}
+```
+
+**오류 원인**
+
+- `NumberFormatException`은 `Exception`의 하위 타입이다.
+- 첫 번째 `catch (Exception e)`에서 이미 해당 예외를 처리할 수 있다.
+- 따라서 두 번째 catch 블록에는 도달할 수 없다.
+
+**올바른 예제**
+
+```java
+try {
+    int number = Integer.parseInt("abc");
+
+} catch (NumberFormatException e) {
+    System.out.println("숫자 오류");
+
+} catch (Exception e) {
+    System.out.println("기타 예외");
+}
+```
+
+**핵심 규칙**
+
+```text
+구체적인 자식 예외
+        ↓
+보다 일반적인 부모 예외
+        ↓
+최상위 포괄 예외
+```
+
+**주의 : 모든 예외를 무조건 `catch (Exception e)` 하나로 처리하면 예외마다 필요한 대응 방법을 구분하기 어려워질 수 있다.**
+
+### 10. 멀티 catch(Multi-catch)
+
+멀티 catch는 여러 예외를 하나의 catch 블록에서 공통으로 처리하는 문법이다.
+
+**기본 구조**
+
+```java
+catch (ExceptionA | ExceptionB e) {
+    // 공통 예외 처리
+}
+```
+
+**Java 예제**
+
+```java
+try {
+    int number = Integer.parseInt("abc");
+
+    System.out.println(100 / number);
+
+} catch (NumberFormatException | ArithmeticException e) {
+    System.out.println("숫자 처리 오류");
+}
+```
+
+**다중 catch와 멀티 catch 비교**
+
+| 구분 | 다중 catch | 멀티 catch |
+|---|---|---|
+| 문법 | catch 블록 여러 개 | `\|`를 이용한 하나의 catch |
+| 처리 방식 | 예외별 개별 처리 | 여러 예외의 공통 처리 |
+| 장점 | 오류별 세부 대응 | 중복 코드 감소 |
+| 사용 상황 | 오류마다 대응이 다름 | 처리 방식이 동일함 |
+
+**주의사항**
+
+- 멀티 catch에서는 서로 상속 관계에 있는 예외 타입을 함께 나열할 수 없다.
+- 멀티 catch의 예외 매개변수는 암묵적으로 final이다.
+- 예외별로 처리 방법이 다르다면 개별 catch를 사용하는 것이 적합하다.
+
+### 11. 예외 전파(Exception Propagation)
+
+예외 전파는 메서드 내부에서 처리되지 않은 예외가 해당 메서드를 호출한 상위 메서드로 전달되는 과정이다.
+
+**Java 예제**
+
+```java
+public class Main {
+
+    static void methodA() {
+        methodB();
+    }
+
+    static void methodB() {
+        int result = 10 / 0;
+    }
+
+    public static void main(String[] args) {
+
+        try {
+            methodA();
+
+        } catch (ArithmeticException e) {
+            System.out.println("main에서 예외 처리");
+        }
+    }
+}
+```
+
+**실행 결과**
+
+```text
+main에서 예외 처리
+```
+
+**예외 전파 과정**
+
+```text
+           main()
+              │
+              ▼
+          methodA()
+              │
+              ▼
+          methodB()
+              │
+              ▼
+     ArithmeticException
+              │
+              │ 예외 처리 없음
+              ▼
+         methodA()로 전파
+              │
+              │ 예외 처리 없음
+              ▼
+          main()으로 전파
+              │
+              ▼
+         catch 실행
+              │
+              ▼
+          예외 처리 완료
+```
+
+**핵심**
+
+- 예외가 발생한 메서드에서 반드시 처리해야 하는 것은 아니다.
+- 적절한 복구 방법을 알고 있는 상위 호출자에게 전달할 수 있다.
+- 예외가 전파되는 동안 해당 호출의 정상적인 실행 흐름은 중단된다.
+- 최종적으로 처리되지 않은 예외는 해당 스레드의 비정상 종료로 이어질 수 있다.
+
+### 12. throw와 throws의 차이
+
+`throw`와 `throws`는 이름이 비슷하지만 서로 다른 역할을 수행한다.
+
+| 구분 | throw | throws |
+|---|---|---|
+| 역할 | 예외 객체를 발생시킴 | 예외 전파 가능성을 선언 |
+| 위치 | 메서드 내부 등의 실행 코드 | 메서드 선언부 |
+| 목적 | 문제 상황을 예외로 표현 | 호출자에게 처리 책임 전달 |
+| 대표 문법 | `throw new Exception()` | `throws IOException` |
+
+**throw 예제**
+
+```java
+public static void validateAge(int age) {
+
+    if (age < 0) {
+        throw new IllegalArgumentException(
+            "나이는 음수일 수 없습니다."
+        );
+    }
+}
+```
+
+- `throw`는 예외 객체를 실제로 발생시킨다.
+- 실행되면 현재의 정상적인 실행 흐름이 중단된다.
+- 해당 예외는 일치하는 catch를 찾거나 상위 호출자로 전파된다.
+
+**throws 예제**
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public static String readFile(String path)
+        throws IOException {
+
+    return Files.readString(Path.of(path));
+}
+```
+
+- `throws`는 메서드가 발생시킬 수 있는 예외를 선언한다.
+- `throws` 자체가 예외를 발생시키는 것은 아니다.
+- Checked Exception을 호출자에게 전파하려면 적절한 throws 선언이 필요하다.
+
+**핵심**
+
+```text
+throw  → 예외를 발생시키는 실행문
+throws → 예외를 전파할 수 있음을 선언
+```
+
+### 13. throws와 메서드 호출 계층
+
+메서드 내부에서 발생한 Checked Exception을 직접 처리하지 않고 상위 호출자에게 전파할 수 있다.
+
+**Java 예제**
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+
+    static String readFile() throws IOException {
+        return Files.readString(Path.of("test.txt"));
+    }
+
+    static void process() throws IOException {
+        String content = readFile();
+
+        System.out.println(content);
+    }
+
+    public static void main(String[] args) {
+
+        try {
+            process();
+
+        } catch (IOException e) {
+            System.out.println("파일 읽기 실패");
+        }
+    }
+}
+```
+
+**호출 구조**
+
+```text
+           main()
+              │
+              ▼
+         process()
+        throws IOException
+              │
+              ▼
+         readFile()
+        throws IOException
+              │
+              ▼
+       IOException 발생
+              │
+              ▼
+        process()로 전파
+              │
+              ▼
+         main()으로 전파
+              │
+              ▼
+        catch에서 처리
+```
+
+**주의사항**
+
+- `throws`를 선언했다고 예외가 자동으로 처리되는 것은 아니다.
+- 예외를 호출자에게 전달할 수 있음을 선언하는 것이다.
+- 호출자는 Checked Exception을 처리하거나 다시 전파해야 한다.
+- 실제 복구를 수행할 수 있는 계층에서 예외를 처리하는 것이 좋다.
+
+### 14. 자원 누수(Resource Leak)
+
+자원 누수는 파일, 데이터베이스 연결, 네트워크 연결 등의 외부 자원을 사용한 후 적절하게 정리하지 않아 발생하는 문제이다.
+
+**대표적인 외부 자원**
+
+- 파일 스트림
+- 데이터베이스 Connection
+- 네트워크 Socket
+- 입출력 Stream
+- 기타 명시적인 종료가 필요한 자원
+
+**문제가 발생할 수 있는 코드**
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public static void readFile() throws IOException {
+
+    FileReader reader = new FileReader("test.txt");
+
+    int data = reader.read();
+
+    // close()가 호출되지 않음
+}
+```
+
+**문제점**
+
+- 파일 자원이 적절하게 닫히지 않을 수 있다.
+- 예외가 발생하면 정리 작업이 누락되기 쉽다.
+- 불필요하게 열린 자원이 누적되면 프로그램 성능과 안정성에 영향을 줄 수 있다.
+
+**기존 finally 방식**
+
+```java
+FileReader reader = null;
+
+try {
+    reader = new FileReader("test.txt");
+
+    System.out.println(reader.read());
+
+} catch (IOException e) {
+    System.out.println("파일 처리 실패");
+
+} finally {
+
+    if (reader != null) {
+        try {
+            reader.close();
+
+        } catch (IOException e) {
+            System.out.println("파일 종료 실패");
+        }
+    }
+}
+```
+
+**한계**
+
+- 코드가 복잡해진다.
+- 자원이 여러 개라면 정리 코드가 길어진다.
+- 자원을 닫는 과정에서도 예외가 발생할 수 있다.
+
+이러한 문제를 간결하게 해결하는 문법이 `try-with-resources`이다.
+
+### 15. try-with-resources
+
+`try-with-resources`는 사용한 자원을 자동으로 닫도록 하는 Java 문법이다.
+
+Java 7부터 지원하며 `AutoCloseable` 인터페이스를 구현한 객체에 사용할 수 있다.
+
+**기본 문법**
+
+```java
+try (자원_선언) {
+    // 자원 사용
+}
+```
+
+**Java 예제**
+
+```java
+import java.io.FileReader;
+import java.io.IOException;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        try (FileReader reader =
+                new FileReader("test.txt")) {
+
+            int data = reader.read();
+
+            System.out.println(data);
+
+        } catch (IOException e) {
+            System.out.println("파일 처리 실패");
+        }
+    }
+}
+```
+
+**실행 과정**
+
+```text
+          자원 생성
+              │
+              ▼
+      try-with-resources
+              │
+              ▼
+          작업 실행
+              │
+              ▼
+      정상 종료 또는 예외
+              │
+              ▼
+       자동 close() 호출
+              │
+              ▼
+         자원 정리 완료
+```
+
+**주요 특징**
+
+- 자원을 자동으로 닫는 코드를 제공한다.
+- 정상 종료와 예외 발생 상황 모두에서 자원 정리를 수행한다.
+- 명시적으로 finally에서 close를 호출하는 코드를 줄일 수 있다.
+- 여러 자원을 선언할 수 있다.
+- 선언된 자원은 역순으로 닫힌다.
+
+**여러 자원 선언**
+
+```java
+try (
+    FileReader reader = new FileReader("input.txt");
+    java.io.FileWriter writer =
+        new java.io.FileWriter("output.txt")
+) {
+    int data = reader.read();
+
+    writer.write(data);
+
+} catch (IOException e) {
+    System.out.println("파일 처리 오류");
+}
+```
+
+**닫히는 순서**
+
+```text
+FileReader 생성
+       ↓
+FileWriter 생성
+       ↓
+작업 수행
+       ↓
+FileWriter 종료
+       ↓
+FileReader 종료
+```
+
+**주의**
+
+- `AutoCloseable`을 구현한 자원에 사용할 수 있다.
+- 자원 생성이나 close 과정에서 예외가 발생할 수 있다.
+- Java 9부터는 이미 선언된 final 또는 사실상 final 자원 변수도 try 괄호에서 사용할 수 있다.
+
+### 16. AutoCloseable과 Suppressed Exception
+
+`AutoCloseable`은 자원 종료를 위한 `close()` 메서드를 정의하는 인터페이스이다.
+
+**기본 구조**
+
+```java
+public interface AutoCloseable {
+
+    void close() throws Exception;
+}
+```
+
+**사용자 정의 자원 예제**
+
+```java
+class MyResource implements AutoCloseable {
+
+    public void execute() {
+        System.out.println("작업 수행");
+    }
+
+    @Override
+    public void close() {
+        System.out.println("자원 종료");
+    }
+}
+```
+
+**사용**
+
+```java
+try (MyResource resource = new MyResource()) {
+
+    resource.execute();
+}
+```
+
+**실행 결과**
+
+```text
+작업 수행
+자원 종료
+```
+
+**Suppressed Exception**
+
+try 블록의 작업 도중 예외가 발생하고, 자원을 닫는 과정에서도 예외가 발생할 수 있다.
+
+이때 `try-with-resources`는 일반적으로 작업 중 발생한 예외를 주요 예외로 유지하고, 닫는 과정에서 발생한 예외를 Suppressed Exception으로 보관한다.
+
+```java
+Throwable[] suppressed = e.getSuppressed();
+```
+
+**핵심**
+
+- `close()`는 자원 종료 동작을 정의한다.
+- `try-with-resources`는 자원 종료를 자동으로 수행한다.
+- 자원을 닫는 과정에서 발생한 예외도 확인할 수 있다.
+- 파일과 DB 연결처럼 사용 후 반드시 정리해야 하는 자원에 특히 중요하다.
+
+### 17. 사용자 정의 예외(Custom Exception)
+
+사용자 정의 예외는 Java가 기본적으로 제공하는 예외만으로 표현하기 어려운 업무 상황을 명확하게 나타내기 위해 작성하는 예외 클래스이다.
+
+**대표적인 활용 상황**
+
+| 상황 | 사용자 정의 예외 예시 |
+|---|---|
+| 계좌 잔액 부족 | InsufficientBalanceException |
+| 상품 재고 부족 | StockException |
+| 중복 회원가입 | DuplicateMemberException |
+| 회원 조회 실패 | MemberNotFoundException |
+| 권한 부족 | PermissionDeniedException |
+
+**사용자 정의 예외의 목적**
+
+- 업무 규칙 위반을 명확한 타입으로 표현
+- 예외 종류에 따른 처리 방식 구분
+- 잘못된 상태에서 후속 작업 진행 방지
+- 코드의 의미와 유지보수성 향상
+
+**Checked Exception 정의**
+
+```java
+class InsufficientBalanceException extends Exception {
+
+    public InsufficientBalanceException(String message) {
+        super(message);
+    }
+}
+```
+
+**Unchecked Exception 정의**
+
+```java
+class StockException extends RuntimeException {
+
+    public StockException(String message) {
+        super(message);
+    }
+}
+```
+
+**비교**
+
+| 구분 | extends Exception | extends RuntimeException |
+|---|---|---|
+| 분류 | Checked Exception | Unchecked Exception |
+| 호출자의 처리 의무 | 있음 | 컴파일러가 강제하지 않음 |
+| 사용 예 | 명시적인 복구 절차가 필요한 상황 | 업무 규칙 위반, 잘못된 상태 등 |
+| 예외 전파 | 적절한 throws 선언 필요 | throws 선언 선택 |
+
+**주의**
+
+- Checked와 Unchecked의 선택 기준은 단순히 외부 오류인지 내부 오류인지로만 구분하지 않는다.
+- 호출자가 해당 상황을 복구하도록 요구할 것인지 등 API의 계약을 고려해야 한다.
+- 모든 비즈니스 오류를 반드시 사용자 정의 예외로 만들 필요는 없다.
+
+### 18. 사용자 정의 예외를 활용한 재고 관리
+
+상품 주문 과정에서는 유효하지 않은 수량이나 재고 부족 상황을 예외로 표현할 수 있다.
+
+**재고 관리 흐름**
+
+```text
+         주문 요청
+             │
+             ▼
+        주문 수량 검사
+             │
+      ┌──────┴──────┐
+      │             │
+   수량 정상      수량 오류
+      │             │
+      ▼             ▼
+    재고 검사   IllegalArgumentException
+      │
+  ┌───┴────────┐
+  │            │
+재고 충분     재고 부족
+  │            │
+  ▼            ▼
+재고 차감   StockException
+  │
+  ▼
+주문 처리 완료
+```
+
+**사용자 정의 예외**
+
+```java
+class StockException extends RuntimeException {
+
+    public StockException(String message) {
+        super(message);
+    }
+}
+```
+
+**Product 클래스**
+
+```java
+class Product {
+
+    private int stock;
+
+    public Product(int stock) {
+
+        if (stock < 0) {
+            throw new IllegalArgumentException(
+                "초기 재고는 음수일 수 없습니다."
+            );
+        }
+
+        this.stock = stock;
+    }
+
+    public void order(int quantity) {
+
+        if (quantity <= 0) {
+            throw new IllegalArgumentException(
+                "주문 수량은 1 이상이어야 합니다."
+            );
+        }
+
+        if (quantity > stock) {
+            throw new StockException(
+                "재고가 부족합니다."
+            );
+        }
+
+        stock -= quantity;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Product product = new Product(3);
+
+try {
+    product.order(5);
+
+} catch (StockException e) {
+    System.out.println(e.getMessage());
+}
+```
+
+**실행 결과**
+
+```text
+재고가 부족합니다.
+```
+
+**핵심**
+
+- 잘못된 주문 수량은 `IllegalArgumentException`으로 처리한다.
+- 재고 부족은 `StockException`으로 표현한다.
+- 문제가 발생하면 재고 차감 작업을 수행하지 않는다.
+- 예외 종류에 따라 서로 다른 대응을 할 수 있다.
+
+※ 위 코드는 예외 처리 원리를 설명하기 위한 단일 객체 예제이다. 실제 다중 사용자 주문 시스템에서는 트랜잭션과 동시성 제어가 추가로 필요하다.
+
+### 19. 예외 처리의 세 가지 주요 전략
+
+예외가 발생했을 때는 복구, 전파, 의도적인 예외 발생 등을 선택할 수 있다.
+
+| 전략 | 대표 문법 | 설명 |
+|---|---|---|
+| 복구(Recovery) | try-catch | 상황에 맞게 문제를 처리하고 후속 작업 수행 |
+| 전파(Propagation) | throws | 적절한 호출자에게 처리 책임 전달 |
+| 의도적 예외 발생 | throw | 잘못된 입력이나 상태를 명시적으로 표현 |
+
+**복구**
+
+```java
+try {
+    int number = Integer.parseInt(input);
+
+} catch (NumberFormatException e) {
+    System.out.println("올바른 숫자를 입력하세요.");
+}
+```
+
+**전파**
+
+```java
+public static String loadFile(String path)
+        throws IOException {
+
+    return Files.readString(Path.of(path));
+}
+```
+
+**의도적 예외 발생**
+
+```java
+if (quantity <= 0) {
+    throw new IllegalArgumentException(
+        "수량은 1 이상이어야 합니다."
+    );
+}
+```
+
+**핵심**
+
+예외를 무조건 처리하는 것보다 현재 계층에서 복구가 가능한지 판단하고, 적절한 위치에서 처리하거나 전파하는 것이 중요하다.
+
+### 20. 실무에서 피해야 할 예외 처리 안티 패턴
+
+**1. 빈 catch 블록**
+
+```java
+try {
+    process();
+
+} catch (Exception e) {
+    // 아무 작업도 하지 않음
+}
+```
+
+**문제점**
+
+- 예외 발생 사실이 숨겨진다.
+- 오류의 원인을 추적하기 어려워진다.
+- 잘못된 상태로 후속 작업이 진행될 수 있다.
+
+**2. 모든 예외를 하나로 처리**
+
+```java
+catch (Exception e) {
+    System.out.println("오류 발생");
+}
+```
+
+- 서로 다른 예외의 원인과 처리 방법을 구분하기 어렵다.
+- 복구 가능한 예외와 복구 불가능한 예외를 혼동할 수 있다.
+
+**3. 원인 예외를 잃어버리는 재전파**
+
+```java
+catch (IOException e) {
+    throw new RuntimeException("파일 오류");
+}
+```
+
+위 코드는 원본 예외를 새 예외의 원인으로 연결하지 않는다.
+
+**개선 예제**
+
+```java
+catch (IOException e) {
+    throw new RuntimeException("파일 처리 실패", e);
+}
+```
+
+- 원래 예외를 원인(Cause)으로 보존한다.
+- 호출자가 전체 예외 발생 경로를 확인할 수 있다.
+- 예외의 원인을 추적하기 쉬워진다.
+
+**4. 불필요한 예외 처리**
+
+- 복구할 방법이 없는데 무조건 catch로 예외를 삼키지 않는다.
+- 단순한 조건 검사를 위해 예외를 일반적인 분기 수단으로 남용하지 않는다.
+- 정리해야 하는 자원을 방치하지 않는다.
+
+**5. 부적절한 오류 정보 노출**
+
+- 서버의 내부 Stack Trace나 데이터베이스 연결 정보 등을 사용자에게 그대로 전달하지 않는다.
+- 사용자에게는 필요한 오류 메시지만 제공한다.
+- 내부 원인 분석에 필요한 상세 정보는 로그로 관리한다.
+
+### 21. Spring Boot에서의 예외 처리 흐름
+
+Spring Boot 기반 웹 애플리케이션에서는 비즈니스 로직에서 발생한 예외를 HTTP 응답으로 변환하여 클라이언트에 전달한다.
+
+**기본 구조**
+
+```text
+          Client
+             │
+             ▼
+         Controller
+             │
+             ▼
+          Service
+             │
+             ▼
+        Repository
+             │
+             ▼
+          Database
+
+
+[예외 발생 시]
+
+          Service
+             │
+             ▼
+    MemberNotFoundException
+             │
+             ▼
+       예외 전파
+             │
+             ▼
+    GlobalExceptionHandler
+             │
+             ▼
+      HTTP 오류 응답 생성
+             │
+             ▼
+           Client
+```
+
+**일반적인 역할**
+
+| 계층 | 주요 역할 |
+|---|---|
+| Controller | HTTP 요청 수신 및 처리 연결 |
+| Service | 비즈니스 로직과 업무 규칙 검사 |
+| Repository | 데이터 접근 |
+| Exception Handler | 예외를 적절한 HTTP 응답으로 변환 |
+| Client | HTTP 상태 코드와 오류 메시지 수신 |
+
+**핵심**
+
+- 서비스 계층에서 업무 오류를 예외로 표현한다.
+- 필요한 경우 예외를 상위 계층으로 전파한다.
+- 전역 예외 처리기를 통해 공통적인 오류 응답을 구성할 수 있다.
+- 컨트롤러마다 동일한 try-catch를 반복하지 않도록 설계할 수 있다.
+
+### 22. @RestControllerAdvice를 이용한 전역 예외 처리
+
+Spring Boot에서는 `@RestControllerAdvice`와 `@ExceptionHandler`를 이용하여 컨트롤러 예외를 공통으로 처리할 수 있다.
+
+**사용자 정의 예외**
+
+```java
+public class MemberNotFoundException
+        extends RuntimeException {
+
+    public MemberNotFoundException(String message) {
+        super(message);
+    }
+}
+```
+
+**오류 응답 DTO**
+
+```java
+public record ErrorResponse(
+    int status,
+    String code,
+    String message
+) {}
+```
+
+**전역 예외 처리 클래스**
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMemberNotFound(
+            MemberNotFoundException e) {
+
+        ErrorResponse response = new ErrorResponse(
+            404,
+            "MEMBER_NOT_FOUND",
+            e.getMessage()
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(response);
+    }
+}
+```
+
+※ 위 코드는 Spring Boot 환경에서 사용하는 구조 설명용 예제로, 필요한 Spring 클래스들의 import는 생략했다.
+
+**관련 어노테이션**
+
+| 어노테이션 | 역할 |
+|---|---|
+| `@RestControllerAdvice` | 컨트롤러의 예외 등을 공통 처리하는 Advice 선언 |
+| `@ExceptionHandler` | 지정된 예외 타입을 처리하는 메서드 정의 |
+| `ResponseEntity` | HTTP 상태, 헤더, 응답 본문 구성 |
+
+**실행 흐름**
+
+```text
+MemberService
+      │
+      ▼
+MemberNotFoundException
+      │
+      ▼
+GlobalExceptionHandler
+      │
+      ▼
+@ExceptionHandler
+      │
+      ▼
+ErrorResponse 생성
+      │
+      ▼
+ResponseEntity 반환
+      │
+      ▼
+HTTP 404 응답
+```
+
+**핵심**
+
+- 공통 예외 응답 처리를 한곳에서 관리할 수 있다.
+- 비즈니스 로직과 HTTP 오류 응답 처리를 분리할 수 있다.
+- 동일한 유형의 오류를 일관된 형태로 전달할 수 있다.
+- 실제 서비스에서는 예외의 의미에 맞는 HTTP 상태 코드를 선택해야 한다.
+
+### 23. HTTP 상태 코드와 JSON 오류 응답
+
+웹 애플리케이션에서는 예외의 의미에 따라 적절한 HTTP 상태 코드와 오류 메시지를 제공한다.
+
+**대표적인 HTTP 오류 상태**
+
+| 상태 코드 | 의미 | 예시 |
+|---|---|---|
+| 400 Bad Request | 잘못된 요청 | 잘못된 입력 형식 |
+| 401 Unauthorized | 인증 필요 또는 실패 | 유효하지 않은 인증 정보 |
+| 403 Forbidden | 접근 권한 없음 | 권한 부족 |
+| 404 Not Found | 요청한 리소스 없음 | 회원 조회 실패 |
+| 409 Conflict | 현재 상태와 충돌 | 중복 회원가입 |
+| 500 Internal Server Error | 서버 내부 오류 | 예상하지 못한 서버 오류 |
+| 503 Service Unavailable | 서비스 일시적 이용 불가 | 일시적 서버 장애 등 |
+
+**JSON 오류 응답 예시**
+
+```json
+{
+  "status": 404,
+  "code": "MEMBER_NOT_FOUND",
+  "message": "해당 회원을 찾을 수 없습니다."
+}
+```
+
+**각 필드의 의미**
+
+| 필드 | 역할 |
+|---|---|
+| status | HTTP 오류 상태 |
+| code | 애플리케이션에서 정의한 오류 코드 |
+| message | 사용자 또는 클라이언트에 전달할 오류 설명 |
+
+**JSON 오류 응답의 장점**
+
+- 클라이언트가 오류 종류를 쉽게 구분할 수 있다.
+- 일관된 오류 응답 구조를 제공한다.
+- 오류 코드에 따라 클라이언트가 다른 작업을 수행할 수 있다.
+- 프론트엔드와 백엔드 사이의 오류 처리 규약을 명확하게 정의할 수 있다.
+
+**주의 : 내부 구현 정보나 민감한 데이터가 오류 응답에 포함되지 않도록 주의해야 한다.**
+
+### 24. 예외 처리와 로그 관리
+
+실제 서비스에서는 사용자에게 제공하는 오류 응답과 개발자가 확인하는 오류 로그의 목적이 다르다.
+
+**사용자 오류 응답**
+
+- 간결하고 이해할 수 있는 메시지 제공
+- 필요한 HTTP 상태 코드 사용
+- 내부 시스템 정보 노출 최소화
+
+**서버 오류 로그**
+
+- 발생한 예외의 타입 확인
+- 예외 메시지와 원인 기록
+- Stack Trace 분석
+- 요청 처리 과정에서 발생한 오류의 추적
+
+**예외 기록 예제**
+
+```java
+try {
+    process();
+
+} catch (Exception e) {
+    logger.error("작업 처리 중 오류 발생", e);
+    throw e;
+}
+```
+
+※ 위 예제의 `logger`와 `process()`는 이미 정의되어 있다고 가정한다. 실제 로깅에는 SLF4J 등의 로깅 API를 사용할 수 있다.
+
+**핵심**
+
+- 로그는 예외 원인을 분석하는 데 사용한다.
+- 사용자 응답에는 불필요한 내부 정보를 전달하지 않는다.
+- 상위 계층에서 이미 충분히 기록하는 경우 중복 로그를 남기지 않도록 고려한다.
+- 재시도 가능한 일시적 장애와 영구적인 업무 오류는 구분한다.
+
+### 25. Java 핵심 문법과 웹 개발의 관계
+
+강의자료 후반부에서는 Java 기본 문법부터 객체지향, 예외 처리까지 웹 개발에서 어떤 역할을 수행하는지 정리한다.
+
+| 학습 영역 | 핵심 개념 | 웹 개발에서의 역할 |
+|---|---|---|
+| 변수와 자료형 | int, String, boolean | 사용자 데이터 저장 |
+| 연산자 | 산술·비교·논리 연산 | 계산 및 조건 검사 |
+| 제어문 | if, switch, for, while | 실행 흐름과 반복 처리 |
+| 참조 타입 | 배열, String, 객체 | 데이터 관리 |
+| 클래스와 객체 | 필드, 생성자, 메서드 | 기능과 상태의 구조화 |
+| 상속과 다형성 | extends, Override | 기능 재사용과 확장 |
+| 인터페이스 | implements | 공통 규약과 의존성 분리 |
+| 예외 처리 | try-catch, throw, throws | 오류 대응과 전파 |
+| 사용자 정의 예외 | Exception 상속 | 업무 규칙 위반 표현 |
+
+**Java에서 Spring Boot로 연결되는 구조**
+
+```text
+Java 기본 문법
+     │
+     ▼
+변수 / 연산자 / 제어문
+     │
+     ▼
+클래스 / 객체 / 메서드
+     │
+     ▼
+상속 / 다형성 / 인터페이스
+     │
+     ▼
+예외 처리 / 데이터 관리
+     │
+     ▼
+Spring Boot
+     │
+     ├── Controller
+     ├── Service
+     ├── Repository
+     ├── DTO / Entity
+     └── Exception Handler
+```
+
+**핵심**
+
+Java에서 학습한 객체지향과 예외 처리 개념은 Spring Boot에서도 그대로 활용된다.
+
+특히 클래스 간 책임 분리와 인터페이스를 통한 추상화, 사용자 정의 예외를 통한 오류 관리 방식이 중요하다.
+
+### 26. 앞으로 학습할 Java 주요 문법
+
+강의자료에서는 Spring Boot 학습 전 추가로 익히면 좋은 Java 문법을 소개한다.
+
+| 학습 항목 | 주요 내용 | 활용 목적 |
+|---|---|---|
+| List / ArrayList | 가변 크기 데이터 목록 | 여러 데이터 저장 및 조회 |
+| Map / HashMap | Key-Value 데이터 관리 | 키를 이용한 데이터 조회 |
+| Generic | 타입 매개변수 | 타입 안정성과 재사용성 |
+| Lambda | 함수형 인터페이스 구현 | 간결한 동작 표현 |
+| Stream API | 데이터 필터링 및 변환 | 컬렉션 데이터 가공 |
+| Optional | 값의 존재 여부 표현 | null 관련 오류 예방에 도움 |
+
+**기본적인 활용 구조**
+
+```text
+      여러 데이터
+           │
+           ▼
+     List / Map
+           │
+           ▼
+      Generic<T>
+           │
+           ▼
+   Lambda / Stream API
+           │
+           ▼
+     데이터 가공
+           │
+           ▼
+      서비스 로직
+           │
+           ▼
+      API 응답
+```
+
+**주의**
+
+- `Optional`은 모든 null을 자동으로 제거하는 기능이 아니다.
+- Stream API도 모든 반복문을 대체해야 하는 것은 아니다.
+- 컬렉션과 제네릭의 특성을 이해한 후 필요한 상황에 적절하게 사용하는 것이 중요하다.
+
+### 27. 예외 처리 시 자주 발생하는 오류 및 주의사항
+
+| 주의사항 | 원인 및 해결 방법 |
+|---|---|
+| Exception과 Error 혼동 | 일반적인 예외와 심각한 오류 구분 |
+| Checked Exception 처리 누락 | catch 또는 throws 필요 |
+| Unchecked Exception 오해 | 컴파일러가 처리를 강제하지 않을 뿐 예외는 발생 가능 |
+| try 내부 실행 흐름 혼동 | 예외 발생 이후의 try 코드 실행 중단 |
+| catch 작성 순서 오류 | 자식 예외를 부모 예외보다 먼저 작성 |
+| 멀티 catch 타입 충돌 | 상속 관계의 예외를 함께 나열하지 않음 |
+| finally 실행 보장 오해 | JVM 강제 종료 등에서는 실행되지 않을 수 있음 |
+| finally 내부 return | 기존 반환값 또는 예외가 가려질 수 있음 |
+| throw와 throws 혼동 | 예외 발생과 전파 선언 구분 |
+| throws의 역할 오해 | 예외를 직접 처리하는 기능이 아님 |
+| 빈 catch 블록 | 예외를 무시하지 않고 적절히 대응 |
+| Exception 전체 처리 남용 | 구체적인 예외별 처리 방법 검토 |
+| 예외 원인 누락 | 예외를 감쌀 때 원본 cause 보존 |
+| 파일 자원 해제 누락 | try-with-resources 사용 |
+| GC와 자원 해제 혼동 | 외부 자원은 명시적인 종료 필요 |
+| 사용자 정의 예외 남용 | 의미 있는 업무 오류에 적절히 활용 |
+| 내부 오류 정보 노출 | 클라이언트에는 안전한 오류 메시지 제공 |
+| 일률적인 HTTP 상태 코드 | 예외 종류에 맞는 상태 코드 선택 |
+| 불필요한 재시도 | 복구 가능성과 중복 실행 위험 검토 |
+| 중복 로그 | 오류 추적에 필요한 위치에서 적절하게 기록 |
+
+### ✅ Day18 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| Exception Handling | 비정상 상황에 대한 적절한 대응과 실행 흐름 관리 |
+| Throwable | 예외 및 오류의 최상위 클래스 |
+| Exception | 애플리케이션에서 처리할 수 있는 예외 상황 |
+| Error | 일반적으로 복구하기 어려운 심각한 오류 |
+| Checked Exception | 컴파일러가 처리 또는 전파 선언 요구 |
+| Unchecked Exception | 컴파일러가 처리 강제하지 않음 |
+| try | 예외 발생 가능 코드 실행 |
+| catch | 발생한 예외를 받아 처리 |
+| finally | 일반적인 정리 작업 수행 |
+| Multiple Catch | 예외 종류별로 다른 처리 |
+| Multi-catch | 여러 예외를 하나의 catch로 처리 |
+| getMessage() | 예외 메시지 반환 |
+| toString() | 예외 타입과 메시지 확인 |
+| printStackTrace() | 예외 발생 위치와 호출 경로 출력 |
+| Exception Propagation | 예외를 상위 호출자로 전달 |
+| throw | 예외 객체를 직접 발생 |
+| throws | 예외 전파 가능성을 선언 |
+| Resource Leak | 자원을 적절히 종료하지 않아 발생하는 누수 |
+| try-with-resources | AutoCloseable 자원의 자동 종료 |
+| AutoCloseable | 자원 종료를 위한 close() 규약 |
+| Suppressed Exception | 자원 종료 중 발생한 추가 예외 보관 |
+| Custom Exception | 업무 규칙을 표현하기 위한 사용자 정의 예외 |
+| RuntimeException | 대표적인 Unchecked Exception의 상위 클래스 |
+| Exception Cause | 예외 발생 원인을 연결하고 보존 |
+| GlobalExceptionHandler | 웹 애플리케이션의 공통 예외 처리 |
+| @RestControllerAdvice | Spring의 전역 Controller Advice |
+| @ExceptionHandler | 특정 예외를 처리할 메서드 지정 |
+| ResponseEntity | HTTP 상태 코드와 응답 구성 |
+| ErrorResponse | 클라이언트에 전달할 공통 오류 정보 |
+| Logging | 서버 오류 발생 원인 및 경로 기록 |
+
+**최종 학습 정리**
+
+- 예외 처리는 오류를 무조건 없애는 것이 아니라 발생한 문제에 적절히 대응하여 프로그램의 흐름을 관리하는 기능이다.
+- Java의 예외와 오류는 Throwable을 최상위 클래스로 하는 계층 구조를 가진다.
+- Exception은 일반적인 예외 상황을 표현하고 Error는 심각한 시스템 문제 등을 표현한다.
+- Checked Exception은 컴파일러가 처리 또는 전파 선언을 요구한다.
+- Unchecked Exception은 컴파일러가 처리를 강제하지 않는다.
+- try 블록에서 예외가 발생하면 해당 지점 이후의 정상 실행 흐름이 중단된다.
+- catch는 발생한 예외를 처리하며 자식 예외부터 부모 예외 순서로 작성해야 한다.
+- 멀티 catch를 사용하면 여러 예외를 하나의 블록에서 공통으로 처리할 수 있다.
+- finally는 일반적으로 예외 발생 여부에 관계없이 실행되지만 모든 상황에서 실행을 보장하지는 않는다.
+- getMessage(), toString(), printStackTrace()를 이용하여 예외 정보를 확인할 수 있다.
+- 메서드 내부에서 처리되지 않은 예외는 호출 스택을 따라 상위 호출자로 전파될 수 있다.
+- throw는 예외를 직접 발생시키고 throws는 예외를 전파할 수 있음을 선언한다.
+- 파일과 DB 연결 등의 외부 자원은 사용 후 적절하게 종료해야 한다.
+- try-with-resources를 사용하면 AutoCloseable 자원의 종료를 자동화할 수 있다.
+- 사용자 정의 예외는 프로그램의 업무 규칙 위반을 의미 있는 타입으로 표현한다.
+- 예외를 감싸서 다시 발생시킬 때는 원본 예외를 Cause로 보존하는 것이 좋다.
+- 빈 catch 블록이나 모든 예외를 무조건 무시하는 처리는 피해야 한다.
+- Spring Boot에서는 @RestControllerAdvice와 @ExceptionHandler를 이용해 공통 예외 처리 구조를 만들 수 있다.
+- 서버에서 발생한 예외는 적절한 HTTP 상태 코드와 JSON 오류 응답으로 변환할 수 있다.
+- 서버의 내부 오류 정보는 로그로 관리하고 클라이언트에는 필요한 정보만 전달해야 한다.
+- 안정적인 프로그램 설계에서는 정상적인 기능 구현뿐 아니라 실패 상황을 어떻게 처리할 것인지도 중요하다.
 
 </details>
