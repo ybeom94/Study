@@ -20,6 +20,7 @@
 | **Day 16** | Java 클래스 종류와 객체지향 설계 | package·import, 추상 클래스, 인터페이스, 템플릿 메서드 패턴, 내부 클래스 4종, Builder 패턴, 익명 클래스·람다식, 의존성 주입(DI), 예외 처리 |
 | **Day 17** | Java 인터페이스 심화 및 예외 처리 | 인터페이스, 추상·default·static·private 메서드, 다중 구현·상속, 다형성, 결합도, 의존성 주입(DI), Mock 객체, 중첩 클래스, 예외 처리 |
 | **Day 18** | Java 예외 처리 및 실무 활용 | Exception·Error, Checked·Unchecked, try-catch-finally, 다중 catch, 예외 정보·전파, throw·throws, try-with-resources, 사용자 정의 예외, Spring Boot 전역 예외 처리 |
+| **Day 19** | Java 예외 처리 및 중첩 클래스 심화 | 예외 전파, throw·throws, 사용자 정의 예외, 전역 예외 처리, 중첩 클래스 4종, static, 변수 캡처, DTO·Builder, java.lang |
 
 
 
@@ -14858,5 +14859,1573 @@ Java에서 학습한 객체지향과 예외 처리 개념은 Spring Boot에서�
 - 서버에서 발생한 예외는 적절한 HTTP 상태 코드와 JSON 오류 응답으로 변환할 수 있다.
 - 서버의 내부 오류 정보는 로그로 관리하고 클라이언트에는 필요한 정보만 전달해야 한다.
 - 안정적인 프로그램 설계에서는 정상적인 기능 구현뿐 아니라 실패 상황을 어떻게 처리할 것인지도 중요하다.
+
+</details>
+
+
+## Day19. Java 예외 처리 및 중첩 클래스 심화
+<details>
+
+### 🎯 학습 목표
+- Java 예외 처리의 구조와 실행 흐름을 이해한다.
+- Checked Exception과 Unchecked Exception의 차이를 구분한다.
+- `try-catch-finally`, `throw`, `throws`의 역할을 이해한다.
+- 예외가 메서드 호출 스택을 따라 전파되는 원리를 이해한다.
+- 사용자 정의 예외를 이용하여 비즈니스 오류를 표현한다.
+- Spring Boot의 전역 예외 처리 구조를 이해한다.
+- 중첩 클래스의 개념과 사용 목적을 이해한다.
+- 인스턴스 멤버 클래스와 정적 중첩 클래스의 차이를 구분한다.
+- 지역 클래스와 익명 클래스의 특징을 이해한다.
+- 중첩 클래스의 접근 규칙과 변수 캡처 조건을 이해한다.
+- 정적 중첩 클래스를 활용한 DTO 및 Builder 구조를 이해한다.
+- `java.lang` 패키지의 주요 클래스와 사용법을 익힌다.
+- 객체지향 설계에서 적절한 클래스 구조를 선택할 수 있다.
+
+### 1. Java 예외 처리(Exception Handling)
+
+예외 처리는 프로그램 실행 중 발생하는 비정상적인 상황을 적절하게 처리하거나 전파하여 실행 흐름을 제어하는 기능이다.
+
+**예외 처리를 사용하는 목적**
+
+- 프로그램의 비정상적인 실행 상황에 대응한다.
+- 오류가 발생한 원인을 추적한다.
+- 복구 가능한 작업을 적절하게 처리한다.
+- 외부 자원을 안전하게 정리한다.
+- 비즈니스 규칙을 위반한 상황을 명확하게 표현한다.
+
+**예외 처리의 기본 구조**
+
+```text
+        프로그램 실행
+              │
+              ▼
+          정상 처리
+              │
+         예외 발생?
+          │      │
+         No     Yes
+          │      │
+          │      ▼
+          │   예외 처리
+          │      │
+          └──┬───┘
+             │
+             ▼
+       이후 실행 흐름
+```
+
+**핵심**
+
+- 예외 처리는 오류를 무조건 없애는 기능이 아니다.
+- 예외가 발생했을 때 적절한 처리 방법을 결정한다.
+- 현재 메서드에서 처리할 수 없다면 상위 호출자로 전파할 수 있다.
+
+### 2. Error와 Exception의 차이
+
+Java의 예외 및 오류는 `Throwable` 클래스를 중심으로 계층 구조를 가진다.
+
+**예외 클래스 계층**
+
+```text
+                 Throwable
+                     │
+           ┌─────────┴─────────┐
+           │                   │
+           ▼                   ▼
+         Error              Exception
+           │                   │
+      ┌────┴────┐       ┌──────┴────────┐
+      │         │       │               │
+      ▼         ▼       ▼               ▼
+   OutOfMemory  Stack  IOException  RuntimeException
+     Error     Overflow                │
+                Error                  ├─ NullPointerException
+                                       ├─ ArithmeticException
+                                       └─ IllegalArgumentException
+```
+
+| 구분 | Error | Exception |
+|---|---|---|
+| 의미 | 시스템·JVM 수준의 심각한 문제 등 | 프로그램의 예외적 상황 |
+| 복구 | 일반적으로 복구 어려움 | 상황에 따라 처리 및 복구 가능 |
+| 대표 예시 | OutOfMemoryError | IOException |
+| 주요 대응 | 원인 분석 및 시스템 문제 해결 | 적절한 처리 또는 전파 |
+
+**주의사항**
+
+- `Error`도 문법적으로 `catch`할 수 있지만 일반적인 복구 대상으로 취급하지 않는다.
+- `Exception`이라고 해서 항상 복구할 수 있는 것은 아니다.
+- 예외를 처리할 수 없는 경우 상위 계층에 전달하는 것이 적합할 수 있다.
+
+### 3. Checked Exception과 Unchecked Exception
+
+예외는 컴파일러가 처리 또는 전파 선언을 요구하는지에 따라 구분된다.
+
+| 구분 | Checked Exception | Unchecked Exception |
+|---|---|---|
+| 대표 부모 타입 | Exception(RuntimeException 제외) | RuntimeException |
+| 컴파일러 검사 | 처리 또는 전파 선언 필요 | 강제하지 않음 |
+| 대표 예시 | IOException, SQLException | NullPointerException, ArithmeticException |
+| 주요 특징 | 호출자에게 예외 대응 요구 | 상황에 따라 선택적으로 처리 |
+
+**Checked Exception**
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public static String readFile(String path)
+        throws IOException {
+
+    return Files.readString(Path.of(path));
+}
+```
+
+**Unchecked Exception**
+
+```java
+int number = Integer.parseInt("abc");
+// NumberFormatException 발생
+```
+
+**핵심**
+
+- Checked Exception은 `catch` 또는 `throws`가 필요하다.
+- Unchecked Exception은 컴파일러가 처리를 강제하지 않는다.
+- Unchecked Exception도 실행 중 발생하면 프로그램의 흐름을 중단시킬 수 있다.
+
+### 4. try-catch-finally와 다중 catch
+
+`try-catch-finally`는 예외 발생 가능성이 있는 코드를 실행하고, 예외 처리와 정리 작업을 수행하는 구문이다.
+
+**기본 구조**
+
+```java
+try {
+    // 예외 발생 가능 코드
+
+} catch (Exception e) {
+    // 예외 처리
+
+} finally {
+    // 정리 작업
+}
+```
+
+**실행 예제**
+
+```java
+try {
+    int result = 10 / 0;
+
+    System.out.println(result);
+
+} catch (ArithmeticException e) {
+    System.out.println("산술 연산 오류");
+
+} finally {
+    System.out.println("작업 종료");
+}
+```
+
+**실행 결과**
+
+```text
+산술 연산 오류
+작업 종료
+```
+
+**다중 catch**
+
+```java
+try {
+    // 작업 수행
+
+} catch (ArithmeticException e) {
+    System.out.println("산술 연산 오류");
+
+} catch (NumberFormatException e) {
+    System.out.println("숫자 변환 오류");
+
+} catch (Exception e) {
+    System.out.println("기타 오류");
+}
+```
+
+**멀티 catch**
+
+```java
+try {
+    int number = Integer.parseInt("abc");
+
+    System.out.println(10 / number);
+
+} catch (ArithmeticException | NumberFormatException e) {
+    System.out.println("숫자 처리 오류");
+}
+```
+
+**주의사항**
+
+- `catch`는 위에서부터 순서대로 검사한다.
+- 자식 예외를 부모 예외보다 먼저 선언해야 한다.
+- 멀티 catch에는 서로 상속 관계인 예외 타입을 함께 선언할 수 없다.
+- `finally`는 일반적으로 실행되지만 JVM 강제 종료 등의 경우 실행이 보장되지 않는다.
+
+### 5. throw와 throws의 차이
+
+`throw`와 `throws`는 모두 예외와 관련된 문법이지만 역할이 다르다.
+
+| 구분 | throw | throws |
+|---|---|---|
+| 역할 | 예외 객체 발생 | 예외 전파 가능성 선언 |
+| 위치 | 실행 코드 내부 | 메서드 선언부 |
+| 주요 목적 | 잘못된 상태를 예외로 표현 | 호출자에게 예외 처리 책임 전달 |
+
+**throw**
+
+```java
+public static void validateAge(int age) {
+
+    if (age < 0) {
+        throw new IllegalArgumentException(
+            "나이는 음수일 수 없습니다."
+        );
+    }
+}
+```
+
+- 조건이 만족되면 예외 객체를 생성하여 발생시킨다.
+- 예외가 발생한 지점의 정상적인 실행 흐름이 중단된다.
+
+**throws**
+
+```java
+public static void readFile()
+        throws java.io.IOException {
+
+    java.nio.file.Files.readString(
+        java.nio.file.Path.of("test.txt")
+    );
+}
+```
+
+- 메서드 선언부에서 전파할 수 있는 예외를 명시한다.
+- `throws` 자체가 예외를 발생시키지는 않는다.
+- Checked Exception은 처리하지 않을 경우 전파 선언이 필요하다.
+
+**핵심**
+
+```text
+throw
+  └── 예외를 직접 발생시킴
+
+throws
+  └── 발생 가능한 예외를 선언하고 호출자에게 전파 허용
+```
+
+### 6. 예외 전파(Exception Propagation)
+
+예외 전파는 메서드 내부에서 처리하지 않은 예외가 호출한 메서드로 전달되는 과정이다.
+
+**Java 예제**
+
+```java
+public class Main {
+
+    static void methodA() throws java.io.IOException {
+        methodB();
+    }
+
+    static void methodB() throws java.io.IOException {
+        throw new java.io.IOException("파일 처리 오류");
+    }
+
+    public static void main(String[] args) {
+
+        try {
+            methodA();
+
+        } catch (java.io.IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
+```
+
+**실행 흐름**
+
+```text
+           main()
+              │
+              ▼
+          methodA()
+              │
+              ▼
+          methodB()
+              │
+              ▼
+      IOException 발생
+              │
+              ▼
+       methodA()로 전파
+              │
+              ▼
+        main()으로 전파
+              │
+              ▼
+          catch 처리
+```
+
+**핵심**
+
+- 예외는 호출 스택을 따라 상위 호출자로 전파될 수 있다.
+- 현재 메서드에서 처리하지 않아도 된다.
+- Checked Exception을 전파하려는 메서드는 필요한 `throws`를 선언해야 한다.
+- 상위 호출자에서도 처리하지 않으면 예외가 계속 전파된다.
+
+### 7. 사용자 정의 예외(Custom Exception)
+
+사용자 정의 예외는 프로그램의 업무 규칙이나 특정 실패 상황을 의미 있는 예외 클래스로 표현하는 방식이다.
+
+**사용 목적**
+
+- 비즈니스 규칙 위반을 명확하게 표현한다.
+- 예외 발생 원인을 타입으로 구분한다.
+- 예외별 처리 방식을 다르게 지정할 수 있다.
+- 코드의 가독성과 유지보수성을 높인다.
+
+**사용자 정의 예외 선언**
+
+```java
+class InsufficientBalanceException
+        extends RuntimeException {
+
+    public InsufficientBalanceException(String message) {
+        super(message);
+    }
+}
+```
+
+**계좌 클래스**
+
+```java
+class BankAccount {
+
+    private int balance = 100000;
+
+    public void withdraw(int amount) {
+
+        if (amount <= 0) {
+            throw new IllegalArgumentException(
+                "출금 금액은 양수여야 합니다."
+            );
+        }
+
+        if (amount > balance) {
+            throw new InsufficientBalanceException(
+                "잔액이 부족합니다."
+            );
+        }
+
+        balance -= amount;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+BankAccount account = new BankAccount();
+
+try {
+    account.withdraw(150000);
+
+} catch (InsufficientBalanceException e) {
+    System.out.println(e.getMessage());
+}
+```
+
+**실행 결과**
+
+```text
+잔액이 부족합니다.
+```
+
+**핵심**
+
+- `RuntimeException`을 상속하면 Unchecked Exception이 된다.
+- `Exception`을 직접 상속하면 Checked Exception이 된다.
+- `super(message)`로 부모 예외 클래스에 메시지를 전달한다.
+- 의미 있는 업무 상황을 구분할 필요가 있을 때 사용자 정의 예외를 사용한다.
+
+### 8. Spring Boot 전역 예외 처리
+
+Spring Boot에서는 Controller에서 발생하거나 전달된 예외를 공통으로 처리하기 위해 `@RestControllerAdvice`와 `@ExceptionHandler`를 사용할 수 있다.
+
+**예외 처리 구조**
+
+```text
+         Client
+            │
+            ▼
+        Controller
+            │
+            ▼
+         Service
+            │
+            ▼
+      비즈니스 규칙 검사
+            │
+            ▼
+    사용자 정의 예외 발생
+            │
+            ▼
+    GlobalExceptionHandler
+            │
+            ▼
+       HTTP 오류 응답
+            │
+            ▼
+          Client
+```
+
+**전역 예외 처리 예제**
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<String> handleMemberNotFound(
+            MemberNotFoundException e) {
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(e.getMessage());
+    }
+}
+```
+
+※ Spring Boot 의존성 및 import가 필요하며 `MemberNotFoundException`은 별도로 정의해야 한다.
+
+**주요 구성 요소**
+
+| 구성 요소 | 역할 |
+|---|---|
+| `@RestControllerAdvice` | MVC Controller 예외의 공통 처리 |
+| `@ExceptionHandler` | 처리할 예외 타입 지정 |
+| `ResponseEntity` | HTTP 상태 코드와 응답 본문 구성 |
+| 사용자 정의 예외 | 업무 상황에 따른 오류 표현 |
+
+**핵심**
+
+- 서비스는 비즈니스 규칙을 검증한다.
+- 잘못된 상태를 예외로 표현한다.
+- 공통 예외 처리기는 적절한 HTTP 응답을 생성한다.
+- 비즈니스 로직과 오류 응답 처리를 분리할 수 있다.
+
+### 9. 예외 처리의 안티 패턴(Anti-pattern)
+
+실무에서는 예외를 어떻게 처리하는지만큼 잘못된 예외 처리 방식을 피하는 것도 중요하다.
+
+| 잘못된 방식 | 문제점 | 개선 방법 |
+|---|---|---|
+| 빈 catch 블록 | 오류 발생 사실을 숨김 | 적절한 처리 또는 전파 |
+| 무조건 Exception으로 처리 | 오류 유형 구분 어려움 | 구체적인 예외 처리 |
+| 원본 예외 제거 | 발생 원인 추적 어려움 | Cause 보존 |
+| 자원 종료 누락 | 파일·연결 자원 누수 | try-with-resources |
+| 불필요한 중복 로깅 | 동일 오류가 여러 번 기록됨 | 적절한 계층에서 기록 |
+
+**잘못된 예외 처리**
+
+```java
+try {
+    process();
+
+} catch (Exception e) {
+    // 아무것도 하지 않음
+}
+```
+
+**예외 원인을 보존하는 방법**
+
+```java
+try {
+    readFile();
+
+} catch (java.io.IOException e) {
+    throw new RuntimeException("파일 처리 실패", e);
+}
+```
+
+**자원 관리**
+
+```java
+try (java.io.FileReader reader =
+        new java.io.FileReader("test.txt")) {
+
+    System.out.println(reader.read());
+
+} catch (java.io.IOException e) {
+    System.out.println("파일 처리 오류");
+}
+```
+
+**주의사항**
+
+- 복구가 불가능한 예외를 무조건 catch할 필요는 없다.
+- 예외를 전파하거나 처리할 위치를 명확하게 정해야 한다.
+- 이미 상위 계층에서 로깅하는 경우 중복 기록에 주의한다.
+- 외부 자원은 사용 후 적절하게 정리해야 한다.
+
+---
+
+### 10. 중첩 클래스(Nested Class)의 개념
+
+중첩 클래스는 하나의 클래스 내부에 다른 클래스를 선언하는 구조이다.
+
+**중첩 클래스를 사용하는 이유**
+
+- 관련된 클래스를 하나의 구조로 묶는다.
+- 외부에 불필요한 타입과 구현을 숨긴다.
+- 특정 클래스와 밀접한 보조 기능을 정의한다.
+- 프로그램의 응집도와 유지보수성을 높일 수 있다.
+
+**일반적인 클래스 구성**
+
+```java
+class Car {
+}
+
+class Engine {
+}
+```
+
+**중첩 클래스 구성**
+
+```java
+class Car {
+
+    class Engine {
+    }
+}
+```
+
+**구조 비교**
+
+```text
+[일반 클래스]
+
+Car             Engine
+ │                 │
+ ▼                 ▼
+독립적인 타입    독립적인 타입
+
+
+[중첩 클래스]
+
+       Car
+        │
+        └── Engine
+             │
+             └── Car 내부에 선언된 타입
+```
+
+**중첩 클래스의 주요 특징**
+
+- 외부 클래스와 관련성이 높은 타입을 내부에 정의한다.
+- 필요에 따라 외부 클래스의 private 멤버에 접근할 수 있다.
+- 외부에 공개할 필요가 없는 구현을 감출 수 있다.
+- 중첩 클래스도 일반 클래스처럼 필드, 메서드, 생성자 등을 가질 수 있다.
+
+**주의 : 클래스를 내부에 선언하는 것과 외부 객체가 해당 객체를 필드로 소유하는 것은 다른 개념이다.**
+
+### 11. 중첩 클래스의 네 가지 종류
+
+중첩 클래스는 선언 위치와 외부 객체와의 관계에 따라 네 가지 유형으로 구분한다.
+
+| 종류 | 선언 위치 | 특징 |
+|---|---|---|
+| 인스턴스 멤버 클래스 | 클래스 내부 | 외부 객체와 연결 |
+| 정적 중첩 클래스 | 클래스 내부 | 외부 객체 없이 사용 가능 |
+| 지역 클래스 | 메서드·블록 내부 | 선언된 범위에서 사용 |
+| 익명 클래스 | 객체 생성 표현식 | 이름 없는 일회성 구현 |
+
+**전체 구조**
+
+```text
+        Nested Class
+             │
+     ┌───────┴────────┐
+     │                │
+     ▼                ▼
+  멤버 클래스       지역 클래스
+     │                │
+  ┌──┴──────┐         │
+  │         │         ▼
+  ▼         ▼      Local Class
+Instance  Static
+  │
+  └── 외부 객체와 연결
+
+익명 클래스
+  └── 이름 없이 클래스 구현과 객체 생성
+```
+
+**주요 선택 기준**
+
+- 외부 객체의 상태가 필요하다면 인스턴스 멤버 클래스를 고려한다.
+- 외부 객체 없이 사용할 보조 타입이라면 정적 중첩 클래스를 고려한다.
+- 특정 메서드에서만 필요한 타입이라면 지역 클래스를 고려한다.
+- 일회성 구현이 필요하다면 익명 클래스를 고려한다.
+
+※ Java의 엄밀한 용어에서 정적 중첩 클래스는 Nested Class이지만 Inner Class에는 포함되지 않는다.
+
+### 12. 인스턴스 멤버 클래스(Instance Member Class)
+
+인스턴스 멤버 클래스는 외부 클래스의 객체와 연결되어 동작하는 내부 클래스이다.
+
+**특징**
+
+- 외부 객체와 연결된 인스턴스를 생성한다.
+- 외부 클래스의 인스턴스 필드 및 메서드에 접근할 수 있다.
+- 외부 클래스의 `private` 멤버에도 접근할 수 있다.
+- 일반적으로 외부 객체를 통해 생성한다.
+
+**Java 예제**
+
+```java
+class Car {
+
+    private String model = "Sonata";
+
+    class Engine {
+
+        void start() {
+            System.out.println(model + " 엔진 작동");
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Car car = new Car();
+
+Car.Engine engine = car.new Engine();
+
+engine.start();
+```
+
+**실행 결과**
+
+```text
+Sonata 엔진 작동
+```
+
+**메모리 참조 개념**
+
+```text
+       Car 객체
+    ┌──────────────┐
+    │ model        │
+    │ "Sonata"     │
+    └──────┬───────┘
+           │
+     외부 객체 연결
+           │
+           ▼
+       Engine 객체
+    ┌──────────────┐
+    │ start()      │
+    └──────────────┘
+```
+
+**핵심**
+
+- `car.new Engine()`으로 외부 객체와 연결된 내부 객체를 생성한다.
+- 내부 클래스는 연결된 외부 객체의 상태를 사용할 수 있다.
+- 외부 객체마다 다른 상태를 가진 내부 클래스 객체를 생성할 수 있다.
+
+### 13. 정적 중첩 클래스(Static Nested Class)
+
+정적 중첩 클래스는 외부 클래스 내부에 `static` 키워드로 선언하는 클래스이다.
+
+**특징**
+
+- 외부 클래스의 인스턴스 없이 생성할 수 있다.
+- 외부 객체에 자동으로 연결되지 않는다.
+- 외부 클래스의 정적 멤버에 직접 접근할 수 있다.
+- 외부 인스턴스 멤버를 사용하려면 별도의 객체 참조가 필요하다.
+
+**Java 예제**
+
+```java
+class Car {
+
+    private static String manufacturer = "Hyundai";
+
+    static class Engine {
+
+        void start() {
+            System.out.println(manufacturer + " 엔진 작동");
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Car.Engine engine = new Car.Engine();
+
+engine.start();
+```
+
+**실행 결과**
+
+```text
+Hyundai 엔진 작동
+```
+
+**인스턴스 멤버 클래스와 비교**
+
+| 구분 | 인스턴스 멤버 클래스 | 정적 중첩 클래스 |
+|---|---|---|
+| static 키워드 | 사용하지 않음 | 사용 |
+| 외부 객체 | 필요 | 불필요 |
+| 외부 객체와 연결 | 있음 | 없음 |
+| 외부 인스턴스 필드 직접 접근 | 가능 | 불가능 |
+| 주요 용도 | 외부 상태와 관련된 기능 | DTO, Builder, 보조 타입 |
+
+**핵심**
+
+```java
+// 인스턴스 멤버 클래스
+Outer.Inner a = outer.new Inner();
+
+// 정적 중첩 클래스
+Outer.Nested b = new Outer.Nested();
+```
+
+위 코드는 `Outer` 클래스에 각각 `Inner`, `Nested`가 선언되어 있다고 가정한 생성 문법이다.
+
+### 14. 지역 클래스(Local Class)
+
+지역 클래스는 메서드나 블록 내부에 선언하는 클래스이다.
+
+**특징**
+
+- 선언된 블록의 유효 범위 안에서 클래스 이름을 사용할 수 있다.
+- 특정 메서드에 필요한 보조 타입을 구현할 수 있다.
+- 외부 클래스의 접근 가능한 멤버를 사용할 수 있다.
+- 지역 변수를 참조할 때는 `final` 또는 사실상 final이어야 한다.
+
+**Java 예제**
+
+```java
+class Car {
+
+    void drive() {
+
+        String message = "주행 중";
+
+        class Engine {
+
+            void start() {
+                System.out.println(message);
+            }
+        }
+
+        Engine engine = new Engine();
+
+        engine.start();
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Car car = new Car();
+
+car.drive(); // 주행 중
+```
+
+**지역 클래스의 유효 범위**
+
+```text
+      drive() 메서드
+             │
+             ▼
+     Local Class 선언
+             │
+             ▼
+       객체 생성 가능
+             │
+             ▼
+       메서드 종료
+             │
+             ▼
+   지역 클래스 이름의 범위 종료
+```
+
+**주의사항**
+
+- 지역 클래스의 이름은 선언된 범위 밖에서 사용할 수 없다.
+- 생성된 객체는 다른 곳에 참조가 남아 있다면 메서드 종료 후에도 존재할 수 있다.
+- 지역 클래스를 이용해 캡처한 지역 변수는 `final` 또는 사실상 final이어야 한다.
+
+### 15. final과 Effectively Final
+
+지역 클래스와 익명 클래스는 외부 메서드의 지역 변수를 참조할 수 있다.
+
+이때 참조하는 지역 변수는 `final`이거나 사실상 final(Effectively Final)이어야 한다.
+
+**final 변수**
+
+```java
+final int number = 10;
+```
+
+**Effectively Final 변수**
+
+```java
+int number = 10;
+
+// 이후 number에 다른 값을 대입하지 않으면
+// 사실상 final로 취급할 수 있다.
+```
+
+**지역 클래스 예제**
+
+```java
+public static void execute() {
+
+    int number = 10;
+
+    class Local {
+
+        void print() {
+            System.out.println(number);
+        }
+    }
+
+    Local local = new Local();
+
+    local.print();
+}
+```
+
+**변경할 수 없는 이유**
+
+```java
+int number = 10;
+
+class Local {
+
+    void print() {
+        System.out.println(number);
+    }
+}
+
+// number = 20;
+// 위 재대입을 활성화하면 컴파일 오류 발생
+```
+
+**핵심**
+
+- 캡처한 지역 변수는 `final` 또는 사실상 final이어야 한다.
+- 내부 클래스가 사용할 수 있도록 지역 변수의 값이 캡처된다.
+- 외부 클래스의 인스턴스 필드나 정적 필드는 지역 변수 캡처 규칙과 다르게 동작한다.
+
+### 16. 익명 클래스(Anonymous Class)
+
+익명 클래스는 별도의 클래스 이름을 선언하지 않고, 클래스 상속이나 인터페이스 구현과 객체 생성을 하나의 표현식으로 작성하는 방식이다.
+
+**사용 목적**
+
+- 한 번만 필요한 구현 작성
+- 이벤트 처리
+- 간단한 콜백 구현
+- 별도 클래스 선언이 불필요한 경우
+
+**인터페이스 선언**
+
+```java
+interface Robot {
+
+    void action();
+}
+```
+
+**익명 클래스 구현**
+
+```java
+Robot robot = new Robot() {
+
+    @Override
+    public void action() {
+        System.out.println("로봇 작동");
+    }
+};
+
+robot.action();
+```
+
+**실행 결과**
+
+```text
+로봇 작동
+```
+
+**일반 클래스와 비교**
+
+```text
+[일반 클래스]
+
+인터페이스 정의
+      │
+      ▼
+구현 클래스 선언
+      │
+      ▼
+객체 생성
+      │
+      ▼
+메서드 호출
+
+
+[익명 클래스]
+
+인터페이스 정의
+      │
+      ▼
+익명 구현 클래스와
+객체 생성
+      │
+      ▼
+메서드 호출
+```
+
+**주의사항**
+
+- 익명 클래스는 인터페이스 구현과 클래스 상속에 사용할 수 있다.
+- 직접 이름을 선언하지 않는다.
+- 일반적인 생성자를 직접 선언할 수 없다.
+- 반복적으로 사용하거나 구현이 복잡하다면 별도 클래스를 고려하는 것이 좋다.
+
+### 17. 익명 클래스와 람다식의 관계
+
+익명 클래스와 람다식은 간단한 동작을 전달할 때 사용할 수 있지만 서로 동일한 개념은 아니다.
+
+**익명 클래스**
+
+```java
+Runnable task = new Runnable() {
+
+    @Override
+    public void run() {
+        System.out.println("작업 실행");
+    }
+};
+```
+
+**람다식**
+
+```java
+Runnable task = () -> {
+    System.out.println("작업 실행");
+};
+```
+
+**주요 차이점**
+
+| 구분 | 익명 클래스 | 람다식 |
+|---|---|---|
+| 문법 | 클래스 본문 작성 | 람다 표현식 |
+| 구현 대상 | 클래스 또는 인터페이스 | 함수형 인터페이스 |
+| 코드 길이 | 상대적으로 김 | 상대적으로 간결 |
+| this | 익명 클래스의 객체 | 외부 문맥의 this |
+| 사용 목적 | 일회성 클래스 구현 | 간단한 동작 전달 |
+
+**핵심**
+
+- 람다식은 추상 메서드가 하나인 함수형 인터페이스에 사용할 수 있다.
+- 모든 인터페이스에 람다식을 사용할 수 있는 것은 아니다.
+- 익명 클래스는 필요에 따라 여러 메서드를 구현할 수 있다.
+- 람다식은 함수형 인터페이스의 동작을 간결하게 표현한다.
+
+### 18. 중첩 클래스의 접근 규칙
+
+중첩 클래스의 종류에 따라 외부 클래스의 멤버에 접근하는 방법이 달라진다.
+
+| 구분 | 외부 static 멤버 | 외부 인스턴스 멤버 |
+|---|---|---|
+| 인스턴스 멤버 클래스 | 가능 | 직접 접근 가능 |
+| 정적 중첩 클래스 | 가능 | 객체 참조 필요 |
+| 지역 클래스 | 가능 | 선언 문맥에 따라 가능 |
+| 익명 클래스 | 가능 | 선언 문맥에 따라 가능 |
+
+**정적 중첩 클래스의 접근 예제**
+
+```java
+class Outer {
+
+    private int value = 10;
+    private static int count = 20;
+
+    static class Nested {
+
+        void print() {
+
+            System.out.println(count); // 가능
+
+            // System.out.println(value);
+            // 외부 인스턴스 없이 직접 접근 불가
+
+            Outer outer = new Outer();
+
+            System.out.println(outer.value); // 가능
+        }
+    }
+}
+```
+
+**핵심**
+
+- 정적 중첩 클래스에는 연결된 외부 인스턴스가 없다.
+- 외부 인스턴스의 멤버를 사용하려면 객체 참조가 필요하다.
+- 지역 클래스와 익명 클래스는 캡처하는 지역 변수의 재대입 여부를 확인해야 한다.
+
+### 19. 정적 중첩 클래스와 DTO
+
+DTO(Data Transfer Object)는 계층이나 시스템 사이에 데이터를 전달하기 위한 객체이다.
+
+정적 중첩 클래스는 특정 데이터 구조와 관련된 DTO를 논리적으로 묶는 데 사용할 수 있다.
+
+**Java 예제**
+
+```java
+class ApiResponse {
+
+    private final String message;
+
+    ApiResponse(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public static class Data {
+
+        private final Long id;
+        private final String name;
+
+        public Data(Long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+ApiResponse.Data data =
+    new ApiResponse.Data(1L, "홍길동");
+```
+
+**정적 중첩 클래스를 사용하는 이유**
+
+- 외부 객체 없이 내부 데이터 타입을 생성할 수 있다.
+- 관련된 데이터 구조를 하나의 클래스 아래에 묶을 수 있다.
+- 외부 클래스의 불필요한 인스턴스 참조를 만들지 않는다.
+
+**주의**
+
+- DTO가 반드시 정적 중첩 클래스여야 하는 것은 아니다.
+- 독립적으로 사용할 DTO라면 일반 클래스나 record도 적합하다.
+- 중첩 클래스는 논리적으로 밀접한 관계가 있을 때 선택한다.
+
+### 20. 정적 중첩 클래스와 Builder 패턴
+
+Builder 패턴은 객체 생성에 필요한 데이터를 단계적으로 설정하고, 마지막에 객체를 생성하는 방식이다.
+
+**Builder를 사용하는 이유**
+
+- 생성자 매개변수가 많을 때 가독성 향상
+- 선택적인 데이터 설정 용이
+- 필드의 의미를 메서드 이름으로 표현
+- 생성 과정에서 유효성 검사 가능
+
+**Java 예제**
+
+```java
+class Member {
+
+    private final String name;
+    private final int age;
+
+    private Member(Builder builder) {
+        this.name = builder.name;
+        this.age = builder.age;
+    }
+
+    public static class Builder {
+
+        private String name;
+        private int age;
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder age(int age) {
+            this.age = age;
+            return this;
+        }
+
+        public Member build() {
+            if (name == null || name.isBlank()) {
+                throw new IllegalStateException(
+                    "이름은 필수입니다."
+                );
+            }
+
+            return new Member(this);
+        }
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Member member = new Member.Builder()
+    .name("홍길동")
+    .age(25)
+    .build();
+```
+
+**Builder 실행 구조**
+
+```text
+      Member.Builder 생성
+               │
+               ▼
+          name() 설정
+               │
+               ▼
+           age() 설정
+               │
+               ▼
+            build()
+               │
+               ▼
+          유효성 검사
+               │
+               ▼
+         Member 객체 생성
+```
+
+**핵심**
+
+- Builder는 외부 Member 인스턴스 없이 생성되어야 한다.
+- 따라서 정적 중첩 클래스가 적합하다.
+- `build()`는 설정된 값을 이용하여 최종 객체를 생성한다.
+- 생성된 객체는 필요한 경우 불변 객체로 설계할 수 있다.
+
+### 21. 중첩 클래스와 Java 모듈의 차이
+
+중첩 클래스와 모듈(Module)은 모두 프로그램 구조화에 관련되지만 서로 다른 개념이다.
+
+**중첩 클래스**
+
+- 하나의 클래스 내부에 다른 클래스를 선언한다.
+- 클래스와 관련된 타입을 논리적으로 묶는다.
+- 코드의 응집도와 캡슐화를 높이는 데 활용한다.
+
+**모듈(Module)**
+
+- 여러 패키지를 하나의 논리적 단위로 구성한다.
+- Java 9에서 Java Platform Module System이 도입되었다.
+- `module-info.java`를 이용해 의존성과 공개 패키지 등을 선언할 수 있다.
+
+**구조 비교**
+
+```text
+모듈 (Module)
+       │
+       ├── 패키지 A
+       │      │
+       │      └── 일반 클래스
+       │               │
+       │               └── 중첩 클래스
+       │
+       └── 패키지 B
+              │
+              └── 일반 클래스
+```
+
+**핵심**
+
+- 중첩 클래스는 클래스 내부의 타입 선언 구조이다.
+- 패키지는 관련 타입을 관리하는 이름 공간이다.
+- 모듈은 여러 패키지의 의존성과 공개 범위를 관리하는 더 큰 단위이다.
+
+---
+
+### 22. java.lang 패키지의 개념
+
+`java.lang`은 Java 프로그램에서 기본적으로 사용하는 핵심 클래스들이 포함된 패키지이다.
+
+**주요 특징**
+
+- 별도의 import 선언 없이 사용할 수 있다.
+- 객체 관리, 문자열 처리, 숫자 변환 등의 기능을 제공한다.
+- 시스템 정보, 스레드 및 예외 처리 관련 클래스가 포함되어 있다.
+
+**대표적인 클래스**
+
+| 클래스 | 주요 역할 |
+|---|---|
+| Object | 모든 클래스의 최상위 부모 |
+| String | 문자열 처리 |
+| StringBuilder | 변경 가능한 문자열 처리 |
+| Integer | 정수 래퍼 클래스 |
+| Double | 실수 래퍼 클래스 |
+| Character | 문자 관련 기능 |
+| Math | 수학 계산 |
+| System | 표준 입출력 및 시스템 기능 |
+| Runtime | JVM 실행 환경 정보 |
+| Thread | 스레드 실행 |
+| Throwable | 예외 및 오류의 최상위 클래스 |
+| Class | 런타임 클래스 정보 |
+| Comparable | 객체의 자연 정렬 순서 정의 |
+
+### 23. Object 클래스
+
+`Object`는 Java의 모든 클래스가 직간접적으로 상속하는 최상위 클래스이다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `equals()` | 객체의 동등성 비교 |
+| `hashCode()` | 객체의 해시 코드 반환 |
+| `toString()` | 객체의 문자열 표현 반환 |
+| `getClass()` | 객체의 런타임 타입 정보 반환 |
+
+**Java 예제**
+
+```java
+Object obj = new Object();
+
+System.out.println(obj.toString());
+System.out.println(obj.hashCode());
+System.out.println(obj.getClass().getName());
+```
+
+**equals()와 ==**
+
+```java
+String a = new String("Java");
+String b = new String("Java");
+
+System.out.println(a == b);      // false
+System.out.println(a.equals(b)); // true
+```
+
+**핵심**
+
+- `==`는 참조 타입에서 두 참조값의 동일성을 비교한다.
+- `equals()`는 클래스에서 정의한 동등성 기준으로 비교한다.
+- Object의 기본 equals() 구현은 참조 동일성을 비교한다.
+- String은 내용을 비교하도록 equals()를 재정의한다.
+
+### 24. String과 StringBuilder
+
+**String**
+
+- 문자열을 표현하는 클래스이다.
+- 불변(Immutable) 객체이다.
+- 문자열 내용을 변경하는 연산은 새로운 문자열 결과를 만든다.
+
+**StringBuilder**
+
+- 변경 가능한 문자열을 관리한다.
+- 문자열의 추가·수정·삭제 등의 작업에 사용한다.
+- 반복적인 문자열 변경에 유리하다.
+
+**String 예제**
+
+```java
+String text = "Hello";
+
+text += " Java";
+
+System.out.println(text); // Hello Java
+```
+
+**StringBuilder 예제**
+
+```java
+StringBuilder sb = new StringBuilder("Hello");
+
+sb.append(" Java");
+
+System.out.println(sb.toString()); // Hello Java
+```
+
+**비교**
+
+| 구분 | String | StringBuilder |
+|---|---|---|
+| 객체 특성 | 불변 | 가변 |
+| 문자열 변경 | 새로운 결과 문자열 | 기존 Builder의 내용 변경 |
+| 주요 용도 | 일반적인 문자열 처리 | 반복적인 문자열 조합 |
+| 스레드 동기화 | 불변성으로 내용 변경 없음 | 자체적으로 동기화하지 않음 |
+
+**주의사항**
+
+- StringBuilder는 기본적으로 스레드 안전하지 않다.
+- 여러 스레드에서 동일한 Builder를 공유할 때는 동기화 등을 고려해야 한다.
+- 일반적인 문자열 처리에 항상 StringBuilder를 사용할 필요는 없다.
+
+### 25. Wrapper 클래스와 Math
+
+Wrapper 클래스는 기본형 데이터를 객체 형태로 다룰 수 있게 하는 클래스이다.
+
+**대표적인 Wrapper 클래스**
+
+| 기본형 | Wrapper 클래스 |
+|---|---|
+| byte | Byte |
+| short | Short |
+| int | Integer |
+| long | Long |
+| float | Float |
+| double | Double |
+| char | Character |
+| boolean | Boolean |
+
+**문자열을 정수로 변환**
+
+```java
+int number = Integer.parseInt("100");
+
+System.out.println(number); // 100
+```
+
+**오토박싱과 언박싱**
+
+```java
+Integer boxed = 100; // 오토박싱
+
+int number = boxed;  // 언박싱
+```
+
+**Math 클래스**
+
+| 메서드 | 역할 |
+|---|---|
+| `abs()` | 절댓값 |
+| `max()` | 최댓값 |
+| `min()` | 최솟값 |
+| `sqrt()` | 제곱근 |
+| `pow()` | 거듭제곱 |
+| `random()` | 난수 생성 |
+
+```java
+System.out.println(Math.abs(-10));      // 10
+System.out.println(Math.max(10, 20));   // 20
+System.out.println(Math.sqrt(16));      // 4.0
+```
+
+**핵심**
+
+- Wrapper 클래스는 기본형을 객체로 다루거나 변환할 때 사용한다.
+- `parseInt()` 등은 문자열을 숫자로 변환한다.
+- `Math`는 객체 생성 없이 정적 메서드로 수학 기능을 제공한다.
+
+### 26. System, Runtime, Thread와 Class
+
+**System 클래스**
+
+표준 입출력과 시스템 관련 기능을 제공한다.
+
+```java
+System.out.println("Hello");
+
+long time = System.currentTimeMillis();
+
+System.out.println(time);
+```
+
+**Runtime 클래스**
+
+현재 JVM 실행 환경의 일부 정보를 조회할 수 있다.
+
+```java
+Runtime runtime = Runtime.getRuntime();
+
+System.out.println(runtime.availableProcessors());
+
+System.out.println(runtime.maxMemory());
+```
+
+**Thread 클래스**
+
+스레드를 생성하고 실행하는 기능을 제공한다.
+
+```java
+Thread thread = new Thread(() -> {
+    System.out.println("스레드 실행");
+});
+
+thread.start();
+```
+
+**Class 클래스**
+
+객체나 타입의 런타임 정보를 확인하는 데 사용한다.
+
+```java
+String text = "Java";
+
+Class<?> type = text.getClass();
+
+System.out.println(type.getName());
+// java.lang.String
+```
+
+**Comparable 인터페이스**
+
+객체의 자연 정렬 순서를 정의하기 위한 인터페이스이다.
+
+```java
+class Student implements Comparable<Student> {
+
+    private int score;
+
+    Student(int score) {
+        this.score = score;
+    }
+
+    @Override
+    public int compareTo(Student other) {
+        return Integer.compare(this.score, other.score);
+    }
+}
+```
+
+**핵심**
+
+- System : 표준 입출력과 시스템 기능
+- Runtime : JVM 실행 환경 정보
+- Thread : 스레드 실행
+- Class : 런타임 타입 정보
+- Comparable : 객체의 기본 정렬 기준
+
+### 27. 중첩 클래스와 표준 라이브러리 활용 시 주의사항
+
+| 주의사항 | 설명 |
+|---|---|
+| 중첩 클래스 남용 | 관련성이 낮은 타입은 별도 클래스로 분리 |
+| 인스턴스 멤버 클래스 | 외부 객체와의 연결 관계 확인 |
+| 정적 중첩 클래스 | 외부 인스턴스 멤버 직접 접근 불가 |
+| 지역 클래스 | 선언된 블록 내부에서만 이름 사용 가능 |
+| 지역 변수 캡처 | final 또는 사실상 final 조건 필요 |
+| 익명 클래스 | 이름이 없으며 일반적인 생성자 선언 불가 |
+| 람다식 | 함수형 인터페이스에서만 사용 가능 |
+| DTO 설계 | 모든 DTO가 중첩 클래스일 필요 없음 |
+| Builder | 객체 생성 과정에서 필요한 데이터 검증 |
+| java.lang | 별도 import 없이 타입 사용 가능 |
+| Object.equals() | 기본 동작과 클래스별 재정의 구분 |
+| String | 불변 객체라는 특징 이해 |
+| StringBuilder | 가변 객체이며 동시 접근 주의 |
+| Wrapper | null 언박싱 시 NullPointerException 가능 |
+| Math.random() | 보안용 난수로 사용하지 않음 |
+| Thread | start()와 run()의 차이 구분 |
+| Runtime | JVM 메모리 정보와 시스템 전체 메모리 구분 |
+
+### ✅ Day19 핵심 정리
+
+| 학습 내용 | 핵심 개념 |
+|---|---|
+| Exception Handling | 비정상적인 실행 상황 처리 |
+| Throwable | 예외와 오류의 최상위 타입 |
+| Error | 일반적으로 복구하기 어려운 심각한 오류 |
+| Exception | 프로그램의 예외적 상황 |
+| Checked Exception | 컴파일러가 처리 또는 전파 선언 요구 |
+| Unchecked Exception | 컴파일러가 처리 강제하지 않음 |
+| try-catch-finally | 예외 처리와 정리 작업 |
+| Multi-catch | 여러 예외를 공통으로 처리 |
+| throw | 예외 객체 발생 |
+| throws | 예외 전파 가능성 선언 |
+| Exception Propagation | 호출 스택에 따른 예외 전파 |
+| Custom Exception | 사용자 정의 예외 |
+| GlobalExceptionHandler | 웹 애플리케이션의 공통 예외 처리 |
+| Nested Class | 클래스 내부에 선언한 타입 |
+| Instance Member Class | 외부 객체와 연결된 내부 클래스 |
+| Static Nested Class | 외부 객체 없이 사용 가능한 중첩 클래스 |
+| Local Class | 메서드·블록 내부에서 선언 |
+| Anonymous Class | 이름 없는 일회성 클래스 구현 |
+| Effectively Final | 재대입하지 않는 지역 변수 |
+| Lambda | 함수형 인터페이스의 동작 표현 |
+| DTO | 데이터 전달을 위한 객체 |
+| Builder Pattern | 단계적인 객체 생성 |
+| Module | 패키지들을 묶고 의존 관계를 관리하는 단위 |
+| java.lang | Java의 기본 핵심 패키지 |
+| Object | 모든 클래스의 최상위 부모 |
+| String | 불변 문자열 객체 |
+| StringBuilder | 변경 가능한 문자열 처리 |
+| Wrapper | 기본형의 객체 표현 |
+| Math | 정적 수학 계산 기능 |
+| System | 표준 입출력 및 시스템 기능 |
+| Runtime | JVM 실행 환경 관련 기능 |
+| Thread | 스레드 실행 |
+| Class | 런타임 타입 정보 |
+| Comparable | 객체의 자연 정렬 순서 |
+
+**최종 학습 정리**
+
+- 예외 처리는 비정상적인 실행 상황을 처리하거나 상위 호출자에게 전달하기 위한 기능이다.
+- Checked Exception과 Unchecked Exception은 컴파일러의 처리 강제 여부가 다르다.
+- throw는 예외 객체를 발생시키고 throws는 예외 전파 가능성을 선언한다.
+- 예외는 호출 스택을 따라 상위 메서드로 전파될 수 있다.
+- 사용자 정의 예외를 이용하면 비즈니스 규칙 위반을 명확하게 표현할 수 있다.
+- Spring Boot에서는 전역 예외 처리기를 이용하여 공통 HTTP 오류 응답을 구성할 수 있다.
+- 중첩 클래스는 관련된 클래스를 하나의 논리적 구조로 묶는 방법이다.
+- 인스턴스 멤버 클래스는 외부 객체와 연결된다.
+- 정적 중첩 클래스는 외부 인스턴스 없이 생성할 수 있다.
+- 지역 클래스는 메서드나 블록 내부에서 선언하고 사용한다.
+- 익명 클래스는 이름 없이 클래스 구현과 객체 생성을 함께 작성한다.
+- 지역 클래스와 익명 클래스가 캡처하는 지역 변수는 final 또는 사실상 final이어야 한다.
+- 람다식은 함수형 인터페이스를 간결하게 구현하는 문법이다.
+- 정적 중첩 클래스는 DTO와 Builder 패턴에 활용할 수 있다.
+- 중첩 클래스는 객체를 자동으로 포함하거나 소유하는 관계를 의미하지 않는다.
+- java.lang 패키지는 Java에서 기본적으로 사용하는 핵심 클래스들을 제공한다.
+- Object는 모든 클래스의 최상위 부모이다.
+- String은 불변이고 StringBuilder는 변경 가능한 문자열을 관리한다.
+- Wrapper 클래스는 기본형 데이터를 객체로 다룰 수 있게 한다.
+- Math, System, Runtime, Thread는 수학 계산, 시스템 기능, JVM 환경 및 스레드 실행을 지원한다.
+- 객체지향 설계에서는 관련성을 높이고 불필요한 외부 노출을 줄이도록 적절한 클래스 구조를 선택하는 것이 중요하다.
 
 </details>
