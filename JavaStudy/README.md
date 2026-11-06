@@ -21,6 +21,7 @@
 | **Day 17** | Java 인터페이스 심화 및 예외 처리 | 인터페이스, 추상·default·static·private 메서드, 다중 구현·상속, 다형성, 결합도, 의존성 주입(DI), Mock 객체, 중첩 클래스, 예외 처리 |
 | **Day 18** | Java 예외 처리 및 실무 활용 | Exception·Error, Checked·Unchecked, try-catch-finally, 다중 catch, 예외 정보·전파, throw·throws, try-with-resources, 사용자 정의 예외, Spring Boot 전역 예외 처리 |
 | **Day 19** | Java 예외 처리 및 중첩 클래스 심화 | 예외 전파, throw·throws, 사용자 정의 예외, 전역 예외 처리, 중첩 클래스 4종, static, 변수 캡처, DTO·Builder, java.lang |
+| **Day 20** | Java 1권 핵심 복습 및 표준 라이브러리 | JDK·JVM, 자료형·메모리, 객체지향 3대 특성, VO·DTO, java.lang, Object, String, StringBuilder·StringBuffer, Wrapper, Math·Character, System·Runtime, 컬렉션·Stream·I/O·JDBC 개요 |
 
 
 
@@ -16427,5 +16428,1538 @@ class Student implements Comparable<Student> {
 - Wrapper 클래스는 기본형 데이터를 객체로 다룰 수 있게 한다.
 - Math, System, Runtime, Thread는 수학 계산, 시스템 기능, JVM 환경 및 스레드 실행을 지원한다.
 - 객체지향 설계에서는 관련성을 높이고 불필요한 외부 노출을 줄이도록 적절한 클래스 구조를 선택하는 것이 중요하다.
+
+</details>
+
+
+## Day20. Java 1권 핵심 복습 및 표준 라이브러리
+<details>
+
+### 🎯 학습 목표
+- Java 1권에서 학습한 핵심 개념을 전체적으로 복습한다.
+- JDK, JRE, JVM의 역할과 Java 프로그램의 실행 과정을 이해한다.
+- 기본형과 참조형, 변수의 종류 및 메모리 구조를 구분한다.
+- 클래스, 객체, 생성자와 객체지향의 핵심 원리를 이해한다.
+- 캡슐화, 상속, 다형성, 인터페이스의 관계를 정리한다.
+- VO와 DTO의 목적 및 차이를 이해한다.
+- Java 표준 라이브러리와 `java.lang` 패키지의 역할을 이해한다.
+- `Object` 클래스의 주요 메서드를 이해한다.
+- `String`의 불변성과 문자열 처리 메서드를 익힌다.
+- `StringBuilder`와 `StringBuffer`의 차이를 구분한다.
+- Wrapper 클래스와 오토박싱·언박싱을 이해한다.
+- `Math`, `Character`, `System`, `Runtime`의 주요 기능을 익힌다.
+- 컬렉션, 제네릭, 람다식, Stream API의 기본 구조를 이해한다.
+- 멀티스레드, 입출력, JDBC의 동작 구조를 파악한다.
+- 학습한 Java 개념이 Spring Boot 개발과 어떻게 연결되는지 이해한다.
+
+---
+
+### 1. Java 프로그램의 실행 구조
+
+Java는 소스 코드를 바이트코드로 컴파일하고, JVM(Java Virtual Machine)을 이용하여 실행하는 언어이다.
+
+**Java 실행 과정**
+
+```text
+       Hello.java
+       (소스 코드)
+            │
+            ▼
+          javac
+       (Java 컴파일러)
+            │
+            ▼
+       Hello.class
+        (바이트코드)
+            │
+            ▼
+           JVM
+      ┌─────┴──────┐
+      │            │
+      ▼            ▼
+  Interpreter     JIT Compiler
+      │            │
+      └─────┬──────┘
+            │
+            ▼
+       프로그램 실행
+```
+
+**주요 구성 요소**
+
+| 구성 요소 | 역할 |
+|---|---|
+| JDK | Java 개발 및 컴파일 도구 제공 |
+| JRE | Java 애플리케이션 실행 환경 |
+| JVM | 바이트코드 실행 및 메모리 관리 |
+| javac | Java 소스 코드를 바이트코드로 컴파일 |
+| JIT Compiler | 실행 중 자주 사용되는 코드 등을 네이티브 코드로 컴파일 |
+
+**Java 실행의 특징**
+
+- Java 소스 코드는 `.java` 확장자를 가진다.
+- 컴파일 결과는 일반적으로 `.class` 파일에 저장된다.
+- JVM은 바이트코드를 실행한다.
+- 운영체제별로 적합한 JVM을 사용하면 동일한 바이트코드를 실행할 수 있다.
+- JVM은 메모리 관리와 가비지 컬렉션(GC) 등의 기능을 제공한다.
+
+**핵심**
+
+Java의 플랫폼 독립성은 운영체제에서 직접 실행하는 기계어 대신 JVM이 이해하는 바이트코드를 사용한다는 특징에서 나온다.
+
+### 2. 기본형(Primitive Type)과 참조형(Reference Type)
+
+Java의 자료형은 크게 기본형과 참조형으로 나뉜다.
+
+**기본형**
+
+| 분류 | 자료형 | 설명 |
+|---|---|---|
+| 정수형 | byte, short, int, long | 정수 저장 |
+| 실수형 | float, double | 실수 저장 |
+| 문자형 | char | UTF-16 코드 단위 저장 |
+| 논리형 | boolean | true 또는 false |
+
+**참조형**
+
+- 배열(Array)
+- 클래스(Class)
+- 인터페이스(Interface)
+- 문자열(String)
+- 열거 타입(Enum)
+
+**기본형과 참조형의 차이**
+
+```java
+int number = 100;
+
+String name = "Java";
+```
+
+```text
+[기본형]
+
+number
+   │
+   ▼
+  100
+
+변수에 실제 값 저장
+
+
+[참조형]
+
+name
+   │
+   ▼
+ 참조값 ──────────► String 객체
+                    "Java"
+
+변수에 객체를 참조하는 값 저장
+```
+
+**주의사항**
+
+- 기본형은 실제 값을 저장한다.
+- 참조형은 객체를 참조하는 값을 저장한다.
+- 참조형 변수에는 `null`을 저장할 수 있다.
+- `null` 참조로 인스턴스 멤버에 접근하면 `NullPointerException`이 발생할 수 있다.
+
+### 3. 변수의 종류와 생명주기
+
+Java 변수는 선언 위치와 `static` 여부에 따라 구분한다.
+
+| 구분 | 지역 변수 | 인스턴스 변수 | 정적 변수 |
+|---|---|---|---|
+| 선언 위치 | 메서드·블록 내부 | 클래스 내부 | 클래스 내부 |
+| static | 해당 없음 | 없음 | 있음 |
+| 소속 | 실행 중인 블록 | 객체 | 클래스 |
+| 초기화 | 직접 초기화 필요 | 기본값으로 자동 초기화 | 기본값으로 자동 초기화 |
+| 주요 용도 | 임시 작업 데이터 | 객체별 고유 상태 | 클래스 공통 데이터 |
+
+**Java 예제**
+
+```java
+class Student {
+
+    static String school = "Java School";
+
+    String name;
+
+    void study() {
+        int hours = 2;
+
+        System.out.println(name);
+        System.out.println(hours);
+    }
+}
+```
+
+**변수별 특징**
+
+- 지역 변수 : 메서드나 블록이 실행되는 동안 필요한 값을 관리한다.
+- 인스턴스 변수 : 객체마다 독립적인 값을 관리한다.
+- 정적 변수 : 같은 클래스에서 선언한 하나의 필드를 여러 객체가 공유한다.
+
+**주의**
+
+- 정적 변수는 객체마다 새로 만들어지지 않는다.
+- 정적 변수라고 해서 자동으로 스레드 안전성이 보장되는 것은 아니다.
+- 지역 변수는 사용하기 전에 확실하게 초기화되어 있어야 한다.
+
+### 4. 제어문과 배열
+
+제어문은 프로그램의 실행 흐름을 변경하고, 배열은 같은 타입의 여러 데이터를 관리한다.
+
+**주요 제어문**
+
+| 제어문 | 역할 |
+|---|---|
+| if / else | 조건에 따른 실행 분기 |
+| switch | 값이나 패턴 등에 따른 분기 |
+| for | 반복 실행 |
+| while | 조건이 참인 동안 반복 |
+| do-while | 최소 한 번 실행 후 조건 검사 |
+| break | 반복문 또는 switch 종료 |
+| continue | 현재 반복을 건너뛰고 다음 반복 진행 |
+
+**배열**
+
+```java
+int[] numbers = {10, 20, 30, 40, 50};
+
+for (int number : numbers) {
+    System.out.println(number);
+}
+```
+
+**2차원 배열**
+
+```java
+int[][] numbers = {
+    {10, 20},
+    {30, 40}
+};
+
+System.out.println(numbers[0][1]); // 20
+```
+
+**배열의 주요 특징**
+
+- 배열의 길이는 생성 후 변경할 수 없다.
+- 인덱스는 0부터 시작한다.
+- 동일한 배열에서 요소 타입은 같다.
+- `length` 필드로 배열 길이를 확인한다.
+- 향상된 for문은 배열의 모든 요소를 순회할 때 유용하다.
+
+**핵심**
+
+```text
+배열          → 여러 데이터 관리
+메서드        → 기능을 하나로 구성
+클래스        → 데이터와 기능을 구조화
+```
+
+### 5. 클래스(Class)와 객체(Object)
+
+클래스는 객체의 상태와 동작을 정의하는 설계도이며, 객체는 해당 클래스를 바탕으로 생성한 인스턴스이다.
+
+**Java 예제**
+
+```java
+class Student {
+
+    private String name;
+    private int age;
+
+    Student(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    void study() {
+        System.out.println(name + " 공부 중");
+    }
+}
+```
+
+**객체 생성**
+
+```java
+Student student = new Student("홍길동", 20);
+
+student.study();
+```
+
+**실행 과정**
+
+```text
+       Student 클래스
+            │
+            ▼
+       new Student()
+            │
+            ▼
+       메모리 할당
+            │
+            ▼
+       생성자 실행
+            │
+            ▼
+        객체 초기화
+            │
+            ▼
+        객체 사용
+```
+
+**핵심 개념**
+
+- `class` : 객체의 구조를 정의한다.
+- `new` : 새로운 객체를 생성한다.
+- 생성자 : 객체 생성 과정에서 초기화 작업을 수행한다.
+- `this` : 현재 객체를 참조한다.
+- 필드 : 객체의 상태를 저장한다.
+- 메서드 : 객체의 기능을 정의한다.
+
+### 6. JVM 메모리 구조
+
+Java 프로그램은 JVM에서 실행되며, 실행 과정에서 여러 메모리 영역을 사용한다.
+
+**주요 런타임 메모리 영역**
+
+```text
+                 JVM
+                  │
+     ┌────────────┼─────────────┐
+     │            │             │
+     ▼            ▼             ▼
+ Method Area     Heap          Stack
+     │            │             │
+     ▼            ▼             ▼
+클래스 관련    객체 및 배열    메서드 호출
+메타데이터     인스턴스       프레임
+```
+
+| 영역 | 주요 역할 |
+|---|---|
+| Method Area | JVM이 로드한 클래스 관련 정보 저장 |
+| Heap | 생성된 객체와 배열 저장 |
+| JVM Stack | 메서드 호출 프레임과 지역 변수 등 관리 |
+
+**참조 변수 예제**
+
+```java
+Student s1 = new Student("홍길동", 20);
+
+Student s2 = s1;
+```
+
+**참조 관계**
+
+```text
+      Stack                  Heap
+  ┌──────────┐        ┌────────────────┐
+  │ s1       │───────►│ Student 객체   │
+  │          │        │ name : 홍길동  │
+  │ s2       │───────►│ age  : 20      │
+  └──────────┘        └────────────────┘
+```
+
+**핵심**
+
+- `s2 = s1`은 객체를 복사하는 것이 아니다.
+- 두 참조 변수가 같은 객체를 참조하게 된다.
+- 객체를 가리키는 참조가 남지 않으면 GC의 수거 대상이 될 수 있다.
+- 메모리의 실제 구현 방식은 JVM에 따라 차이가 있을 수 있다.
+
+### 7. 객체지향 프로그래밍의 3대 특성
+
+객체지향 프로그래밍(OOP)의 핵심 특성은 캡슐화, 상속, 다형성이다.
+
+| 개념 | 의미 | 핵심 목적 |
+|---|---|---|
+| Encapsulation | 데이터와 기능을 묶고 접근 제한 | 내부 상태 보호 |
+| Inheritance | 부모 클래스의 기능 및 상태 상속 | 공통 코드 재사용 |
+| Polymorphism | 같은 타입으로 다양한 객체 동작 처리 | 유연한 기능 확장 |
+
+**캡슐화(Encapsulation)**
+
+```java
+class Account {
+
+    private int balance;
+
+    public void deposit(int amount) {
+
+        if (amount <= 0) {
+            throw new IllegalArgumentException();
+        }
+
+        balance += amount;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+}
+```
+
+- 필드는 `private`으로 보호한다.
+- 공개 메서드를 통해 상태를 변경한다.
+- 객체의 유효성 규칙을 유지할 수 있다.
+
+**상속(Inheritance)**
+
+```java
+class Animal {
+
+    void eat() {
+        System.out.println("먹기");
+    }
+}
+
+class Dog extends Animal {
+}
+```
+
+- `extends`로 클래스를 상속한다.
+- 자식 클래스는 접근 가능한 부모의 기능을 사용할 수 있다.
+
+**다형성(Polymorphism)**
+
+```java
+Animal animal = new Dog();
+```
+
+- 부모 타입으로 자식 객체를 참조할 수 있다.
+- 오버라이딩된 메서드는 실제 객체 타입에 맞게 실행된다.
+
+### 8. 오버로딩과 오버라이딩
+
+| 구분 | Overloading | Overriding |
+|---|---|---|
+| 의미 | 같은 이름의 메서드 여러 개 정의 | 상속받은 메서드 재정의 |
+| 관계 | 매개변수 목록이 달라야 함 | 상속 관계 필요 |
+| 반환 타입 | 반환 타입만으로 구분 불가 | 호환되는 반환 타입 필요 |
+| 주요 목적 | 다양한 입력 처리 | 객체별 동작 변경 |
+
+**오버로딩**
+
+```java
+void print(int value) {
+    System.out.println(value);
+}
+
+void print(String value) {
+    System.out.println(value);
+}
+```
+
+**오버라이딩**
+
+```java
+class Animal {
+
+    void sound() {
+        System.out.println("동물 소리");
+    }
+}
+
+class Dog extends Animal {
+
+    @Override
+    void sound() {
+        System.out.println("멍멍");
+    }
+}
+```
+
+**업캐스팅과 다운캐스팅**
+
+```java
+Animal animal = new Dog(); // 업캐스팅
+
+if (animal instanceof Dog dog) {
+    dog.sound();
+}
+```
+
+**핵심**
+
+- 업캐스팅은 자식 타입을 부모 타입으로 다루는 것이다.
+- 다운캐스팅은 부모 타입 참조를 구체적인 자식 타입으로 변환한다.
+- 잘못된 다운캐스팅은 `ClassCastException`을 발생시킨다.
+- `instanceof`로 실제 타입을 검사할 수 있다.
+
+### 9. 인터페이스와 추상 클래스
+
+추상 클래스와 인터페이스는 공통 기능이나 규약을 정의하기 위해 사용한다.
+
+| 구분 | 추상 클래스 | 인터페이스 |
+|---|---|---|
+| 선언 | abstract class | interface |
+| 관계 | extends | implements |
+| 클래스 다중 상속 | 불가능 | 여러 인터페이스 구현 가능 |
+| 인스턴스 필드 | 가능 | 불가능 |
+| 생성자 | 가능 | 불가능 |
+| 구현 메서드 | 가능 | default/static/private 메서드 등 가능 |
+
+**인터페이스 예제**
+
+```java
+interface Payment {
+
+    void pay(int amount);
+}
+```
+
+**구현 클래스**
+
+```java
+class CardPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("카드 결제: " + amount);
+    }
+}
+
+class AccountPayment implements Payment {
+
+    @Override
+    public void pay(int amount) {
+        System.out.println("계좌 결제: " + amount);
+    }
+}
+```
+
+**다형성 활용**
+
+```java
+Payment payment = new CardPayment();
+
+payment.pay(10000);
+```
+
+**핵심**
+
+- 인터페이스는 서로 다른 클래스가 공통으로 따를 규약을 정의한다.
+- 추상 클래스는 관련 클래스의 공통 상태와 구현을 공유하는 데 사용할 수 있다.
+- 인터페이스에 의존하면 구현 클래스를 교체하기 쉬워진다.
+- 이러한 원리는 Spring의 의존성 주입(DI)에서도 중요하다.
+
+### 10. VO와 DTO의 차이
+
+VO와 DTO는 데이터를 다루는 객체이지만 설계 목적이 다르다.
+
+| 구분 | VO | DTO |
+|---|---|---|
+| 전체 이름 | Value Object | Data Transfer Object |
+| 목적 | 의미 있는 값 표현 | 계층 간 데이터 전달 |
+| 동등성 | 값 기반 동등성 중요 | 전달 목적에 따라 설계 |
+| 불변성 | 일반적으로 불변 설계 선호 | 가변 또는 불변 모두 가능 |
+| 활용 예 | Money, Address | MemberRequest, MemberResponse |
+
+**VO 예제**
+
+```java
+public record Money(int amount) {
+
+    public Money {
+        if (amount < 0) {
+            throw new IllegalArgumentException(
+                "금액은 음수일 수 없습니다."
+            );
+        }
+    }
+}
+```
+
+**DTO 예제**
+
+```java
+public record MemberResponse(
+    Long id,
+    String name
+) {}
+```
+
+**핵심**
+
+- VO는 값 자체의 의미와 동등성을 표현한다.
+- DTO는 데이터를 다른 계층이나 시스템으로 전달한다.
+- 두 개념은 반드시 클래스 내부 구조만으로 결정되지 않는다.
+- Java의 `record`는 간단한 불변 데이터 객체를 작성할 때 유용하다.
+
+---
+
+### 11. Java 표준 라이브러리(Standard Library)
+
+Java 표준 라이브러리는 Java에서 기본적으로 제공하는 클래스, 인터페이스 및 유틸리티의 집합이다.
+
+**주요 패키지**
+
+| 패키지 | 주요 기능 |
+|---|---|
+| `java.lang` | 문자열, 객체, 수학, 예외, 스레드 등 |
+| `java.util` | 컬렉션, Scanner, 유틸리티 |
+| `java.io` | 스트림 기반 입출력 |
+| `java.nio` | 버퍼, 파일, 비동기 I/O 등 |
+| `java.time` | 날짜 및 시간 |
+| `java.util.regex` | 정규표현식 |
+| `java.net` | 네트워크 통신 |
+| `java.sql` | JDBC 데이터베이스 접근 |
+
+**java.lang의 특징**
+
+- Java에서 가장 기본적인 패키지이다.
+- 별도의 import 선언 없이 사용할 수 있다.
+- `Object`, `String`, `Integer`, `Math`, `System` 등이 포함되어 있다.
+- Java 프로그램에서 자주 사용하는 공통 기능을 제공한다.
+
+**사용 예제**
+
+```java
+String name = "Java";
+
+int number = Integer.parseInt("100");
+
+int max = Math.max(10, 20);
+
+System.out.println(name);
+```
+
+위 예제의 클래스는 모두 `java.lang`에 포함되어 있으므로 별도의 import가 필요하지 않다.
+
+**주의**
+
+- import가 필요 없다는 것은 소스 코드에서 이름을 자동으로 사용할 수 있다는 뜻이다.
+- 모든 클래스가 JVM 시작 시점에 객체로 생성된다는 의미는 아니다.
+- `java.lang`은 패키지이며 `java.base`는 해당 패키지 등을 포함하는 Java 플랫폼의 기본 모듈이다.
+
+### 12. Object 클래스
+
+`Object`는 Java의 모든 클래스가 직간접적으로 상속하는 최상위 클래스이다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `toString()` | 객체를 문자열로 표현 |
+| `equals()` | 객체의 동등성 비교 |
+| `hashCode()` | 해시 코드 반환 |
+| `getClass()` | 객체의 런타임 클래스 정보 반환 |
+
+**toString()**
+
+```java
+class Student {
+
+    private String name = "홍길동";
+
+    @Override
+    public String toString() {
+        return "Student{name='" + name + "'}";
+    }
+}
+```
+
+```java
+Student student = new Student();
+
+System.out.println(student);
+```
+
+**실행 결과**
+
+```text
+Student{name='홍길동'}
+```
+
+**equals()**
+
+```java
+String a = new String("Java");
+String b = new String("Java");
+
+System.out.println(a == b);      // false
+System.out.println(a.equals(b)); // true
+```
+
+**비교 기준**
+
+- `==` : 참조 타입에서는 참조값의 동일성 비교
+- `equals()` : 클래스가 정의한 동등성 기준으로 비교
+- Object의 기본 `equals()` : 참조 동일성 비교
+- String의 `equals()` : 문자열 내용 비교
+
+**getClass()**
+
+```java
+String text = "Java";
+
+System.out.println(text.getClass().getName());
+```
+
+**실행 결과**
+
+```text
+java.lang.String
+```
+
+**주의**
+
+- equals()를 재정의하여 동등성 기준을 바꾼다면 hashCode()도 일관되게 재정의해야 한다.
+- 동일하다고 판단하는 두 객체는 같은 해시 코드를 반환해야 한다.
+
+### 13. String 클래스
+
+`String`은 문자열을 표현하는 클래스이며 불변(Immutable) 객체이다.
+
+**String의 특징**
+
+- 한 번 생성된 문자열 객체의 내용은 변경되지 않는다.
+- 문자열 변경 연산은 변경된 내용을 가진 결과 문자열을 반환한다.
+- 문자열 비교 시 일반적으로 `equals()`를 사용한다.
+
+**문자열 처리 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `length()` | 문자열 길이 반환 |
+| `charAt()` | 지정한 위치의 문자 반환 |
+| `substring()` | 문자열 일부 추출 |
+| `indexOf()` | 특정 문자나 문자열의 위치 검색 |
+| `contains()` | 문자열 포함 여부 확인 |
+| `startsWith()` | 시작 문자열 검사 |
+| `endsWith()` | 끝 문자열 검사 |
+| `equals()` | 문자열 내용 비교 |
+| `toUpperCase()` | 대문자 변환 |
+| `toLowerCase()` | 소문자 변환 |
+| `replace()` | 문자열 치환 |
+| `trim()` | 앞뒤 일부 공백 문자 제거 |
+| `strip()` | 앞뒤 Unicode 공백 문자 제거 |
+
+**Java 예제**
+
+```java
+String text = "Hello Java";
+
+System.out.println(text.length());        // 10
+System.out.println(text.charAt(0));       // H
+System.out.println(text.substring(6));    // Java
+System.out.println(text.indexOf("Java")); // 6
+System.out.println(text.contains("Java"));// true
+System.out.println(text.startsWith("He"));// true
+```
+
+**문자열 변경**
+
+```java
+String text = "Java";
+
+String result = text.replace("J", "K");
+
+System.out.println(text);   // Java
+System.out.println(result); // Kava
+```
+
+**String의 불변성**
+
+```text
+         String text
+               │
+               ▼
+           "Java" 객체
+               │
+        문자열 변경 연산
+               │
+               ▼
+        새 문자열 결과
+              "Kava"
+
+기존 String 객체의 내용은 변경되지 않음
+```
+
+**주의사항**
+
+- String은 불변이므로 내용이 직접 수정되지 않는다.
+- String 메서드의 반환값을 저장하지 않으면 변경 결과를 사용하지 못할 수 있다.
+- `length()`는 UTF-16 코드 단위의 개수를 반환한다.
+- 빈번한 문자열 조합에서는 StringBuilder를 고려한다.
+
+### 14. StringBuilder와 StringBuffer
+
+`StringBuilder`와 `StringBuffer`는 변경 가능한 문자열을 관리하는 클래스이다.
+
+**비교**
+
+| 구분 | String | StringBuilder | StringBuffer |
+|---|---|---|---|
+| 불변 여부 | 불변 | 가변 | 가변 |
+| 문자열 수정 | 결과 문자열 반환 | 내부 내용 변경 | 내부 내용 변경 |
+| 자체 동기화 | 해당 없음 | 없음 | 주요 메서드에 동기화 적용 |
+| 주요 용도 | 일반 문자열 | 반복적인 문자열 조합 | 동기화가 필요한 문자열 조작 |
+
+**주요 메서드**
+
+| 메서드 | 기능 |
+|---|---|
+| `append()` | 문자열 끝에 추가 |
+| `insert()` | 지정한 위치에 삽입 |
+| `delete()` | 지정한 범위 삭제 |
+| `replace()` | 지정한 범위 치환 |
+| `reverse()` | 문자 순서 뒤집기 |
+| `toString()` | String 결과 반환 |
+
+**Java 예제**
+
+```java
+StringBuilder sb = new StringBuilder("Java");
+
+sb.append(" Programming");
+
+System.out.println(sb);
+// Java Programming
+
+sb.insert(4, " Language");
+
+System.out.println(sb);
+// Java Language Programming
+
+sb.delete(4, 13);
+
+System.out.println(sb);
+// Java Programming
+```
+
+**반복적인 문자열 조합**
+
+```java
+StringBuilder sb = new StringBuilder();
+
+for (int i = 0; i < 5; i++) {
+    sb.append(i);
+}
+
+String result = sb.toString();
+
+System.out.println(result); // 01234
+```
+
+**주의사항**
+
+- StringBuilder는 여러 스레드가 동시에 수정할 때 자체적인 동기화를 제공하지 않는다.
+- StringBuffer는 주요 메서드에 동기화를 제공하지만 여러 작업 전체의 원자성까지 자동 보장하지는 않는다.
+- 단일 스레드에서 빈번하게 문자열을 변경할 때는 일반적으로 StringBuilder가 적합하다.
+
+### 15. Wrapper 클래스
+
+Wrapper 클래스는 Java 기본형 값을 객체 형태로 다룰 수 있게 하는 클래스이다.
+
+**기본형과 Wrapper**
+
+| 기본형 | Wrapper 클래스 |
+|---|---|
+| byte | Byte |
+| short | Short |
+| int | Integer |
+| long | Long |
+| float | Float |
+| double | Double |
+| char | Character |
+| boolean | Boolean |
+
+**오토박싱(Auto-boxing)**
+
+기본형 값을 Wrapper 객체로 자동 변환하는 기능이다.
+
+```java
+int number = 100;
+
+Integer boxed = number;
+```
+
+**언박싱(Unboxing)**
+
+Wrapper 객체의 값을 기본형으로 자동 변환하는 기능이다.
+
+```java
+Integer boxed = 100;
+
+int number = boxed;
+```
+
+**문자열을 기본형으로 변환**
+
+```java
+int number = Integer.parseInt("100");
+
+double value = Double.parseDouble("12.5");
+
+boolean flag = Boolean.parseBoolean("true");
+```
+
+**문자열을 Wrapper 객체로 변환**
+
+```java
+Integer number = Integer.valueOf("100");
+
+Double value = Double.valueOf("12.5");
+```
+
+**주의사항**
+
+- `parseInt()`는 기본형 `int`를 반환한다.
+- `valueOf()`는 Wrapper 객체를 반환한다.
+- 잘못된 숫자 문자열을 변환하면 `NumberFormatException`이 발생한다.
+- null인 Wrapper 객체를 언박싱하면 `NullPointerException`이 발생한다.
+- Wrapper 객체의 값을 비교할 때는 참조 동일성과 값의 동등성을 구분해야 한다.
+
+### 16. Math 클래스
+
+`Math`는 수학 계산에 필요한 정적 메서드와 상수를 제공한다.
+
+**주요 메서드**
+
+| 메서드 | 기능 |
+|---|---|
+| `abs()` | 절댓값 |
+| `max()` | 최댓값 |
+| `min()` | 최솟값 |
+| `round()` | 반올림 |
+| `floor()` | 내림 |
+| `ceil()` | 올림 |
+| `sqrt()` | 제곱근 |
+| `pow()` | 거듭제곱 |
+| `random()` | 난수 생성 |
+
+**Java 예제**
+
+```java
+System.out.println(Math.abs(-10));     // 10
+System.out.println(Math.max(10, 20));  // 20
+System.out.println(Math.min(10, 20));  // 10
+System.out.println(Math.round(3.5));   // 4
+System.out.println(Math.sqrt(16));     // 4.0
+System.out.println(Math.pow(2, 3));    // 8.0
+```
+
+**난수 생성**
+
+```java
+double random = Math.random();
+```
+
+- `Math.random()`은 0.0 이상 1.0 미만의 double 값을 반환한다.
+
+**1~10 사이의 정수 생성**
+
+```java
+int number = (int) (Math.random() * 10) + 1;
+```
+
+**주의사항**
+
+- Math의 주요 메서드는 static이므로 객체를 생성할 필요가 없다.
+- `Math.random()`은 보안 목적의 난수 생성에 적합하지 않다.
+- 소수점 계산과 정수 변환에서는 형변환에 따른 정밀도 손실을 고려해야 한다.
+
+### 17. Character 클래스
+
+`Character`는 char 값을 객체로 다루거나 문자를 판별하는 기능을 제공한다.
+
+**주요 메서드**
+
+| 메서드 | 기능 |
+|---|---|
+| `isDigit()` | 숫자 문자 여부 |
+| `isLetter()` | 문자 여부 |
+| `isWhitespace()` | 공백 문자 여부 |
+| `isUpperCase()` | 대문자 여부 |
+| `isLowerCase()` | 소문자 여부 |
+| `toUpperCase()` | 대문자 변환 |
+| `toLowerCase()` | 소문자 변환 |
+
+**Java 예제**
+
+```java
+System.out.println(Character.isDigit('5'));
+// true
+
+System.out.println(Character.isLetter('A'));
+// true
+
+System.out.println(Character.isWhitespace(' '));
+// true
+
+System.out.println(Character.toUpperCase('a'));
+// A
+```
+
+**활용 목적**
+
+- 입력된 문자의 종류를 검사한다.
+- 영문 대소문자를 변환한다.
+- 문자 기반 데이터 검증에 활용한다.
+
+**핵심**
+
+Character는 하나의 문자 또는 Unicode 코드 포인트에 대한 판별 기능을 제공한다.
+
+### 18. System과 Runtime 클래스
+
+`System`과 `Runtime`은 Java 프로그램의 실행 환경과 관련된 기능을 제공한다.
+
+**System 클래스**
+
+| 기능 | 사용 예 |
+|---|---|
+| 표준 출력 | System.out.println() |
+| 표준 입력 | System.in |
+| 표준 오류 | System.err.println() |
+| 현재 시간 | System.currentTimeMillis() |
+| 시간 측정 | System.nanoTime() |
+| 시스템 속성 | System.getProperty() |
+
+**Java 예제**
+
+```java
+System.out.println("일반 출력");
+
+System.err.println("오류 출력");
+
+long time = System.currentTimeMillis();
+
+System.out.println(time);
+```
+
+**Runtime 클래스**
+
+Runtime은 현재 JVM 실행 환경의 일부 정보를 제공한다.
+
+```java
+Runtime runtime = Runtime.getRuntime();
+
+System.out.println(runtime.availableProcessors());
+System.out.println(runtime.maxMemory());
+System.out.println(runtime.totalMemory());
+System.out.println(runtime.freeMemory());
+```
+
+**주요 메서드**
+
+| 메서드 | 기능 |
+|---|---|
+| `getRuntime()` | 현재 JVM의 Runtime 객체 반환 |
+| `availableProcessors()` | JVM에서 사용 가능한 프로세서 수 |
+| `maxMemory()` | JVM이 사용하려는 최대 힙 메모리 크기 |
+| `totalMemory()` | 현재 할당된 힙 메모리 크기 |
+| `freeMemory()` | 현재 할당된 힙에서 사용 가능한 메모리 크기 |
+
+**주의사항**
+
+- Runtime의 메모리 정보는 시스템 전체 메모리가 아닌 JVM의 힙 메모리 관련 정보이다.
+- `System.currentTimeMillis()`는 현재 시각 정보에 사용한다.
+- 실행 시간의 경과를 측정할 때는 일반적으로 `System.nanoTime()`이 적합하다.
+
+### 19. 예외 처리와 java.lang
+
+Java의 예외는 `Throwable`을 최상위 타입으로 하는 계층 구조를 가진다.
+
+**예외 클래스 계층**
+
+```text
+             Throwable
+                 │
+       ┌─────────┴─────────┐
+       │                   │
+       ▼                   ▼
+      Error             Exception
+                           │
+                   ┌───────┴───────┐
+                   │               │
+                   ▼               ▼
+            Checked Exception  RuntimeException
+                                   │
+                                   ▼
+                            Unchecked Exception
+```
+
+**주요 문법 정리**
+
+| 문법 | 역할 |
+|---|---|
+| try | 예외 발생 가능 코드 실행 |
+| catch | 예외 처리 |
+| finally | 정리 작업 |
+| throw | 예외 직접 발생 |
+| throws | 예외 전파 가능성 선언 |
+
+**Java 예제**
+
+```java
+public static int divide(int a, int b) {
+
+    if (b == 0) {
+        throw new IllegalArgumentException(
+            "0으로 나눌 수 없습니다."
+        );
+    }
+
+    return a / b;
+}
+```
+
+**핵심**
+
+- 오류 발생 시 적절한 대응 방법을 결정한다.
+- 예외 처리가 어려운 경우 상위 호출자에게 전파할 수 있다.
+- `Exception`과 `RuntimeException`은 모두 java.lang에 속한다.
+- `IOException`, `SQLException`은 각각 java.io와 java.sql에 속한다.
+- 예외 처리의 자세한 내용은 Day18~19 학습 내용과 연결된다.
+
+---
+
+### 20. 컬렉션 프레임워크와 제네릭
+
+컬렉션 프레임워크는 여러 데이터를 효율적으로 저장하고 관리하기 위한 인터페이스 및 클래스들의 집합이다.
+
+**주요 컬렉션**
+
+| 구분 | 대표 구현 | 특징 |
+|---|---|---|
+| List | ArrayList | 순서 유지, 중복 허용 |
+| Set | HashSet | 중복 요소 허용하지 않음 |
+| Map | HashMap | Key-Value 형태의 데이터 관리 |
+
+**List**
+
+```java
+List<String> names = new ArrayList<>();
+
+names.add("Java");
+names.add("Spring");
+
+System.out.println(names.get(0));
+```
+
+**Set**
+
+```java
+Set<String> names = new HashSet<>();
+
+names.add("Java");
+names.add("Java");
+
+System.out.println(names.size()); // 1
+```
+
+**Map**
+
+```java
+Map<Integer, String> users = new HashMap<>();
+
+users.put(1, "홍길동");
+users.put(2, "김철수");
+
+System.out.println(users.get(1));
+```
+
+※ 위 예제들은 `java.util`의 컬렉션 타입을 import한 환경을 가정한다.
+
+**제네릭(Generic)**
+
+```java
+List<String> names = new ArrayList<>();
+```
+
+- `<String>`은 컬렉션에 저장할 요소 타입을 지정한다.
+- 컴파일 시 타입 안정성을 높인다.
+- 불필요한 타입 캐스팅을 줄일 수 있다.
+
+**주의**
+
+- HashSet과 HashMap은 일반적으로 요소의 순서를 보장하지 않는다.
+- HashMap은 Key의 중복을 허용하지 않는다.
+- 일반적인 제네릭 타입 인자로 int 같은 기본형은 직접 사용할 수 없다.
+- 정수 데이터를 저장하려면 `List<Integer>`처럼 Wrapper 타입을 사용한다.
+
+### 21. 람다식과 Stream API
+
+람다식은 함수형 인터페이스의 구현을 간결하게 표현하는 문법이다.
+
+**익명 클래스**
+
+```java
+Runnable task = new Runnable() {
+
+    @Override
+    public void run() {
+        System.out.println("작업 실행");
+    }
+};
+```
+
+**람다식**
+
+```java
+Runnable task = () -> {
+    System.out.println("작업 실행");
+};
+```
+
+**Stream API**
+
+Stream API는 데이터의 필터링, 변환, 집계 등의 작업을 파이프라인 방식으로 구성할 수 있도록 제공하는 API이다.
+
+**Stream 처리 흐름**
+
+```text
+       List<Integer>
+             │
+             ▼
+          stream()
+             │
+             ▼
+          filter()
+       조건에 맞게 필터링
+             │
+             ▼
+           map()
+          데이터 변환
+             │
+             ▼
+          average()
+          최종 집계
+```
+
+**Java 예제**
+
+```java
+List<Integer> scores = List.of(70, 85, 90, 95);
+
+double average = scores.stream()
+    .filter(score -> score >= 80)
+    .mapToInt(Integer::intValue)
+    .average()
+    .orElse(0);
+
+System.out.println(average); // 90.0
+```
+
+**주요 Stream 연산**
+
+| 메서드 | 역할 |
+|---|---|
+| `filter()` | 조건에 맞는 데이터 선택 |
+| `map()` | 데이터 변환 |
+| `mapToInt()` | 정수형 Stream으로 변환 |
+| `sorted()` | 정렬 |
+| `distinct()` | 중복 제거 |
+| `count()` | 요소 개수 |
+| `average()` | 평균 계산 |
+| `collect()` | 결과 수집 |
+
+**핵심**
+
+- 람다식은 함수를 값처럼 다루는 함수형 인터페이스 구현에 활용된다.
+- Stream API는 데이터 처리 과정을 단계적으로 구성한다.
+- Stream의 중간 연산은 일반적으로 지연 실행된다.
+- 최종 연산이 실행되면서 파이프라인이 평가된다.
+- Stream은 컬렉션 자체를 자동으로 수정하지 않는다.
+
+### 22. 멀티스레드와 입출력(I/O)
+
+멀티스레딩은 하나의 프로세스에서 여러 스레드를 이용하여 작업을 실행하는 기술이다.
+
+**스레드의 기본 구조**
+
+```text
+             Process
+                │
+       ┌────────┼────────┐
+       │        │        │
+       ▼        ▼        ▼
+    Thread 1 Thread 2 Thread 3
+       │        │        │
+       └────────┼────────┘
+                │
+           공유 자원 접근
+```
+
+**Thread 예제**
+
+```java
+Thread thread = new Thread(() -> {
+    System.out.println("스레드 실행");
+});
+
+thread.start();
+```
+
+**동기화**
+
+```java
+class Counter {
+
+    private int count = 0;
+
+    public synchronized void increase() {
+        count++;
+    }
+}
+```
+
+- `synchronized`는 지정된 모니터를 통한 상호 배제를 제공한다.
+- 공유 자원에 여러 스레드가 접근할 때 경쟁 상태를 방지하는 데 사용할 수 있다.
+- 모든 동시성 문제를 자동으로 해결하는 것은 아니다.
+
+**입출력(I/O)**
+
+| 구분 | 주요 클래스 | 처리 단위 |
+|---|---|---|
+| 바이트 스트림 | InputStream, OutputStream | byte |
+| 문자 스트림 | Reader, Writer | char |
+
+**바이트 스트림의 주요 용도**
+
+- 파일 데이터
+- 이미지 및 바이너리 데이터
+- 네트워크 바이트 송수신
+
+**문자 스트림의 주요 용도**
+
+- 텍스트 파일
+- 문자 데이터 읽기 및 쓰기
+- 문자 인코딩을 이용한 텍스트 처리
+
+**핵심**
+
+- 서버 프로그램은 여러 작업을 동시에 처리해야 할 수 있다.
+- 데이터 공유가 발생하면 동기화 문제를 고려해야 한다.
+- I/O는 프로그램과 외부 자원 사이의 데이터 이동을 담당한다.
+
+### 23. JDBC 데이터베이스 프로그래밍
+
+JDBC(Java Database Connectivity)는 Java 프로그램이 관계형 데이터베이스에 접근할 수 있도록 제공하는 API이다.
+
+**JDBC 기본 처리 과정**
+
+```text
+        Java Application
+               │
+               ▼
+        1. Connection
+          DB 연결 획득
+               │
+               ▼
+     2. PreparedStatement
+          SQL 준비
+               │
+               ▼
+          3. Execute
+          SQL 실행
+               │
+               ▼
+          4. ResultSet
+         조회 결과 처리
+               │
+               ▼
+           5. Close
+          자원 정리
+```
+
+**주요 인터페이스**
+
+| 인터페이스 | 역할 |
+|---|---|
+| Connection | DB 연결 및 트랜잭션 관리 |
+| PreparedStatement | 매개변수화된 SQL 실행 |
+| ResultSet | 조회 결과 탐색 |
+
+**주요 실행 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `executeQuery()` | SELECT 등의 조회 SQL 실행 |
+| `executeUpdate()` | INSERT, UPDATE, DELETE 등의 변경 SQL 실행 |
+| `execute()` | 다양한 형태의 SQL 실행 |
+
+**핵심**
+
+- JDBC는 Java에서 데이터베이스를 다루는 기본 API이다.
+- PreparedStatement는 SQL과 데이터를 분리하여 처리할 수 있다.
+- 조회 작업에서는 ResultSet을 이용해 결과를 읽는다.
+- 사용이 끝난 Connection, Statement, ResultSet은 적절하게 종료해야 한다.
+- `try-with-resources`를 사용하여 자원 정리를 자동화할 수 있다.
+
+### 24. Java 학습 내용과 Spring Boot의 관계
+
+Java의 기본 문법과 객체지향 원리는 Spring Boot에서도 계속 사용된다.
+
+**학습 단계별 연결**
+
+| Java 학습 내용 | Spring Boot 활용 |
+|---|---|
+| 클래스·객체 | Controller, Service 등의 객체 설계 |
+| 인터페이스·다형성 | 의존성 주입(DI) |
+| DTO | 요청 및 응답 데이터 전달 |
+| 컬렉션 | 여러 데이터 처리 |
+| 예외 처리 | 공통 오류 응답 |
+| 람다·Stream | 데이터 가공 |
+| JDBC | 데이터베이스 접근 |
+| 네트워크·I/O | HTTP 요청 및 응답 이해 |
+
+**전체 학습 흐름**
+
+```text
+           Java 기초
+               │
+               ▼
+           객체지향
+               │
+               ▼
+        Java 표준 라이브러리
+               │
+               ▼
+       컬렉션 / 제네릭 / Stream
+               │
+               ▼
+        Thread / I/O / JDBC
+               │
+               ▼
+           Spring Boot
+               │
+       ┌───────┼────────┐
+       │       │        │
+       ▼       ▼        ▼
+   Spring MVC  Spring DI  Data Access
+       │       │        │
+       └───────┼────────┘
+               │
+               ▼
+          웹 애플리케이션
+```
+
+**핵심**
+
+- Spring Boot는 Java와 객체지향 설계를 기반으로 한다.
+- 인터페이스와 다형성은 의존성을 분리하는 데 중요하다.
+- JDBC는 Spring JDBC, JPA, MyBatis 등을 이해하는 기초가 된다.
+- 컬렉션과 Stream API는 서비스 계층의 데이터 처리에 활용할 수 있다.
+
+### 25. Java 기초 및 라이브러리 사용 시 주의사항
+
+| 주의사항 | 핵심 내용 |
+|---|---|
+| JVM과 JDK 혼동 | JVM은 실행, JDK는 개발 도구 제공 |
+| 기본형과 참조형 혼동 | 실제 값과 객체 참조 구분 |
+| 참조 변수 복사 | 객체가 아닌 참조값 복사 |
+| 지역 변수 초기화 | 사용 전 반드시 초기화 |
+| static 변수 | 객체별 값이 아닌 클래스 소속 값 |
+| 클래스와 객체 혼동 | 설계도와 실제 인스턴스 구분 |
+| 생성자와 메서드 혼동 | 생성자는 반환 타입을 선언하지 않음 |
+| == 와 equals() | 참조 동일성과 동등성 구분 |
+| equals() 재정의 | hashCode()와 일관성 유지 |
+| 오버로딩·오버라이딩 | 매개변수 차이와 상속 재정의 구분 |
+| 잘못된 다운캐스팅 | ClassCastException 발생 가능 |
+| 인터페이스와 추상 클래스 | 계약과 공통 구현의 목적 구분 |
+| String 불변성 | 기존 문자열 객체 내용 변경 불가 |
+| StringBuilder | 여러 스레드에서 공유 시 동기화 고려 |
+| StringBuffer | 동기화만으로 복합 작업 전체를 보호하지는 않음 |
+| Wrapper 언박싱 | null 언박싱 시 NullPointerException |
+| 숫자 변환 | NumberFormatException 주의 |
+| Math.random() | 보안용 난수로 사용하지 않음 |
+| HashSet | 중복 요소 저장 불가 |
+| HashMap | Key 중복 불가, 순서 보장 없음 |
+| 제네릭 | 기본형 대신 Wrapper 타입 사용 |
+| Stream | 중간 연산과 최종 연산 구분 |
+| 멀티스레드 | 공유 자원 경쟁 상태 주의 |
+| I/O | 자원 종료 및 예외 처리 필요 |
+| JDBC | 연결 관리, 트랜잭션, SQL Injection 방지 |
+| java.lang | import가 필요 없는 기본 패키지 |
+
+### ✅ Day20 핵심 정리
+
+| 구분 | 핵심 내용 |
+|---|---|
+| JDK | Java 개발 도구 |
+| JRE | Java 실행 환경 |
+| JVM | 바이트코드 실행 및 메모리 관리 |
+| Primitive Type | 실제 값 저장 |
+| Reference Type | 객체 참조값 저장 |
+| Local Variable | 메서드·블록 내부 변수 |
+| Instance Variable | 객체별 고유 필드 |
+| Static Variable | 클래스에 속하는 필드 |
+| Array | 고정된 길이의 데이터 집합 |
+| Class | 객체 설계도 |
+| Object | 클래스로 생성한 인스턴스 |
+| Constructor | 객체 초기화 |
+| this | 현재 객체 참조 |
+| Heap | 객체 및 배열 저장 |
+| JVM Stack | 메서드 호출 프레임 관리 |
+| Encapsulation | 내부 상태 보호 |
+| Inheritance | 상속을 통한 기능 재사용 |
+| Polymorphism | 하나의 타입으로 여러 구현 처리 |
+| Interface | 공통 규약 정의 |
+| Abstract Class | 공통 구현 및 추상 기능 제공 |
+| Overloading | 같은 이름, 다른 매개변수 |
+| Overriding | 상속 메서드 재정의 |
+| VO | 값 중심 객체 |
+| DTO | 데이터 전달 객체 |
+| java.lang | Java 기본 핵심 패키지 |
+| Object | 모든 클래스의 최상위 부모 |
+| toString() | 객체의 문자열 표현 |
+| equals() | 객체 동등성 비교 |
+| hashCode() | 객체의 해시 코드 |
+| getClass() | 런타임 타입 정보 |
+| String | 불변 문자열 객체 |
+| StringBuilder | 변경 가능한 문자열 객체 |
+| StringBuffer | 주요 메서드가 동기화된 문자열 객체 |
+| Wrapper | 기본형의 객체 표현 |
+| Auto-boxing | 기본형을 Wrapper로 자동 변환 |
+| Unboxing | Wrapper를 기본형으로 자동 변환 |
+| Math | 수학 연산 유틸리티 |
+| Character | 문자 판별 및 변환 |
+| System | 표준 입출력 및 시스템 기능 |
+| Runtime | JVM 실행 환경 정보 |
+| Collection | 여러 데이터 관리 |
+| Generic | 타입 안정성 및 재사용성 |
+| Lambda | 함수형 인터페이스 구현 |
+| Stream API | 데이터 처리 파이프라인 |
+| Thread | 프로그램 내부의 실행 흐름 |
+| I/O | 외부 자원과 데이터 송수신 |
+| JDBC | Java 데이터베이스 접근 API |
+
+**최종 학습 정리**
+
+- Java는 소스 코드를 바이트코드로 컴파일하고 JVM에서 실행한다.
+- 자료형은 기본형과 참조형으로 구분된다.
+- 지역 변수, 인스턴스 변수, 정적 변수는 소속과 생명주기가 다르다.
+- 배열은 같은 타입의 여러 데이터를 고정된 길이로 저장한다.
+- 클래스는 설계도이며 객체는 클래스를 바탕으로 생성한 인스턴스이다.
+- new는 객체를 생성하고 생성자는 객체 초기화를 수행한다.
+- JVM의 Heap은 객체를 관리하고 Stack은 메서드 실행 정보를 관리한다.
+- 참조 변수의 대입은 객체 복사가 아닌 참조값 복사이다.
+- 캡슐화는 객체의 상태를 보호하고 유효성 규칙을 유지한다.
+- 상속은 공통 기능을 재사용하고 다형성은 다양한 구현을 유연하게 처리한다.
+- 인터페이스는 공통 기능의 규약을 정의하며 여러 클래스에서 구현할 수 있다.
+- VO는 값의 의미를 표현하고 DTO는 데이터 전달을 목적으로 한다.
+- java.lang은 별도의 import 없이 사용할 수 있는 Java 핵심 패키지이다.
+- Object는 Java의 모든 클래스가 직간접적으로 상속하는 최상위 클래스이다.
+- ==와 equals()는 참조 동일성과 객체 동등성의 차이를 이해해야 한다.
+- String은 불변 객체이며 문자열 변경 메서드는 결과 문자열을 반환한다.
+- StringBuilder와 StringBuffer는 변경 가능한 문자열을 관리한다.
+- Wrapper 클래스는 기본형 값을 객체 형태로 다루도록 한다.
+- Math는 수학 계산을 제공하고 Character는 문자 판별 및 변환을 지원한다.
+- System은 표준 입출력 등을 제공하고 Runtime은 JVM 실행 환경 정보를 제공한다.
+- 컬렉션은 여러 데이터를 관리하며 List, Set, Map은 서로 다른 특성을 가진다.
+- 제네릭은 타입 안정성을 높이고 람다식은 함수형 인터페이스를 간결하게 구현한다.
+- Stream API는 데이터를 필터링·변환·집계하는 파이프라인을 구성한다.
+- 멀티스레드는 여러 실행 흐름을 제공하며 공유 자원 접근 시 동시성 문제를 고려해야 한다.
+- I/O는 파일 및 네트워크 등의 외부 자원과 데이터를 주고받는 기능이다.
+- JDBC는 Java 애플리케이션에서 데이터베이스를 사용하는 기본 API이다.
+- Java의 객체지향, 컬렉션, 예외 처리 및 데이터 접근 개념은 Spring Boot에서도 활용된다.
 
 </details>
