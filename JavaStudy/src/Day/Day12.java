@@ -7,26 +7,26 @@ class StarRate
 {
     
 }
-class Movie
-{
+// class Movie
+// {
     
-}
+// }
 
-class MovieSystem
-{
-    static Movie[] movies = new Movie[1938];
-    static 
-    {
-        try
-        {
+// class MovieSystem
+// {
+//     static Movie[] movies = new Movie[1938];
+//     static 
+//     {
+//         try
+//         {
 
-        }
-        catch(Exception exception)
-        {
+//         }
+//         catch(Exception exception)
+//         {
 
-        }
-    }
-}
+//         }
+//     }
+// }
 
 // class Card
 // {

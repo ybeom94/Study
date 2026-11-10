@@ -22,6 +22,8 @@
 | **Day 18** | Java 예외 처리 및 실무 활용 | Exception·Error, Checked·Unchecked, try-catch-finally, 다중 catch, 예외 정보·전파, throw·throws, try-with-resources, 사용자 정의 예외, Spring Boot 전역 예외 처리 |
 | **Day 19** | Java 예외 처리 및 중첩 클래스 심화 | 예외 전파, throw·throws, 사용자 정의 예외, 전역 예외 처리, 중첩 클래스 4종, static, 변수 캡처, DTO·Builder, java.lang |
 | **Day 20** | Java 1권 핵심 복습 및 표준 라이브러리 | JDK·JVM, 자료형·메모리, 객체지향 3대 특성, VO·DTO, java.lang, Object, String, StringBuilder·StringBuffer, Wrapper, Math·Character, System·Runtime, 컬렉션·Stream·I/O·JDBC 개요 |
+| **Day 21** | Java 코어 라이브러리 및 제네릭 심화 | java.base, Object, String, Wrapper, System, java.time, Format, Regex, Reflection, Annotation, Generic 클래스·메서드, 와일드카드, PECS, Spring 연계 |
+| **Day 22** | Java 코어 라이브러리 실전 활용 및 자동화 | Object·Clone, Wrapper, String, Math·System, java.time, Period·Duration, Format, Regex, Pattern·Matcher, Annotation, Reflection, 동적 메서드 실행, 자동화 스캐너, 미니 라우터 |
 
 
 
@@ -17961,5 +17963,3371 @@ Java의 기본 문법과 객체지향 원리는 Spring Boot에서도 계속 사�
 - I/O는 파일 및 네트워크 등의 외부 자원과 데이터를 주고받는 기능이다.
 - JDBC는 Java 애플리케이션에서 데이터베이스를 사용하는 기본 API이다.
 - Java의 객체지향, 컬렉션, 예외 처리 및 데이터 접근 개념은 Spring Boot에서도 활용된다.
+
+</details>
+
+
+## Day21. Java 코어 라이브러리 및 제네릭 심화
+<details>
+
+### 🎯 학습 목표
+- Java 코어 라이브러리와 `java.base` 모듈의 구조를 이해한다.
+- `Object` 클래스의 동등성 비교와 주요 메서드를 복습한다.
+- `String`, `StringBuilder`, `StringBuffer`를 용도에 따라 구분한다.
+- Wrapper 클래스와 정적 유틸리티 메서드의 활용법을 이해한다.
+- `java.time`을 이용한 날짜·시간 처리를 이해한다.
+- `DecimalFormat`, `NumberFormat`, `DateTimeFormatter`의 사용법을 익힌다.
+- 정규표현식으로 문자열을 검증하고 추출하는 방법을 이해한다.
+- 리플렉션을 이용하여 런타임에 클래스 정보를 조회하는 방법을 이해한다.
+- 어노테이션의 역할과 사용자 정의 어노테이션을 이해한다.
+- 제네릭의 도입 목적과 타입 안정성을 이해한다.
+- 제네릭 클래스와 제네릭 메서드를 작성할 수 있다.
+- 제네릭의 타입 제한과 와일드카드를 이해한다.
+- PECS 원칙에 따라 제네릭 타입을 선택할 수 있다.
+- Java 라이브러리와 Spring 프레임워크의 관계를 이해한다.
+
+---
+
+### 1. Java 코어 라이브러리(Core Library)
+
+Java 코어 라이브러리는 Java 프로그램 개발에 필요한 기본 기능을 제공하는 클래스와 인터페이스의 집합이다.
+
+개발자는 문자열, 날짜, 수학 계산, 파일 처리 등의 기능을 처음부터 직접 구현하지 않고 표준 라이브러리를 활용할 수 있다.
+
+**Java 코어 라이브러리의 주요 역할**
+
+- 객체의 공통 기능 제공
+- 문자열 처리 및 변환
+- 기본형과 객체형 간 변환
+- 날짜 및 시간 관리
+- 숫자 및 날짜 형식 지정
+- 정규표현식 기반 데이터 검사
+- 런타임 클래스 정보 조회
+- 어노테이션을 이용한 메타데이터 관리
+- 제네릭을 이용한 타입 안정성 확보
+
+**주요 라이브러리 분류**
+
+| 분류 | 주요 클래스 및 기능 |
+|---|---|
+| Object | 객체 동등성, 해시 코드, 문자열 표현 |
+| String | 문자열 검색, 비교 및 처리 |
+| StringBuilder | 변경 가능한 문자열 |
+| Wrapper | 기본형 데이터의 객체 표현 |
+| Math | 수학 계산 |
+| System | 시스템 속성, 환경 변수, 시간 측정 |
+| Date/Time | 날짜와 시간 처리 |
+| Format | 숫자, 통화 및 날짜 형식 지정 |
+| Regex | 문자열 패턴 검사 및 추출 |
+| Reflection | 런타임 클래스 정보 분석 |
+| Annotation | 메타데이터 선언 |
+| Generic | 타입 안정성 및 코드 재사용 |
+
+**핵심**
+
+표준 라이브러리는 단순히 메서드를 암기하는 것이 아니라, **필요한 기능이 무엇이고 어떤 상황에서 사용해야 하는지** 이해하는 것이 중요하다.
+
+### 2. java.base 모듈
+
+`java.base`는 Java 플랫폼의 가장 기본적인 모듈이다.
+
+Java 9부터 도입된 모듈 시스템에서 `java.base`는 모든 모듈이 기본적으로 의존하는 필수 모듈이다.
+
+**java.base의 주요 패키지**
+
+| 패키지 | 역할 |
+|---|---|
+| `java.lang` | Object, String, Math 등 기본 기능 |
+| `java.util` | 컬렉션 및 공통 유틸리티 |
+| `java.io` | 스트림 기반 입출력 |
+| `java.nio` | 버퍼 및 파일 입출력 |
+| `java.time` | 날짜 및 시간 처리 |
+| `java.text` | 숫자 및 문자 형식 처리 |
+| `java.util.regex` | 정규표현식 처리 |
+| `java.lang.reflect` | 리플렉션 |
+
+**구조**
+
+```text
+                   java.base
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+        ▼              ▼              ▼
+    java.lang       java.util       java.io
+        │              │              │
+   Object/String     Collection     InputStream
+   Math/System       Map/List       OutputStream
+        │
+        ├── java.lang.reflect
+        │       └── Reflection
+        │
+        ├── java.time
+        │       └── Date/Time
+        │
+        └── java.util.regex
+                └── Pattern/Matcher
+```
+
+**java.base와 java.lang의 차이**
+
+| 구분 | java.base | java.lang |
+|---|---|---|
+| 종류 | 모듈 | 패키지 |
+| 역할 | Java 기본 패키지들을 포함 | 기본 클래스 제공 |
+| import | 모듈 의존성이 암묵적으로 존재 | 자동 import 대상 |
+| 예시 | java.util, java.time 등 포함 | String, Object, Math |
+
+**주의사항**
+
+- `java.base`에 포함된 모든 패키지가 자동 import되는 것은 아니다.
+- `java.lang`은 별도의 import 없이 사용할 수 있다.
+- `java.util`, `java.time` 등은 필요한 타입을 import해야 한다.
+- `java.base`는 모듈이고 `java.lang`은 그 안에 속한 패키지이다.
+
+### 3. Object 클래스와 객체의 동등성
+
+`Object`는 Java의 모든 클래스가 직간접적으로 상속하는 최상위 클래스이다.
+
+모든 객체는 Object에 정의된 기본 메서드를 사용할 수 있다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `toString()` | 객체의 문자열 표현 반환 |
+| `equals()` | 객체의 동등성 비교 |
+| `hashCode()` | 객체의 해시 코드 반환 |
+| `getClass()` | 객체의 런타임 클래스 정보 반환 |
+
+**참조 동일성과 값 동등성**
+
+```java
+String a = new String("Java");
+String b = new String("Java");
+
+System.out.println(a == b);       // false
+System.out.println(a.equals(b));  // true
+```
+
+**비교 기준**
+
+```text
+       a ─────► String 객체 A
+                       │
+                     "Java"
+
+       b ─────► String 객체 B
+                       │
+                     "Java"
+
+
+==        : 두 참조가 동일 객체를 가리키는지 비교
+equals()  : 클래스에서 정의한 동등성 기준으로 비교
+```
+
+**equals()와 hashCode()**
+
+객체의 값으로 동등성을 비교하려면 `equals()`를 재정의할 수 있다.
+
+이때 `hashCode()`도 동등성 규칙에 맞게 재정의해야 한다.
+
+```java
+import java.util.Objects;
+
+class Member {
+
+    private final int id;
+
+    Member(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj) return true;
+
+        if (!(obj instanceof Member other)) {
+            return false;
+        }
+
+        return id == other.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+```
+
+**핵심**
+
+- Object의 기본 `equals()`는 참조 동일성을 비교한다.
+- String은 내용을 비교하도록 equals()를 재정의한다.
+- 동등한 객체는 반드시 같은 hashCode()를 반환해야 한다.
+- 서로 다른 객체라도 같은 hashCode()를 가질 수 있다.
+- HashMap과 HashSet 등에서 객체 동등성 규칙이 중요하다.
+
+### 4. String, StringBuilder, StringBuffer
+
+Java에는 문자열을 처리하기 위한 여러 클래스가 존재한다.
+
+| 구분 | String | StringBuilder | StringBuffer |
+|---|---|---|---|
+| 변경 가능 여부 | 불변 | 가변 | 가변 |
+| 문자열 수정 | 결과 문자열 반환 | 내부 내용 수정 | 내부 내용 수정 |
+| 동기화 | 불변 객체 | 자체 동기화 없음 | 주요 메서드 동기화 |
+| 주요 용도 | 일반적인 문자열 | 빈번한 문자열 조합 | 동기화가 필요한 문자열 조작 |
+
+**String**
+
+```java
+String text = "Java";
+
+String result = text.replace("J", "K");
+
+System.out.println(text);    // Java
+System.out.println(result);  // Kava
+```
+
+String은 불변 객체이므로 기존 문자열의 내용이 직접 변경되지 않는다.
+
+**StringBuilder**
+
+```java
+StringBuilder sb = new StringBuilder();
+
+sb.append("Hello");
+sb.append(" Java");
+
+System.out.println(sb.toString());
+// Hello Java
+```
+
+**StringBuffer**
+
+```java
+StringBuffer buffer = new StringBuffer();
+
+buffer.append("Hello");
+buffer.append(" Java");
+
+System.out.println(buffer.toString());
+```
+
+**StringBuilder와 StringBuffer의 차이**
+
+- StringBuilder는 자체적인 동기화를 제공하지 않는다.
+- StringBuffer는 주요 메서드에 동기화를 제공한다.
+- 단일 스레드에서 반복적인 문자열 조합에는 일반적으로 StringBuilder가 적합하다.
+- StringBuffer도 여러 메서드로 구성된 복합 작업 전체의 안전성을 자동 보장하지는 않는다.
+
+**선택 기준**
+
+```text
+        문자열 처리
+             │
+             ▼
+     빈번하게 수정하는가?
+          │       │
+         No      Yes
+          │       │
+          ▼       ▼
+        String   여러 스레드가
+                 공유하여 수정?
+                    │      │
+                   No     Yes
+                    │      │
+                    ▼      ▼
+              StringBuilder  StringBuffer
+                             또는 별도 동기화 설계
+```
+
+### 5. Wrapper 클래스와 박싱(Boxing)
+
+Wrapper 클래스는 기본형 데이터를 객체로 다루기 위한 클래스이다.
+
+**기본형과 Wrapper**
+
+| 기본형 | Wrapper |
+|---|---|
+| byte | Byte |
+| short | Short |
+| int | Integer |
+| long | Long |
+| float | Float |
+| double | Double |
+| char | Character |
+| boolean | Boolean |
+
+**오토박싱(Auto-boxing)**
+
+```java
+int number = 100;
+
+Integer boxed = number;
+```
+
+기본형 값이 자동으로 Wrapper 타입으로 변환된다.
+
+**언박싱(Unboxing)**
+
+```java
+Integer boxed = 100;
+
+int number = boxed;
+```
+
+Wrapper 객체의 값이 기본형으로 변환된다.
+
+**문자열 숫자 변환**
+
+```java
+int number = Integer.parseInt("100");
+
+double value = Double.parseDouble("12.5");
+
+Integer object = Integer.valueOf("100");
+```
+
+| 메서드 | 반환 타입 |
+|---|---|
+| `Integer.parseInt()` | int |
+| `Integer.valueOf()` | Integer |
+| `Double.parseDouble()` | double |
+| `Double.valueOf()` | Double |
+
+**주의사항**
+
+```java
+Integer value = null;
+
+// int number = value;
+// null 언박싱 시 NullPointerException 발생
+```
+
+- Wrapper는 null을 가질 수 있다.
+- 잘못된 숫자 문자열을 변환하면 NumberFormatException이 발생한다.
+- Wrapper 객체끼리 값을 비교할 때는 `equals()` 등을 사용한다.
+- 제네릭 컬렉션에는 기본형 대신 Wrapper 타입을 사용한다.
+
+### 6. System과 Math 정적 유틸리티
+
+System과 Math는 객체를 생성하지 않고 사용할 수 있는 다양한 정적 메서드를 제공한다.
+
+**System 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `currentTimeMillis()` | 현재 시각을 밀리초 단위로 반환 |
+| `nanoTime()` | 경과 시간 측정에 사용할 값 반환 |
+| `getProperty()` | Java 시스템 속성 조회 |
+| `getenv()` | 환경 변수 조회 |
+| `arraycopy()` | 배열 요소 복사 |
+| `gc()` | GC 수행 요청 |
+
+**실행 시간 측정**
+
+```java
+long start = System.nanoTime();
+
+for (int i = 0; i < 100000; i++) {
+    Math.sqrt(i);
+}
+
+long end = System.nanoTime();
+
+System.out.println(end - start);
+```
+
+**환경 정보 조회**
+
+```java
+String version = System.getProperty("java.version");
+
+String os = System.getProperty("os.name");
+
+String dbUrl = System.getenv("DB_URL");
+```
+
+**Math 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `abs()` | 절댓값 |
+| `max()` | 최댓값 |
+| `min()` | 최솟값 |
+| `round()` | 반올림 |
+| `ceil()` | 올림 |
+| `floor()` | 내림 |
+| `pow()` | 거듭제곱 |
+| `random()` | 난수 생성 |
+
+**Java 예제**
+
+```java
+System.out.println(Math.max(10, 20)); // 20
+System.out.println(Math.abs(-10));    // 10
+System.out.println(Math.ceil(3.2));   // 4.0
+```
+
+**페이지 개수 계산**
+
+```java
+int totalCount = 103;
+int pageSize = 10;
+
+int pageCount = (int) Math.ceil(
+    (double) totalCount / pageSize
+);
+
+System.out.println(pageCount); // 11
+```
+
+**핵심**
+
+- System은 실행 환경과 관련된 기능을 제공한다.
+- Math는 수학 연산 기능을 제공한다.
+- `nanoTime()`은 경과 시간 측정에 적합하다.
+- `Math.ceil()`을 활용하면 나누기 결과의 올림 처리가 가능하다.
+
+### 7. java.time 날짜와 시간 API
+
+`java.time`은 날짜와 시간을 다루기 위한 Java 표준 API이다.
+
+대부분의 주요 날짜·시간 객체는 불변(Immutable)으로 설계되어 있다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| `LocalDate` | 날짜 |
+| `LocalTime` | 시간 |
+| `LocalDateTime` | 날짜와 시간 |
+| `ZonedDateTime` | 시간대가 포함된 날짜와 시간 |
+| `DateTimeFormatter` | 날짜·시간 형식 변환 |
+
+**Java 예제**
+
+```java
+import java.time.*;
+
+LocalDate date = LocalDate.now();
+
+LocalTime time = LocalTime.now();
+
+LocalDateTime dateTime = LocalDateTime.now();
+
+ZonedDateTime zoned = ZonedDateTime.now();
+```
+
+**날짜 계산**
+
+```java
+import java.time.LocalDate;
+
+LocalDate today = LocalDate.of(2026, 11, 9);
+
+LocalDate tomorrow = today.plusDays(1);
+
+System.out.println(tomorrow);
+// 2026-11-10
+```
+
+**불변성**
+
+```java
+LocalDate date = LocalDate.of(2026, 11, 9);
+
+date.plusDays(1);
+
+System.out.println(date);
+// 2026-11-09
+```
+
+`plusDays()`는 기존 객체를 변경하지 않고 새로운 날짜 결과를 반환한다.
+
+**주의사항**
+
+- LocalDateTime에는 시간대 정보가 없다.
+- 시간대가 필요한 경우 ZonedDateTime 등을 고려한다.
+- 여러 지역의 시간을 다루는 애플리케이션에서는 시간대와 오프셋을 구분해야 한다.
+
+### 8. 날짜 및 숫자 형식 클래스(Format)
+
+형식 클래스는 데이터를 사용자에게 읽기 쉬운 문자열로 변환하는 기능을 제공한다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| `DecimalFormat` | 숫자 형식 지정 |
+| `NumberFormat` | 숫자 및 통화 형식 지정 |
+| `DateTimeFormatter` | 날짜·시간 형식 지정 |
+
+**DecimalFormat**
+
+```java
+import java.text.DecimalFormat;
+
+DecimalFormat format = new DecimalFormat("#,###");
+
+String result = format.format(1000000);
+
+System.out.println(result);
+// 1,000,000
+```
+
+**NumberFormat**
+
+```java
+import java.text.NumberFormat;
+import java.util.Locale;
+
+NumberFormat formatter =
+    NumberFormat.getCurrencyInstance(Locale.KOREA);
+
+String result = formatter.format(350000);
+
+System.out.println(result);
+```
+
+한국 지역 설정에 맞는 통화 형식으로 문자열을 생성한다.
+
+**DateTimeFormatter**
+
+```java
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+LocalDateTime dateTime =
+    LocalDateTime.of(2026, 11, 9, 15, 30);
+
+DateTimeFormatter formatter =
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss"
+    );
+
+String result = dateTime.format(formatter);
+
+System.out.println(result);
+// 2026-11-09 15:30:00
+```
+
+**형식 패턴**
+
+| 패턴 | 의미 |
+|---|---|
+| yyyy | 연도 |
+| MM | 월 |
+| dd | 일 |
+| HH | 24시간 형식 시 |
+| mm | 분 |
+| ss | 초 |
+
+**핵심**
+
+- 형식 클래스는 데이터를 화면에 표시하기 위해 사용한다.
+- 숫자와 문자열 데이터는 구분하여 관리한다.
+- 날짜 데이터는 가능하면 날짜·시간 타입으로 관리한다.
+- 화면에 표시할 때 필요한 형식으로 변환한다.
+
+### 9. 정규표현식(Regular Expression)
+
+정규표현식은 문자열이 특정 규칙에 맞는지 검사하거나 원하는 문자열을 찾기 위한 표현 방식이다.
+
+대표적인 활용 사례는 전화번호, 이메일 형식 검사와 텍스트 데이터 검색이다.
+
+**주요 기호**
+
+| 기호 | 의미 |
+|---|---|
+| `^` | 문자열 시작 |
+| `$` | 문자열 끝 |
+| `.` | 임의의 문자 한 개(기본적으로 줄바꿈 제외) |
+| `\d` | 숫자 |
+| `\w` | 단어 문자 |
+| `[0-9]` | 0~9 중 한 문자 |
+| `[A-Z]` | 대문자 A~Z 중 한 문자 |
+| `+` | 1개 이상 |
+| `*` | 0개 이상 |
+| `?` | 0개 또는 1개 |
+| `{n}` | 정확히 n개 |
+| `{n,m}` | n개 이상 m개 이하 |
+
+**전화번호 검증**
+
+```java
+String phone = "010-1234-5678";
+
+boolean valid = phone.matches(
+    "^010-\\d{4}-\\d{4}$"
+);
+
+System.out.println(valid); // true
+```
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| `Pattern` | 정규표현식 패턴을 컴파일 |
+| `Matcher` | 패턴을 이용해 문자열 검사 및 검색 |
+
+**Pattern과 Matcher**
+
+```java
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+String text = "Java 100 Spring 200";
+
+Pattern pattern = Pattern.compile("\\d+");
+
+Matcher matcher = pattern.matcher(text);
+
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+```
+
+**실행 결과**
+
+```text
+100
+200
+```
+
+**matches()와 find()**
+
+| 메서드 | 역할 |
+|---|---|
+| `matches()` | 입력 전체가 패턴에 일치하는지 검사 |
+| `find()` | 입력에서 패턴과 일치하는 부분 검색 |
+| `group()` | 일치한 문자열 반환 |
+
+**핵심**
+
+- 정규표현식은 문자열 패턴을 정의한다.
+- matches()는 전체 문자열 검증에 활용한다.
+- find()는 문자열 내부의 부분 검색에 활용한다.
+- Pattern은 여러 번 사용할 정규표현식을 재사용할 때 유용하다.
+
+**주의사항**
+
+- Java 문자열에서 정규표현식의 `\`는 `\\`로 작성해야 하는 경우가 많다.
+- 복잡한 정규표현식은 유지보수가 어려울 수 있다.
+- 형식이 올바르다고 데이터 자체가 유효하다는 의미는 아니다.
+
+### 10. 리플렉션(Reflection)
+
+리플렉션은 프로그램 실행 중 클래스의 구조와 정보를 조회하거나 일부 동작을 동적으로 수행할 수 있는 기술이다.
+
+**리플렉션을 사용하는 목적**
+
+- 런타임 클래스 정보 조회
+- 필드 및 메서드 분석
+- 생성자 정보 확인
+- 동적인 객체 생성
+- 메서드 동적 호출
+- 프레임워크의 자동화 기능 지원
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| `Class` | 클래스 및 타입 정보 |
+| `Field` | 필드 정보 및 접근 |
+| `Method` | 메서드 정보 및 호출 |
+| `Constructor` | 생성자 정보 및 객체 생성 |
+
+**Java 예제**
+
+```java
+class Member {
+
+    private String name;
+
+    public void print() {
+        System.out.println("Member");
+    }
+}
+```
+
+**클래스 정보 조회**
+
+```java
+Class<?> clazz = Member.class;
+
+System.out.println(clazz.getName());
+```
+
+**메서드 정보 조회**
+
+```java
+import java.lang.reflect.Method;
+
+Class<?> clazz = Member.class;
+
+Method[] methods = clazz.getDeclaredMethods();
+
+for (Method method : methods) {
+    System.out.println(method.getName());
+}
+```
+
+**메서드 동적 호출**
+
+```java
+import java.lang.reflect.Method;
+
+Member member = new Member();
+
+Method method =
+    member.getClass().getDeclaredMethod("print");
+
+method.invoke(member);
+```
+
+※ `getDeclaredMethod()`와 `invoke()`에서 발생 가능한 리플렉션 관련 Checked Exception은 실제 코드에서 처리하거나 전파해야 한다.
+
+**일반 호출과 리플렉션 호출**
+
+```text
+[일반 메서드 호출]
+
+member.print()
+      │
+      ▼
+ 컴파일 시 알려진 메서드 호출
+
+
+[리플렉션]
+
+Class 객체 조회
+      │
+      ▼
+Method 객체 검색
+      │
+      ▼
+invoke() 실행
+```
+
+**주의사항**
+
+- 리플렉션은 직접 호출보다 복잡하고 성능 비용이 발생할 수 있다.
+- 접근 제어와 모듈 경계를 고려해야 한다.
+- private 멤버에 대한 접근이 언제나 허용되는 것은 아니다.
+- 가능한 경우 일반적인 타입 기반 메서드 호출이 더 명확하다.
+
+### 11. 어노테이션(Annotation)
+
+어노테이션은 클래스, 메서드, 필드 등에 부가 정보를 선언하는 메타데이터이다.
+
+컴파일러, 개발 도구, 프레임워크는 어노테이션을 읽고 정해진 작업을 수행할 수 있다.
+
+**대표적인 어노테이션**
+
+| 어노테이션 | 역할 |
+|---|---|
+| `@Override` | 메서드 재정의 검사 |
+| `@Deprecated` | 사용을 권장하지 않는 요소 표시 |
+| `@Target` | 어노테이션 적용 대상 제한 |
+| `@Retention` | 어노테이션 유지 범위 지정 |
+
+**Override**
+
+```java
+class Parent {
+
+    void print() {
+        System.out.println("Parent");
+    }
+}
+
+class Child extends Parent {
+
+    @Override
+    void print() {
+        System.out.println("Child");
+    }
+}
+```
+
+`@Override`는 메서드가 올바르게 재정의되는지 컴파일러가 검사하도록 한다.
+
+### 12. 사용자 정의 어노테이션
+
+개발자는 `@interface`를 사용하여 직접 어노테이션을 선언할 수 있다.
+
+**어노테이션 정의**
+
+```java
+import java.lang.annotation.*;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@interface LogCheck {
+    String value();
+}
+```
+
+**사용 예제**
+
+```java
+class MemberService {
+
+    @LogCheck("회원 가입")
+    public void join() {
+        System.out.println("회원 가입 처리");
+    }
+}
+```
+
+**Target**
+
+어노테이션을 적용할 수 있는 위치를 지정한다.
+
+| 값 | 적용 대상 |
+|---|---|
+| TYPE | 클래스, 인터페이스 등 |
+| METHOD | 메서드 |
+| FIELD | 필드 |
+| PARAMETER | 매개변수 |
+| CONSTRUCTOR | 생성자 |
+
+**Retention**
+
+어노테이션의 유지 시점을 지정한다.
+
+| 값 | 의미 |
+|---|---|
+| SOURCE | 소스 코드 수준에서 사용 |
+| CLASS | 클래스 파일까지 유지 |
+| RUNTIME | 런타임에도 조회 가능 |
+
+**어노테이션 처리 흐름**
+
+```text
+      @LogCheck 선언
+             │
+             ▼
+      메서드에 적용
+             │
+             ▼
+      프로그램 실행
+             │
+             ▼
+   Reflection으로 조회
+             │
+             ▼
+    어노테이션 정보 확인
+             │
+             ▼
+      지정된 기능 수행
+```
+
+**핵심**
+
+- 어노테이션 자체가 지정된 비즈니스 기능을 실행하는 것은 아니다.
+- 컴파일러나 프레임워크가 어노테이션을 해석하여 기능을 수행한다.
+- 런타임에서 리플렉션으로 조회하려면 적절한 Retention 설정이 필요하다.
+
+### 13. 제네릭(Generic)의 개념
+
+제네릭은 클래스나 메서드에서 사용할 데이터 타입을 외부에서 지정할 수 있도록 하는 기능이다.
+
+**제네릭의 도입 목적**
+
+- 컴파일 시 타입 검사
+- 잘못된 타입 사용 방지
+- 불필요한 형변환 감소
+- 코드 재사용성 향상
+- 타입 안정성 확보
+
+**제네릭을 사용하지 않는 경우**
+
+```java
+class Box {
+
+    private Object item;
+
+    public void set(Object item) {
+        this.item = item;
+    }
+
+    public Object get() {
+        return item;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Box box = new Box();
+
+box.set("Java");
+
+String value = (String) box.get();
+```
+
+Object는 여러 참조 타입을 받을 수 있지만, 값을 꺼낼 때 명시적인 형변환이 필요하다.
+
+잘못된 타입으로 형변환하면 ClassCastException이 발생할 수 있다.
+
+**제네릭을 사용하는 경우**
+
+```java
+class Box<T> {
+
+    private T item;
+
+    public void set(T item) {
+        this.item = item;
+    }
+
+    public T get() {
+        return item;
+    }
+}
+```
+
+```java
+Box<String> box = new Box<>();
+
+box.set("Java");
+
+String value = box.get();
+```
+
+**핵심**
+
+- `<T>`는 타입 매개변수이다.
+- `Box<String>`은 String 타입을 사용하는 Box이다.
+- 컴파일러가 타입의 일치 여부를 검사한다.
+- 값을 꺼낼 때 직접 형변환할 필요가 줄어든다.
+
+### 14. 제네릭 클래스(Generic Class)
+
+제네릭 클래스는 선언 시점에 타입을 고정하지 않고, 사용하는 위치에서 타입 인자를 지정하는 클래스이다.
+
+**기본 문법**
+
+```java
+class Box<T> {
+
+    private T value;
+
+    public void setValue(T value) {
+        this.value = value;
+    }
+
+    public T getValue() {
+        return value;
+    }
+}
+```
+
+**타입 지정**
+
+```java
+Box<String> stringBox = new Box<>();
+
+stringBox.setValue("Java");
+
+String text = stringBox.getValue();
+```
+
+```java
+Box<Integer> intBox = new Box<>();
+
+intBox.setValue(100);
+
+int number = intBox.getValue();
+```
+
+**타입 매개변수의 일반적인 이름**
+
+| 문자 | 의미 |
+|---|---|
+| T | Type |
+| E | Element |
+| K | Key |
+| V | Value |
+| N | Number |
+
+**여러 타입 매개변수**
+
+```java
+class Pair<K, V> {
+
+    private K key;
+    private V value;
+
+    Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public K getKey() {
+        return key;
+    }
+
+    public V getValue() {
+        return value;
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Pair<Integer, String> pair =
+    new Pair<>(1, "홍길동");
+
+System.out.println(pair.getKey());
+System.out.println(pair.getValue());
+```
+
+**핵심**
+
+- 제네릭 클래스는 여러 타입을 처리하는 구조를 재사용할 수 있다.
+- 타입 매개변수는 클래스 선언 시 지정한다.
+- 객체 생성 및 타입 선언 시 구체적인 타입 인자를 지정한다.
+
+### 15. 제네릭 메서드(Generic Method)
+
+제네릭 메서드는 메서드 자체에서 타입 매개변수를 선언하는 방식이다.
+
+제네릭 클래스가 아니더라도 제네릭 메서드를 선언할 수 있다.
+
+**기본 문법**
+
+```java
+public static <T> T getValue(T value) {
+    return value;
+}
+```
+
+**Java 예제**
+
+```java
+public class GenericExample {
+
+    public static <T> void print(T value) {
+        System.out.println(value);
+    }
+
+    public static void main(String[] args) {
+
+        print("Java");
+
+        print(100);
+
+        print(3.14);
+    }
+}
+```
+
+**클래스 제네릭과 메서드 제네릭**
+
+| 구분 | 제네릭 클래스 | 제네릭 메서드 |
+|---|---|---|
+| 선언 위치 | 클래스 선언부 | 메서드 선언부 |
+| 타입 결정 | 타입 사용 시 | 메서드 호출 시 |
+| 적용 범위 | 해당 클래스의 타입 매개변수 사용 범위 | 해당 메서드 내부 |
+| 예시 | `class Box<T>` | `<T> T get(T value)` |
+
+**주의사항**
+
+- 제네릭 메서드의 `<T>`는 반환 타입 앞에 선언한다.
+- 컴파일러가 인자를 통해 타입을 추론할 수 있다.
+- 제네릭 클래스와 제네릭 메서드는 서로 독립적인 타입 매개변수를 가질 수 있다.
+
+### 16. 제한된 타입 매개변수(Bounded Type Parameter)
+
+제네릭은 타입 매개변수에 상한을 지정할 수 있다.
+
+이때 `extends` 키워드를 사용한다.
+
+**Number 타입 제한**
+
+```java
+class Calculator<T extends Number> {
+
+    public double convert(T value) {
+        return value.doubleValue();
+    }
+}
+```
+
+**사용 예제**
+
+```java
+Calculator<Integer> calculator = new Calculator<>();
+
+System.out.println(calculator.convert(100));
+```
+
+**타입 제한**
+
+```text
+              Number
+                 │
+        ┌────────┼────────┐
+        │        │        │
+        ▼        ▼        ▼
+     Integer   Double    Float
+
+<T extends Number>
+
+Number와 그 하위 타입만 사용 가능
+```
+
+**제약 조건**
+
+```java
+Calculator<Integer> a = new Calculator<>();
+
+Calculator<Double> b = new Calculator<>();
+
+// Calculator<String> c = new Calculator<>();
+// String은 Number를 상속하지 않으므로 컴파일 오류
+```
+
+**핵심**
+
+- `extends`는 상한 경계를 지정한다.
+- 타입 매개변수에서 extends는 클래스와 인터페이스 상한에 모두 사용할 수 있다.
+- 타입을 제한하면 해당 상한 타입에서 사용할 수 있는 메서드에 접근할 수 있다.
+
+### 17. 와일드카드(Wildcard)
+
+와일드카드는 제네릭 타입 인자의 범위를 유연하게 지정하기 위한 문법이다.
+
+와일드카드는 `?`로 표현한다.
+
+**주요 종류**
+
+| 문법 | 의미 |
+|---|---|
+| `<?>` | 타입을 특정하지 않음 |
+| `<? extends T>` | T 또는 그 하위 타입 |
+| `<? super T>` | T 또는 그 상위 타입 |
+
+**와일드카드 예제**
+
+```java
+import java.util.List;
+
+public static void printList(List<?> list) {
+
+    for (Object value : list) {
+        System.out.println(value);
+    }
+}
+```
+
+**사용 예제**
+
+```java
+List<String> names = List.of("Java", "Spring");
+
+List<Integer> numbers = List.of(10, 20, 30);
+
+printList(names);
+printList(numbers);
+```
+
+**핵심**
+
+- `<?>`는 요소 타입을 알 수 없는 제네릭 타입을 나타낸다.
+- `<? extends T>`는 T를 상한으로 제한한다.
+- `<? super T>`는 T를 하한으로 제한한다.
+- 제네릭 타입 간의 관계를 유연하게 다룰 수 있다.
+
+### 18. PECS 원칙
+
+PECS는 제네릭 와일드카드를 선택할 때 사용하는 대표적인 원칙이다.
+
+**PECS = Producer Extends, Consumer Super**
+
+```text
+          PECS
+            │
+      ┌─────┴─────┐
+      │           │
+      ▼           ▼
+   Producer    Consumer
+      │           │
+      ▼           ▼
+   extends       super
+      │           │
+      ▼           ▼
+   읽기 중심    쓰기 중심
+```
+
+**Producer Extends**
+
+데이터를 제공하는 쪽은 `extends`를 사용하는 것이 적합하다.
+
+```java
+import java.util.List;
+
+public static double sum(
+        List<? extends Number> numbers) {
+
+    double total = 0;
+
+    for (Number number : numbers) {
+        total += number.doubleValue();
+    }
+
+    return total;
+}
+```
+
+**사용 예제**
+
+```java
+List<Integer> ints = List.of(10, 20, 30);
+
+List<Double> doubles = List.of(1.5, 2.5);
+
+System.out.println(sum(ints));     // 60.0
+System.out.println(sum(doubles));  // 4.0
+```
+
+**Consumer Super**
+
+데이터를 받아들이는 쪽은 `super`를 사용하는 것이 적합하다.
+
+```java
+import java.util.List;
+
+public static void addNumbers(
+        List<? super Integer> list) {
+
+    list.add(10);
+    list.add(20);
+}
+```
+
+**사용 예제**
+
+```java
+List<Number> numbers = new java.util.ArrayList<>();
+
+addNumbers(numbers);
+```
+
+**extends와 super 비교**
+
+| 구분 | extends | super |
+|---|---|---|
+| 역할 | 상한 제한 | 하한 제한 |
+| 중심 동작 | 값 읽기 | 값 쓰기 |
+| 읽기 타입 | 상한 타입으로 읽기 가능 | 일반적으로 Object로 읽기 |
+| 쓰기 | 구체 타입을 알 수 없어 제한됨 | 하한 타입 값을 추가 가능 |
+| 예시 | `<? extends Number>` | `<? super Integer>` |
+
+**주의사항**
+
+- extends는 일반적으로 값을 읽는 작업에 적합하다.
+- super는 일반적으로 값을 추가하는 작업에 적합하다.
+- `List<Integer>`는 `List<Number>`의 하위 타입이 아니다.
+- `List<? extends Number>`에는 일반적으로 Integer나 Double 값을 직접 추가할 수 없다.
+- `List<? super Integer>`에서 꺼낸 값의 구체적인 타입은 컴파일 시점에 알 수 없으므로 Object로 취급한다.
+
+### 19. 제네릭 타입의 주의사항
+
+제네릭은 컴파일 시 타입 안정성을 제공하지만 모든 타입 정보가 런타임에 그대로 유지되는 것은 아니다.
+
+**타입 소거(Type Erasure)**
+
+Java 제네릭은 일반적으로 컴파일 과정에서 타입 매개변수가 소거된다.
+
+```java
+Box<String> stringBox = new Box<>();
+
+Box<Integer> intBox = new Box<>();
+```
+
+위 객체들은 서로 다른 타입 인자를 사용하지만, 런타임에는 동일한 Box 클래스가 사용된다.
+
+**주요 제한사항**
+
+| 제한사항 | 설명 |
+|---|---|
+| 기본형 사용 | `Box<int>` 직접 사용 불가 |
+| 타입 매개변수 직접 생성 | 일반적으로 `new T()` 불가 |
+| 제네릭 배열 생성 | 일반적으로 `new T[10]` 불가 |
+| 타입 검사 | `instanceof List<String>` 불가 |
+| 타입 소거 | 일부 제네릭 타입 정보가 런타임에 유지되지 않음 |
+
+**올바른 기본형 처리**
+
+```java
+Box<Integer> box = new Box<>();
+
+box.setValue(100);
+```
+
+**핵심**
+
+- 제네릭은 주로 컴파일 시 타입 안정성을 제공한다.
+- 구체적인 제네릭 타입 인자가 모두 런타임에 유지되는 것은 아니다.
+- 제네릭 컬렉션은 Wrapper 타입과 함께 사용한다.
+- Raw Type 사용은 타입 안정성을 약화시킬 수 있다.
+
+---
+
+### 20. Reflection과 Annotation의 관계
+
+리플렉션과 어노테이션은 프레임워크의 자동화 기능을 이해하기 위한 중요한 개념이다.
+
+**각 기술의 역할**
+
+| 기술 | 역할 |
+|---|---|
+| Annotation | 코드에 의미 있는 메타데이터 선언 |
+| Reflection | 런타임에 타입과 메타데이터 조회 |
+| Generic | 코드의 타입 안정성 확보 |
+
+**동작 구조**
+
+```text
+        Java 클래스
+             │
+             ▼
+      어노테이션 선언
+             │
+             ▼
+       프로그램 실행
+             │
+             ▼
+      Reflection 검사
+             │
+             ▼
+    어노테이션 정보 해석
+             │
+             ▼
+       지정된 기능 처리
+```
+
+**활용 사례**
+
+- Spring의 컴포넌트 검색
+- Spring MVC의 요청 매핑
+- JPA의 엔티티 메타데이터 처리
+- JUnit의 테스트 메서드 탐색
+
+**핵심**
+
+어노테이션은 정보를 표시하고, 리플렉션은 런타임에 그 정보를 조회하여 프레임워크의 기능을 구성하는 데 활용된다.
+
+단, 프레임워크의 모든 동작이 리플렉션만으로 구현되는 것은 아니다.
+
+### 21. Java 코어 라이브러리와 Spring Boot
+
+Spring Boot는 Java의 객체지향 설계와 표준 라이브러리 기능을 바탕으로 동작한다.
+
+**주요 기술 연결**
+
+| Java 개념 | Spring Boot 활용 |
+|---|---|
+| 인터페이스 | 의존성 분리 및 DI |
+| 다형성 | 구현 객체 교체 |
+| 제네릭 | 다양한 타입의 데이터 처리 |
+| Annotation | Controller, Service 등의 선언 |
+| Reflection | 클래스 및 어노테이션 정보 분석 |
+| Regex | 요청 데이터 검증 |
+| Date/Time | 날짜·시간 데이터 관리 |
+| Wrapper | 요청 값 변환 및 nullable 데이터 처리 |
+| Object | 객체 동등성 및 공통 기능 |
+
+**Spring MVC의 요청 처리 개념**
+
+```text
+        HTTP Request
+              │
+              ▼
+      Spring MVC 처리
+              │
+              ▼
+      어노테이션 정보 확인
+              │
+              ▼
+      요청 경로 및 메서드 매핑
+              │
+              ▼
+       Controller 호출
+              │
+              ▼
+         Service 호출
+              │
+              ▼
+         데이터 처리
+              │
+              ▼
+        HTTP Response
+```
+
+**Spring 어노테이션 예시**
+
+```java
+@RestController
+public class MemberController {
+
+    @GetMapping("/members/{id}")
+    public String getMember(@PathVariable Long id) {
+        return "Member ID: " + id;
+    }
+}
+```
+
+※ 위 예제는 Spring Web 의존성 및 import가 필요한 Spring Boot 코드이다.
+
+**주요 어노테이션**
+
+| 어노테이션 | 역할 |
+|---|---|
+| `@RestController` | REST 응답을 처리하는 Controller 선언 |
+| `@GetMapping` | HTTP GET 요청 경로 매핑 |
+| `@PathVariable` | URL 경로 변수 바인딩 |
+| `@Service` | 서비스 계층의 컴포넌트 선언 |
+| `@Transactional` | 트랜잭션 처리 경계 선언 |
+
+**핵심**
+
+- Spring은 Java의 기본 문법과 객체지향 개념을 활용한다.
+- 어노테이션은 프레임워크가 처리할 메타데이터를 제공한다.
+- 리플렉션은 타입과 메타데이터를 런타임에 분석하는 데 활용된다.
+- 제네릭은 데이터 및 API 타입을 안전하게 다루는 데 중요하다.
+
+### 22. JSON과 Java 객체 변환
+
+JSON(JavaScript Object Notation)은 시스템 사이에서 구조화된 데이터를 주고받을 때 사용하는 데이터 형식이다.
+
+**JSON 예제**
+
+```json
+{
+  "name": "홍길동",
+  "age": 20
+}
+```
+
+Java에서는 Jackson 등의 라이브러리를 이용해 객체와 JSON 문자열을 변환할 수 있다.
+
+**변환 흐름**
+
+```text
+       Java 객체
+           │
+           ▼
+    JSON 직렬화
+           │
+           ▼
+      JSON 문자열
+           │
+           ▼
+    JSON 역직렬화
+           │
+           ▼
+       Java 객체
+```
+
+**주요 개념**
+
+| 용어 | 의미 |
+|---|---|
+| Serialization | 객체를 JSON 등의 형식으로 변환 |
+| Deserialization | JSON 등의 데이터를 객체로 변환 |
+| ObjectMapper | Jackson의 객체 변환 기능 |
+| DTO | 계층이나 시스템 사이에서 데이터를 전달하는 객체 |
+
+**주의사항**
+
+- JSON은 Java 객체를 표현할 수 있는 데이터 교환 형식이다.
+- Jackson은 Java 표준 `java.base` 모듈이 아닌 외부 라이브러리이다.
+- Spring Boot에서는 JSON 기반 요청·응답 처리에 Jackson 등의 메시지 변환기를 활용할 수 있다.
+- 입력 데이터 검증과 JSON 변환은 서로 다른 작업이다.
+
+### 23. 실무에서 라이브러리 선택 기준
+
+| 상황 | 적합한 기능 |
+|---|---|
+| 객체의 동등성 비교 | equals(), hashCode() |
+| 객체의 문자열 표현 | toString() |
+| 일반적인 문자열 처리 | String |
+| 반복적인 문자열 조합 | StringBuilder |
+| 숫자 문자열 변환 | Wrapper의 parse 메서드 |
+| 수학 계산 | Math |
+| 실행 시간 측정 | System.nanoTime() |
+| 실행 환경 정보 조회 | System.getProperty(), getenv() |
+| 날짜 및 시간 관리 | java.time |
+| 통화 및 숫자 표시 | NumberFormat, DecimalFormat |
+| 날짜 문자열 변환 | DateTimeFormatter |
+| 문자열 형식 검증 | Pattern, Matcher |
+| 런타임 클래스 분석 | Reflection |
+| 클래스 및 메서드 메타데이터 | Annotation |
+| 다양한 타입을 안전하게 처리 | Generic |
+| 읽기 중심 제네릭 타입 | extends 와일드카드 |
+| 쓰기 중심 제네릭 타입 | super 와일드카드 |
+| 객체와 JSON 변환 | Jackson 등 외부 라이브러리 |
+
+### 24. 코어 라이브러리 및 제네릭 사용 시 주의사항
+
+| 주의사항 | 설명 |
+|---|---|
+| java.base와 java.lang 혼동 | 모듈과 패키지를 구분 |
+| Object.equals() | 기본 구현은 참조 동일성 비교 |
+| equals() 재정의 | hashCode() 규칙도 고려 |
+| String 비교 | `==` 대신 내용 비교는 equals() 사용 |
+| String 불변성 | 변경 메서드의 반환 결과 확인 |
+| StringBuilder | 동시 수정 시 별도 동기화 고려 |
+| Wrapper | null 언박싱 시 예외 발생 |
+| 숫자 변환 | 잘못된 문자열로 인한 예외 주의 |
+| Math 계산 | 정수 나눗셈과 실수 나눗셈 구분 |
+| 시간 측정 | 경과 시간에는 nanoTime() 활용 |
+| 날짜 관리 | LocalDateTime과 시간대 정보 구분 |
+| 형식 클래스 | Locale과 형식 패턴 확인 |
+| 정규표현식 | 전체 일치와 부분 검색 구분 |
+| Reflection | 성능 비용과 접근 권한 고려 |
+| Annotation | 메타데이터와 실제 처리 로직 구분 |
+| Generic | 기본형은 직접 타입 인자로 사용 불가 |
+| Generic 타입 소거 | 런타임 타입 정보의 한계 이해 |
+| 와일드카드 | extends와 super의 용도 구분 |
+| PECS | Producer Extends, Consumer Super |
+| JSON | 외부 라이브러리와 표준 라이브러리 구분 |
+
+### ✅ Day21 핵심 정리
+
+| 학습 내용 | 핵심 개념 |
+|---|---|
+| Core Library | Java 기본 라이브러리 |
+| java.base | Java 플랫폼의 필수 모듈 |
+| java.lang | 기본 클래스 및 언어 핵심 기능 |
+| Object | 모든 클래스의 최상위 부모 |
+| equals() | 객체 동등성 비교 |
+| hashCode() | 객체 해시 코드 |
+| toString() | 객체의 문자열 표현 |
+| String | 불변 문자열 |
+| StringBuilder | 가변 문자열 |
+| StringBuffer | 주요 메서드가 동기화된 가변 문자열 |
+| Wrapper | 기본형의 객체 표현 |
+| Auto-boxing | 기본형에서 Wrapper로 자동 변환 |
+| Unboxing | Wrapper에서 기본형으로 자동 변환 |
+| System | 시스템 속성 및 시간 측정 |
+| Math | 수학 계산 |
+| java.time | 날짜와 시간 API |
+| LocalDate | 날짜 |
+| LocalTime | 시간 |
+| LocalDateTime | 날짜와 시간 |
+| ZonedDateTime | 시간대가 포함된 날짜와 시간 |
+| DateTimeFormatter | 날짜·시간 형식 지정 |
+| DecimalFormat | 숫자 형식 지정 |
+| NumberFormat | 통화 및 숫자 형식 지정 |
+| Regex | 문자열 패턴 검사 |
+| Pattern | 정규표현식 패턴 |
+| Matcher | 패턴 일치 검사 및 검색 |
+| Reflection | 런타임 클래스 정보 조회 |
+| Class | 타입 정보 |
+| Field | 필드 정보 |
+| Method | 메서드 정보 |
+| Annotation | 메타데이터 선언 |
+| @Target | 어노테이션 적용 대상 |
+| @Retention | 어노테이션 유지 범위 |
+| Generic | 타입 안정성과 재사용성 |
+| Generic Class | 타입 매개변수를 가진 클래스 |
+| Generic Method | 타입 매개변수를 가진 메서드 |
+| Bounded Type | 제네릭 타입의 상한 제한 |
+| Wildcard | 유연한 타입 범위 지정 |
+| extends | 상한 제한, 읽기 중심 |
+| super | 하한 제한, 쓰기 중심 |
+| PECS | Producer Extends, Consumer Super |
+| Type Erasure | 컴파일 과정의 제네릭 타입 소거 |
+| JSON | 구조화된 데이터 교환 형식 |
+| ObjectMapper | Jackson의 객체 변환 클래스 |
+
+**최종 학습 정리**
+
+- Java 코어 라이브러리는 프로그램 개발에 필요한 공통 기능을 제공한다.
+- java.base는 Java에서 기본적으로 의존하는 필수 모듈이다.
+- java.lang은 별도의 import 없이 사용하는 기본 패키지이다.
+- Object는 모든 클래스의 최상위 부모이며 객체의 공통 기능을 제공한다.
+- 객체 동등성 비교 시 equals()와 hashCode()의 일관성이 중요하다.
+- String은 불변 객체이며 반복적인 문자열 조합에는 StringBuilder를 고려할 수 있다.
+- StringBuffer는 주요 메서드에 동기화를 제공한다.
+- Wrapper는 기본형 값을 객체로 다루거나 문자열을 숫자로 변환할 때 사용한다.
+- System은 실행 환경 조회 및 시간 측정 기능을 제공한다.
+- Math는 수학 계산에 필요한 정적 메서드를 제공한다.
+- java.time은 날짜와 시간을 처리하는 현대적인 Java API이다.
+- LocalDate, LocalTime, LocalDateTime, ZonedDateTime은 서로 다른 시간 정보를 표현한다.
+- DateTimeFormatter는 날짜와 시간을 원하는 문자열 형식으로 변환한다.
+- NumberFormat과 DecimalFormat은 숫자 및 통화 데이터를 보기 좋은 형태로 표현한다.
+- 정규표현식은 문자열이 지정한 패턴에 맞는지 검사하거나 필요한 정보를 추출한다.
+- Pattern은 정규표현식을 컴파일하고 Matcher는 패턴과 입력을 비교한다.
+- Reflection은 런타임에 클래스, 필드, 메서드 등의 정보를 조회한다.
+- Annotation은 클래스와 메서드 등에 메타데이터를 선언하는 기능이다.
+- @Target은 적용 위치를, @Retention은 유지 범위를 지정한다.
+- 제네릭은 컴파일 시 타입 안정성을 확보하고 코드 재사용성을 높인다.
+- 제네릭 클래스는 클래스 사용 시 타입을 지정한다.
+- 제네릭 메서드는 메서드 호출 시 타입을 결정할 수 있다.
+- extends는 타입의 상한을 제한한다.
+- super는 타입의 하한을 제한한다.
+- PECS는 읽기 중심에는 extends, 쓰기 중심에는 super를 사용하는 원칙이다.
+- Java 제네릭은 일반적으로 타입 소거 방식으로 구현된다.
+- Reflection과 Annotation은 Spring 등의 프레임워크 자동화 기능에 활용된다.
+- JSON은 시스템 간 데이터 교환에 사용하며 Jackson 등의 라이브러리로 Java 객체와 변환할 수 있다.
+- Java 라이브러리는 메서드 이름을 암기하기보다 역할과 사용 시점을 이해하는 것이 중요하다.
+
+</details>
+
+
+## Day22. Java 코어 라이브러리 실전 활용 및 자동화
+<details>
+
+### 🎯 학습 목표
+- Java 코어 라이브러리의 주요 기능과 사용 목적을 복습한다.
+- Object 클래스의 객체 비교와 복사 원리를 이해한다.
+- Wrapper 클래스와 제네릭의 관계를 이해한다.
+- String, StringBuilder, StringBuffer의 차이를 구분한다.
+- Math와 System의 주요 정적 메서드를 활용한다.
+- java.time의 날짜·시간 처리 방법을 이해한다.
+- Period와 Duration의 차이를 구분한다.
+- 숫자와 날짜 데이터를 원하는 형식으로 변환한다.
+- 정규표현식의 주요 기호와 이스케이프 규칙을 이해한다.
+- Pattern과 Matcher를 이용하여 데이터를 검증·추출·치환한다.
+- 어노테이션과 리플렉션의 역할을 구분한다.
+- 사용자 정의 어노테이션을 작성하고 실행 시점에 읽을 수 있다.
+- 리플렉션을 이용하여 메서드를 동적으로 실행한다.
+- 어노테이션 기반 자동화 스캐너의 동작 원리를 이해한다.
+- 간단한 라우터를 구현하여 프레임워크의 기본 구조를 이해한다.
+
+---
+
+### 1. Java 코어 라이브러리의 전체 구조
+
+Java 코어 라이브러리는 프로그램에서 반복적으로 필요한 기능을 미리 구현하여 제공하는 표준 API이다.
+
+이번 학습에서는 각 라이브러리를 개별적으로 사용하는 방법뿐 아니라, 여러 기능을 조합하여 자동화 시스템을 구성하는 방법을 학습한다.
+
+**주요 라이브러리 분류**
+
+| 영역 | 주요 클래스 | 핵심 기능 |
+|---|---|---|
+| 객체 관리 | Object | 동등성 비교, 문자열 표현, 복사 |
+| 데이터 변환 | Wrapper | 기본형 객체화, 숫자 변환 |
+| 문자열 처리 | String | 문자열 검색 및 비교 |
+| 문자열 조합 | StringBuilder, StringBuffer | 가변 문자열 처리 |
+| 수학 계산 | Math | 수학 연산 및 난수 |
+| 시스템 관리 | System | 환경 정보, 시간 측정 |
+| 날짜 및 시간 | java.time | 날짜·시간 계산 |
+| 기간 계산 | Period, Duration | 날짜 및 시간 간격 계산 |
+| 형식 변환 | java.text | 숫자 및 날짜 표시 |
+| 문자열 검증 | Pattern, Matcher | 정규표현식 처리 |
+| 메타데이터 | Annotation | 코드에 부가 정보 선언 |
+| 동적 제어 | Reflection | 런타임 타입 분석 및 호출 |
+
+**학습 흐름**
+
+```text
+             Java Core Library
+                     │
+          ┌──────────┼──────────┐
+          │          │          │
+          ▼          ▼          ▼
+      데이터 처리   데이터 검증    동적 제어
+          │          │          │
+          ▼          ▼          ▼
+    String/Wrapper  Regex    Annotation
+    Math/Time                 Reflection
+          │          │          │
+          └──────────┼──────────┘
+                     │
+                     ▼
+             자동화 시스템 구현
+                     │
+                     ▼
+             프레임워크 원리 이해
+```
+
+**핵심**
+
+- 데이터 처리는 값의 변환 및 계산을 담당한다.
+- 정규표현식은 문자열의 패턴 검증과 추출을 담당한다.
+- 어노테이션은 메타데이터를 선언한다.
+- 리플렉션은 런타임에 클래스 정보를 분석하고 동작을 호출할 수 있다.
+- 여러 기능을 연결하면 반복 작업을 자동화할 수 있다.
+
+### 2. Object 클래스와 객체 비교
+
+Object는 모든 Java 클래스가 직간접적으로 상속하는 최상위 클래스이다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `toString()` | 객체의 문자열 표현 |
+| `equals()` | 객체의 동등성 비교 |
+| `hashCode()` | 객체의 해시 코드 |
+| `getClass()` | 런타임 클래스 정보 |
+| `clone()` | 객체 복제 기능 지원 |
+
+**참조 비교와 내용 비교**
+
+```java
+String a = new String("Java");
+String b = new String("Java");
+
+System.out.println(a == b);      // false
+System.out.println(a.equals(b)); // true
+```
+
+**비교 구조**
+
+```text
+      변수 a                 변수 b
+         │                     │
+         ▼                     ▼
+   String 객체 A         String 객체 B
+       "Java"                "Java"
+
+==        : 서로 다른 객체이므로 false
+equals()  : 문자열 내용이 같으므로 true
+```
+
+**주의사항**
+
+- 참조 타입에 대한 `==`는 같은 객체를 참조하는지 검사한다.
+- Object의 기본 `equals()`는 참조 동일성을 비교한다.
+- String은 내용 기반 비교를 위해 `equals()`를 재정의한다.
+- equals()를 재정의할 때는 hashCode() 규칙도 함께 고려해야 한다.
+
+### 3. 객체 복사와 참조형 메모리
+
+Java에서 참조형 변수를 다른 변수에 대입하면 객체 자체가 복제되는 것이 아니라 참조값이 복사된다.
+
+**참조값 복사**
+
+```java
+class Member {
+    String name;
+}
+
+Member a = new Member();
+a.name = "홍길동";
+
+Member b = a;
+
+b.name = "김철수";
+
+System.out.println(a.name); // 김철수
+```
+
+**메모리 구조**
+
+```text
+       Member a ──────┐
+                      │
+                      ▼
+                 Member 객체
+                 name = 김철수
+                      ▲
+                      │
+       Member b ──────┘
+```
+
+**얕은 복사(Shallow Copy)**
+
+객체 자체를 새로 생성하더라도 내부의 참조형 필드가 같은 객체를 가리킬 수 있는 복사 방식이다.
+
+**깊은 복사(Deep Copy)**
+
+내부에서 참조하는 변경 가능한 객체까지 필요에 따라 별도로 복제하는 방식이다.
+
+| 구분 | 참조값 복사 | 얕은 복사 | 깊은 복사 |
+|---|---|---|---|
+| 최상위 객체 | 동일 객체 | 새 객체 | 새 객체 |
+| 내부 참조형 객체 | 공유 | 공유 가능 | 필요한 객체를 복제 |
+| 데이터 독립성 | 낮음 | 일부만 독립 | 복제 범위만큼 독립 |
+
+**clone() 주의**
+
+강의자료에서는 clone()을 깊은 복사와 연결해 설명하지만, Object의 기본 clone() 동작은 얕은 복사이다.
+
+깊은 복사가 필요하다면 내부 참조형 객체까지 직접 복사하거나 복사 생성자 등을 구현해야 한다.
+
+또한 Java의 메서드 인자 전달 방식은 항상 값에 의한 전달(Call by Value)이다. 참조형 인자를 전달할 때도 참조값이 복사되어 전달된다.
+
+### 4. Wrapper 클래스와 제네릭
+
+Wrapper 클래스는 기본형 값을 객체로 다룰 수 있도록 제공하는 클래스이다.
+
+**기본형과 Wrapper**
+
+| 기본형 | Wrapper |
+|---|---|
+| byte | Byte |
+| short | Short |
+| int | Integer |
+| long | Long |
+| float | Float |
+| double | Double |
+| char | Character |
+| boolean | Boolean |
+
+**박싱(Boxing)**
+
+```java
+int number = 100;
+
+Integer boxed = number;
+```
+
+**언박싱(Unboxing)**
+
+```java
+Integer boxed = 100;
+
+int number = boxed;
+```
+
+**제네릭과의 관계**
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+List<Integer> numbers = new ArrayList<>();
+
+numbers.add(100);
+numbers.add(200);
+
+int value = numbers.get(0);
+```
+
+**중요한 차이**
+
+```java
+// List<int> numbers; // 컴파일 오류
+
+List<Integer> numbers = new ArrayList<>();
+```
+
+- 제네릭 타입 인자는 참조 타입이어야 한다.
+- 기본형 int 대신 Integer를 사용한다.
+- 오토박싱과 언박싱으로 기본형처럼 간편하게 사용할 수 있다.
+- null인 Wrapper 객체를 언박싱하면 NullPointerException이 발생한다.
+
+**문자열 숫자 변환**
+
+```java
+int age = Integer.parseInt("25");
+
+double score = Double.parseDouble("95.5");
+```
+
+**핵심**
+
+Wrapper는 기본형과 객체 중심 API를 연결하는 역할을 수행한다.
+
+### 5. String과 가변 문자열
+
+String은 불변(Immutable) 객체이며, StringBuilder와 StringBuffer는 가변(Mutable) 객체이다.
+
+**비교**
+
+| 구분 | String | StringBuilder | StringBuffer |
+|---|---|---|---|
+| 변경 가능 여부 | 불변 | 가변 | 가변 |
+| 문자열 결합 | 결과 문자열 생성 | 내부 버퍼 변경 | 내부 버퍼 변경 |
+| 동기화 | 불변 객체 | 없음 | 주요 메서드 제공 |
+| 사용 목적 | 일반 문자열 처리 | 반복적인 문자열 조합 | 동기화가 필요한 문자열 조작 |
+
+**String**
+
+```java
+String text = "Java";
+
+text.concat(" Spring");
+
+System.out.println(text); // Java
+```
+
+**StringBuilder**
+
+```java
+StringBuilder builder = new StringBuilder();
+
+builder.append("Java");
+builder.append(" Spring");
+
+System.out.println(builder.toString());
+// Java Spring
+```
+
+**StringBuffer**
+
+```java
+StringBuffer buffer = new StringBuffer();
+
+buffer.append("Java");
+buffer.append(" Spring");
+```
+
+**선택 기준**
+
+```text
+      문자열을 다루는가?
+              │
+              ▼
+     반복적인 변경이 필요한가?
+          │            │
+         No           Yes
+          │            │
+          ▼            ▼
+        String      StringBuilder
+                       │
+                       ▼
+                동시 수정이 필요한가?
+                       │
+                       ▼
+                StringBuffer 또는
+                별도의 동기화 설계
+```
+
+**주의사항**
+
+- String의 불변성이 곧 모든 문자열 처리의 성능 저하를 의미하지는 않는다.
+- 단순한 문자열 결합은 컴파일러와 JVM이 최적화할 수 있다.
+- StringBuffer는 주요 메서드에 동기화를 적용하지만 복합 작업 전체의 안전성까지 자동으로 보장하지 않는다.
+
+### 6. Math와 System의 활용
+
+Math는 수학 계산에 필요한 정적 메서드를 제공한다.
+
+**주요 Math 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `abs()` | 절댓값 |
+| `max()` | 최댓값 |
+| `min()` | 최솟값 |
+| `ceil()` | 올림 |
+| `floor()` | 내림 |
+| `round()` | 반올림 |
+| `sqrt()` | 제곱근 |
+| `random()` | 난수 생성 |
+
+**사용 예제**
+
+```java
+System.out.println(Math.abs(-10));   // 10
+System.out.println(Math.ceil(3.2));  // 4.0
+System.out.println(Math.round(3.5)); // 4
+```
+
+**페이지 수 계산**
+
+```java
+int total = 103;
+int pageSize = 10;
+
+int pages = (int) Math.ceil(
+    (double) total / pageSize
+);
+
+System.out.println(pages); // 11
+```
+
+**System 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `currentTimeMillis()` | 현재 시각 조회 |
+| `nanoTime()` | 경과 시간 측정 |
+| `getProperty()` | 시스템 속성 조회 |
+| `getenv()` | 환경 변수 조회 |
+| `arraycopy()` | 배열 복사 |
+| `gc()` | 가비지 컬렉션 수행 요청 |
+
+**실행 시간 측정**
+
+```java
+long start = System.nanoTime();
+
+int sum = 0;
+
+for (int i = 0; i < 100000; i++) {
+    sum += i;
+}
+
+long end = System.nanoTime();
+
+System.out.println(end - start);
+```
+
+**핵심**
+
+- Math는 객체 생성 없이 정적 메서드로 호출한다.
+- System은 시스템 환경 및 실행 정보를 다룬다.
+- 경과 시간 측정은 일반적으로 nanoTime()을 사용한다.
+- System.gc()는 GC 실행 요청이며 즉시 실행을 보장하지 않는다.
+
+### 7. java.time 날짜와 시간 처리
+
+java.time은 Java의 현대적인 날짜와 시간 API이다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| LocalDate | 날짜 |
+| LocalTime | 시간 |
+| LocalDateTime | 날짜와 시간 |
+| ZonedDateTime | 시간대 포함 |
+| Instant | 시간선의 특정 시점 |
+| Period | 날짜 기반 간격 |
+| Duration | 시간 기반 간격 |
+
+**기본 예제**
+
+```java
+import java.time.*;
+
+LocalDate date = LocalDate.of(2026, 11, 9);
+
+LocalTime time = LocalTime.of(14, 30);
+
+LocalDateTime dateTime =
+    LocalDateTime.of(date, time);
+
+System.out.println(dateTime);
+// 2026-11-09T14:30
+```
+
+**날짜 변경**
+
+```java
+LocalDate today = LocalDate.of(2026, 11, 9);
+
+LocalDate result = today.plusDays(10);
+
+System.out.println(result);
+// 2026-11-19
+```
+
+**핵심**
+
+- java.time의 주요 날짜·시간 타입은 불변이다.
+- plusDays()는 기존 객체를 수정하지 않는다.
+- 계산된 날짜를 사용하려면 반환값을 저장해야 한다.
+- LocalDateTime은 시간대 정보를 포함하지 않는다.
+
+### 8. Period와 Duration의 차이
+
+Period와 Duration은 두 시점 사이의 간격을 표현하지만 기준 단위가 다르다.
+
+**Period**
+
+Period는 연, 월, 일 단위의 날짜 기반 간격을 표현한다.
+
+```java
+import java.time.LocalDate;
+import java.time.Period;
+
+LocalDate start = LocalDate.of(2026, 1, 1);
+LocalDate end = LocalDate.of(2026, 11, 9);
+
+Period period = Period.between(start, end);
+
+System.out.println(period.getYears());  // 0
+System.out.println(period.getMonths()); // 10
+System.out.println(period.getDays());   // 8
+```
+
+**Duration**
+
+Duration은 시간 기반 간격을 표현한다.
+
+```java
+import java.time.LocalTime;
+import java.time.Duration;
+
+LocalTime start = LocalTime.of(9, 0);
+LocalTime end = LocalTime.of(18, 0);
+
+Duration duration = Duration.between(start, end);
+
+System.out.println(duration.toHours()); // 9
+```
+
+**비교**
+
+| 구분 | Period | Duration |
+|---|---|---|
+| 기준 | 날짜 기반 | 시간 기반 |
+| 주요 단위 | 연, 월, 일 | 초, 나노초 |
+| 사용 예시 | 회원 가입 경과 기간 | 작업 소요 시간 |
+| 대표 메서드 | Period.between() | Duration.between() |
+
+**선택 기준**
+
+```text
+             시간 간격 계산
+                   │
+           ┌───────┴───────┐
+           │               │
+           ▼               ▼
+       연/월/일          시간/분/초
+           │               │
+           ▼               ▼
+         Period          Duration
+```
+
+**주의사항**
+
+- Period는 달력 기준의 연·월·일 간격을 표현한다.
+- Duration은 초와 나노초 기준의 간격을 표현한다.
+- 서로 다른 시간대의 실제 경과 시간을 다룰 때는 Instant 등 적절한 시점 타입을 고려해야 한다.
+
+### 9. 데이터 형식화(Formatting)
+
+데이터 형식화는 값을 사용자에게 읽기 쉬운 문자열 형태로 변환하는 과정이다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| DecimalFormat | 숫자 형식 지정 |
+| NumberFormat | 숫자 및 통화 형식 지정 |
+| SimpleDateFormat | 기존 Date 기반 날짜 형식 |
+| DateTimeFormatter | java.time 날짜·시간 형식 |
+
+**DecimalFormat 예제**
+
+```java
+import java.text.DecimalFormat;
+
+DecimalFormat format =
+    new DecimalFormat("#,###");
+
+System.out.println(format.format(1000000));
+// 1,000,000
+```
+
+**NumberFormat 예제**
+
+```java
+import java.text.NumberFormat;
+import java.util.Locale;
+
+NumberFormat format =
+    NumberFormat.getCurrencyInstance(Locale.KOREA);
+
+System.out.println(format.format(350000));
+```
+
+**DateTimeFormatter 예제**
+
+```java
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+LocalDateTime dateTime =
+    LocalDateTime.of(2026, 11, 9, 15, 30);
+
+DateTimeFormatter format =
+    DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd HH:mm:ss"
+    );
+
+System.out.println(dateTime.format(format));
+// 2026-11-09 15:30:00
+```
+
+**주의사항**
+
+- 데이터의 실제 타입과 출력용 문자열을 구분한다.
+- 새로운 java.time 코드에서는 DateTimeFormatter를 우선 고려한다.
+- SimpleDateFormat은 가변 객체이며 스레드 안전하지 않다.
+- 날짜 형식에서 MM은 월, mm은 분을 의미한다.
+- 문자열 형식화는 SQL 매개변수 바인딩을 대신하지 않는다. 데이터베이스 입력에는 PreparedStatement 등을 사용해야 한다.
+
+### 10. 정규표현식(Regex)의 활용 목적
+
+정규표현식은 특정 문자열 패턴을 정의하여 데이터를 검사하거나 필요한 부분을 찾는 기술이다.
+
+**주요 활용**
+
+| 활용 | 설명 |
+|---|---|
+| Validation | 문자열 형식 검사 |
+| Search | 특정 패턴 검색 |
+| Extraction | 필요한 문자열 추출 |
+| Replacement | 일치하는 문자열 치환 |
+
+**기본 흐름**
+
+```text
+           입력 문자열
+                │
+                ▼
+            정규표현식
+                │
+         ┌──────┼──────┐
+         │      │      │
+         ▼      ▼      ▼
+        검증    추출    치환
+         │      │      │
+         ▼      ▼      ▼
+       true/false  데이터  변경 문자열
+```
+
+**핵심**
+
+정규표현식은 문자열 처리에서 반복적인 조건 검사를 간결하게 표현할 수 있다.
+
+### 11. 정규표현식 주요 기호
+
+**문자 클래스**
+
+| 기호 | 의미 |
+|---|---|
+| `[0-9]` | 숫자 한 개 |
+| `[a-z]` | 영문 소문자 |
+| `[A-Z]` | 영문 대문자 |
+| `[가-힣]` | 지정한 한글 음절 범위 |
+| `\d` | 숫자 |
+| `\w` | 단어 문자 |
+| `\s` | 공백 문자 |
+| `.` | 기본적으로 줄바꿈을 제외한 임의의 문자 |
+
+**반복 및 수량**
+
+| 기호 | 의미 |
+|---|---|
+| `*` | 0개 이상 |
+| `+` | 1개 이상 |
+| `?` | 0개 또는 1개 |
+| `{n}` | 정확히 n개 |
+| `{n,m}` | n개 이상 m개 이하 |
+
+**위치 지정**
+
+| 기호 | 의미 |
+|---|---|
+| `^` | 입력의 시작 |
+| `$` | 입력의 끝 |
+| `\b` | 단어 경계 |
+
+**그룹화**
+
+```regex
+(\d{3})-(\d{4})-(\d{4})
+```
+
+- 첫 번째 괄호 : 첫 번째 번호
+- 두 번째 괄호 : 가운데 번호
+- 세 번째 괄호 : 마지막 번호
+
+괄호를 이용하여 일치한 데이터의 특정 부분을 추출할 수 있다.
+
+### 12. 정규표현식의 이스케이프(Escape)
+
+Java에서는 정규표현식을 문자열 리터럴에 작성할 때 역슬래시를 주의해야 한다.
+
+**정규표현식**
+
+```regex
+\d+
+```
+
+**Java 문자열**
+
+```java
+String regex = "\\d+";
+```
+
+**이유**
+
+```text
+   Java 소스 코드
+       "\\d+"
+          │
+          ▼
+   Java 문자열 처리
+          │
+          ▼
+        \d+
+          │
+          ▼
+   정규표현식 엔진
+          │
+          ▼
+      숫자 1개 이상
+```
+
+**주요 변환**
+
+| 정규표현식 | Java 문자열 |
+|---|---|
+| `\d` | `"\\d"` |
+| `\s` | `"\\s"` |
+| `\.` | `"\\."` |
+| `\w` | `"\\w"` |
+
+**핵심**
+
+정규표현식의 역슬래시를 Java 문자열에서 표현하려면 일반적으로 역슬래시를 한 번 더 작성해야 한다.
+
+### 13. Pattern과 Matcher
+
+Pattern은 정규표현식을 컴파일한 객체이고 Matcher는 실제 문자열과 비교하는 객체이다.
+
+**처리 흐름**
+
+```text
+        정규표현식
+             │
+             ▼
+      Pattern.compile()
+             │
+             ▼
+          Pattern
+             │
+             ▼
+      pattern.matcher()
+             │
+             ▼
+          Matcher
+             │
+      ┌──────┴──────┐
+      │             │
+      ▼             ▼
+   matches()       find()
+   전체 검사      부분 탐색
+```
+
+**Java 예제**
+
+```java
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+String text = "Java123Spring456";
+
+Pattern pattern = Pattern.compile("\\d+");
+
+Matcher matcher = pattern.matcher(text);
+
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+```
+
+**실행 결과**
+
+```text
+123
+456
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `matches()` | 전체 문자열 일치 검사 |
+| `find()` | 부분 문자열 검색 |
+| `group()` | 일치한 문자열 반환 |
+| `group(n)` | 지정한 그룹의 문자열 반환 |
+| `start()` | 일치 부분의 시작 인덱스 |
+| `end()` | 일치 부분의 끝 다음 인덱스 |
+
+### 14. matches()와 find()의 차이
+
+**matches()**
+
+입력 문자열 전체가 지정한 패턴과 일치해야 true를 반환한다.
+
+```java
+String text = "Java123Spring456";
+
+System.out.println(text.matches("\\d+"));
+// false
+```
+
+**find()**
+
+입력 문자열 내부에서 패턴과 일치하는 부분을 검색한다.
+
+```java
+import java.util.regex.*;
+
+Matcher matcher =
+    Pattern.compile("\\d+")
+           .matcher("Java123Spring456");
+
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+```
+
+**실행 결과**
+
+```text
+123
+456
+```
+
+**비교**
+
+| 구분 | matches() | find() |
+|---|---|---|
+| 검사 범위 | 전체 문자열 | 부분 문자열 |
+| 주요 목적 | 유효성 검사 | 데이터 추출 |
+| 반환 | boolean | boolean |
+| 그룹 추출 | 일치 성공 후 가능 | 일치 성공 후 가능 |
+
+**핵심**
+
+- 입력값이 규칙에 정확하게 맞아야 할 때는 matches()를 사용한다.
+- 긴 문자열에서 특정 데이터를 찾을 때는 find()를 사용한다.
+
+### 15. 그룹(Group)을 이용한 데이터 추출
+
+괄호 `()`로 정규표현식을 그룹화하면 일치한 문자열을 부분별로 추출할 수 있다.
+
+**전화번호 추출**
+
+```java
+import java.util.regex.*;
+
+String text = "전화번호: 010-1234-5678";
+
+Pattern pattern = Pattern.compile(
+    "(\\d{3})-(\\d{4})-(\\d{4})"
+);
+
+Matcher matcher = pattern.matcher(text);
+
+if (matcher.find()) {
+
+    System.out.println(matcher.group(0));
+    System.out.println(matcher.group(1));
+    System.out.println(matcher.group(2));
+    System.out.println(matcher.group(3));
+}
+```
+
+**실행 결과**
+
+```text
+010-1234-5678
+010
+1234
+5678
+```
+
+**그룹 구조**
+
+```text
+       010 - 1234 - 5678
+        │      │      │
+        ▼      ▼      ▼
+     group(1) group(2) group(3)
+
+group(0) = 전체 일치 문자열
+```
+
+**주의사항**
+
+- group(0)은 전체 일치 문자열이다.
+- group(1)부터 괄호로 묶은 그룹을 반환한다.
+- 일치에 성공하지 않은 상태에서 group()을 호출하면 예외가 발생한다.
+
+### 16. 정규표현식을 이용한 문자열 치환
+
+String의 `replaceAll()`은 정규표현식과 일치하는 부분을 지정한 문자열로 치환한다.
+
+**숫자 제거**
+
+```java
+String text = "Java123Spring456";
+
+String result = text.replaceAll("\\d+", "");
+
+System.out.println(result);
+// JavaSpring
+```
+
+**공백 정리**
+
+```java
+String text = "Java   Spring   Boot";
+
+String result = text.replaceAll("\\s+", " ");
+
+System.out.println(result);
+// Java Spring Boot
+```
+
+**replace()와 replaceAll()**
+
+| 메서드 | 의미 |
+|---|---|
+| `replace()` | 문자 또는 문자열을 그대로 치환 |
+| `replaceAll()` | 정규표현식과 일치하는 부분 치환 |
+| `replaceFirst()` | 첫 번째 일치 부분만 치환 |
+
+**핵심**
+
+정규표현식은 데이터 검증뿐 아니라 추출과 문자열 정리에도 활용할 수 있다.
+
+### 17. 실무 문자열 검증 예제
+
+**휴대전화 번호 검사**
+
+```java
+String phone = "010-1234-5678";
+
+boolean valid = phone.matches(
+    "^010-\\d{4}-\\d{4}$"
+);
+
+System.out.println(valid); // true
+```
+
+**간단한 이메일 형식 검사**
+
+```java
+String email = "test@example.com";
+
+boolean valid = email.matches(
+    "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+);
+```
+
+**주의사항**
+
+- 이메일 정규표현식은 흔히 사용하는 형식을 검사하는 단순 예제이다.
+- 실제 이메일의 모든 유효한 형식을 완벽하게 판별하지는 못한다.
+- 정규표현식 검증과 실제 데이터의 유효성 검증은 구분해야 한다.
+- 사용자 입력값은 서비스의 요구사항에 맞게 추가 검증해야 한다.
+
+---
+
+### 18. 어노테이션(Annotation)
+
+어노테이션은 클래스, 메서드, 필드 등에 추가 정보를 선언하는 메타데이터이다.
+
+컴파일러와 프레임워크는 어노테이션을 읽어 적절한 처리를 수행할 수 있다.
+
+**대표적인 어노테이션**
+
+| 어노테이션 | 역할 |
+|---|---|
+| `@Override` | 메서드 재정의 확인 |
+| `@Deprecated` | 사용 비권장 표시 |
+| `@SuppressWarnings` | 지정한 컴파일러 경고 억제 |
+| `@Target` | 어노테이션 적용 대상 설정 |
+| `@Retention` | 어노테이션 유지 범위 설정 |
+
+**어노테이션의 구조**
+
+```text
+         Java 코드
+             │
+             ▼
+        @Annotation
+             │
+             ▼
+        부가 정보 선언
+             │
+             ▼
+      컴파일러 / 프레임워크
+             │
+             ▼
+        지정된 방식으로 처리
+```
+
+**핵심**
+
+어노테이션 자체가 메서드를 자동으로 실행하는 것은 아니다.
+
+어노테이션을 해석하는 처리 코드가 있어야 기능이 수행된다.
+
+### 19. @Target과 @Retention
+
+사용자 정의 어노테이션에서는 적용 대상과 유지 범위를 지정할 수 있다.
+
+**@Target**
+
+| ElementType | 적용 대상 |
+|---|---|
+| TYPE | 클래스, 인터페이스 등 |
+| METHOD | 메서드 |
+| FIELD | 필드 |
+| PARAMETER | 매개변수 |
+| CONSTRUCTOR | 생성자 |
+
+**@Retention**
+
+| RetentionPolicy | 의미 |
+|---|---|
+| SOURCE | 소스 코드 수준에서만 사용 |
+| CLASS | 클래스 파일까지 유지 |
+| RUNTIME | 런타임 조회 가능 |
+
+**사용자 정의 어노테이션 예제**
+
+```java
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface MyExecute {
+}
+```
+
+**메서드에 적용**
+
+```java
+class StudentService {
+
+    @MyExecute
+    public void insertStudent() {
+        System.out.println("학생 등록");
+    }
+
+    public void deleteStudent() {
+        System.out.println("학생 삭제");
+    }
+}
+```
+
+**핵심**
+
+- MyExecute는 메서드에만 사용할 수 있다.
+- RUNTIME 유지 정책을 사용하므로 실행 중 리플렉션으로 조회할 수 있다.
+- 실제 자동 실행 여부는 별도의 처리 코드가 결정한다.
+
+### 20. 리플렉션(Reflection)
+
+리플렉션은 프로그램 실행 중 클래스의 구조와 메타데이터를 분석하거나 메서드를 동적으로 호출하는 기술이다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| Class | 타입 정보 조회 |
+| Field | 필드 정보 조회 및 접근 |
+| Method | 메서드 정보 조회 및 호출 |
+| Constructor | 생성자 정보 조회 및 객체 생성 |
+
+**리플렉션 처리 흐름**
+
+```text
+         Java 클래스
+              │
+              ▼
+         Class 객체
+              │
+              ▼
+       내부 구조 조회
+              │
+      ┌───────┼─────────┐
+      │       │         │
+      ▼       ▼         ▼
+    Field   Method   Constructor
+              │
+              ▼
+           invoke()
+              │
+              ▼
+         메서드 실행
+```
+
+**메서드 정보 조회**
+
+```java
+import java.lang.reflect.Method;
+
+Class<?> clazz = StudentService.class;
+
+Method[] methods = clazz.getDeclaredMethods();
+
+for (Method method : methods) {
+    System.out.println(method.getName());
+}
+```
+
+**메서드 동적 호출**
+
+```java
+import java.lang.reflect.Method;
+
+StudentService service = new StudentService();
+
+Method method = StudentService.class
+    .getDeclaredMethod("insertStudent");
+
+method.invoke(service);
+```
+
+※ 위 메서드 호출은 리플렉션 관련 Checked Exception을 처리하거나 전파해야 한다.
+
+**주의사항**
+
+- getDeclaredMethods()는 해당 클래스에서 선언한 메서드를 조회한다.
+- 반환되는 메서드의 순서는 보장되지 않는다.
+- 리플렉션은 일반적인 메서드 직접 호출보다 복잡하다.
+- private 멤버 접근은 접근 제어 및 모듈 제한의 영향을 받는다.
+
+### 21. Annotation과 Reflection의 관계
+
+Annotation과 Reflection을 결합하면 개발자가 특정 조건에 해당하는 메서드를 직접 호출하지 않아도 자동으로 실행하도록 설계할 수 있다.
+
+**각 기술의 역할**
+
+| 기술 | 역할 |
+|---|---|
+| Annotation | 실행 대상이나 규칙 선언 |
+| Reflection | 실행 중 메서드 및 어노테이션 조회 |
+| Method.invoke() | 선택된 메서드 호출 |
+
+**동작 구조**
+
+```text
+        @MyExecute 선언
+               │
+               ▼
+        메서드에 부착
+               │
+               ▼
+        Reflection 조회
+               │
+               ▼
+       어노테이션 존재 검사
+               │
+               ▼
+        대상 메서드 결정
+               │
+               ▼
+         Method.invoke()
+               │
+               ▼
+           메서드 실행
+```
+
+**핵심**
+
+어노테이션은 실행 대상을 표시하고, 리플렉션은 그 대상을 찾아 실행하는 역할을 수행할 수 있다.
+
+### 22. 어노테이션 기반 자동화 스캐너
+
+강의자료에서는 어노테이션과 리플렉션을 결합한 자동화 처리 구조를 다룬다.
+
+**5단계 자동화 파이프라인**
+
+```text
+  1. Define
+     어노테이션 정의
+          │
+          ▼
+  2. Attach
+     메서드에 적용
+          │
+          ▼
+  3. Search
+     Reflection으로 검색
+          │
+          ▼
+  4. Check
+     어노테이션 존재 확인
+          │
+          ▼
+  5. Execute
+     Method.invoke() 실행
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `getDeclaredMethods()` | 메서드 목록 조회 |
+| `isAnnotationPresent()` | 어노테이션 존재 확인 |
+| `getAnnotation()` | 어노테이션 정보 조회 |
+| `invoke()` | 메서드 실행 |
+
+**핵심**
+
+자동화 스캐너는 코드에서 실행 대상을 탐색하고, 조건에 맞는 메서드를 선택하여 실행하는 구조이다.
+
+### 23. 자동화 스캐너 구현 예제
+
+다음은 사용자 정의 어노테이션이 부착된 메서드만 순서대로 실행하는 예제이다.
+
+**전체 Java 예제**
+
+```java
+import java.lang.annotation.*;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Comparator;
+
+// 1. 어노테이션 정의
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface MyExecute {
+
+    int order();
+}
+
+// 2. 실행 대상 클래스
+class StudentService {
+
+    @MyExecute(order = 2)
+    public void insertStudent() {
+        System.out.println("2. 학생 등록");
+    }
+
+    @MyExecute(order = 1)
+    public void initialize() {
+        System.out.println("1. 초기화");
+    }
+
+    public void deleteStudent() {
+        System.out.println("실행 대상 아님");
+    }
+}
+
+// 3. 자동화 스캐너
+public class Day22Example {
+
+    public static void main(String[] args)
+            throws ReflectiveOperationException {
+
+        StudentService service = new StudentService();
+
+        // 메서드 조회
+        Method[] methods = StudentService.class
+                .getDeclaredMethods();
+
+        // 어노테이션이 있는 메서드만 선택 후 정렬
+        Method[] targets = Arrays.stream(methods)
+                .filter(method ->
+                    method.isAnnotationPresent(
+                        MyExecute.class
+                    )
+                )
+                .sorted(
+                    Comparator.comparingInt(method ->
+                        method.getAnnotation(
+                            MyExecute.class
+                        ).order()
+                    )
+                )
+                .toArray(Method[]::new);
+
+        // 동적 메서드 실행
+        for (Method method : targets) {
+            method.invoke(service);
+        }
+    }
+}
+```
+
+**실행 결과**
+
+```text
+1. 초기화
+2. 학생 등록
+```
+
+**실행 원리**
+
+1. @MyExecute 어노테이션을 선언한다.
+2. 실행할 메서드에 어노테이션을 적용한다.
+3. Reflection으로 클래스의 메서드 목록을 조회한다.
+4. 어노테이션이 있는 메서드만 선택한다.
+5. order 값을 기준으로 정렬한다.
+6. Method.invoke()로 메서드를 실행한다.
+
+**핵심**
+
+- 실행 대상을 어노테이션으로 구분할 수 있다.
+- 메서드 호출 순서를 메타데이터로 관리할 수 있다.
+- 새로운 대상 메서드를 추가하더라도 스캐너의 검색 코드를 그대로 재사용할 수 있다.
+- 일반적인 자바 메서드 실행이 아닌 런타임 기반 동적 제어를 경험할 수 있다.
+
+### 24. 리플렉션을 이용한 매개변수 전달
+
+Method.invoke()는 메서드 실행 시 매개변수도 전달할 수 있다.
+
+**예제**
+
+```java
+class GreetingService {
+
+    public void hello(String name) {
+        System.out.println("Hello " + name);
+    }
+}
+```
+
+**동적 호출**
+
+```java
+import java.lang.reflect.Method;
+
+GreetingService service = new GreetingService();
+
+Method method = GreetingService.class
+        .getDeclaredMethod("hello", String.class);
+
+method.invoke(service, "홍길동");
+```
+
+**실행 결과**
+
+```text
+Hello 홍길동
+```
+
+**핵심**
+
+- 메서드를 검색할 때 이름과 매개변수 타입을 지정할 수 있다.
+- invoke()에는 호출 대상 객체와 실제 매개변수를 전달한다.
+- 동적 호출도 메서드의 매개변수 타입과 개수를 지켜야 한다.
+
+### 25. Annotation 기반 입력 검증
+
+어노테이션은 데이터 검증 규칙을 표현하는 데도 활용할 수 있다.
+
+**개념적 구조**
+
+```text
+          입력 데이터
+               │
+               ▼
+       @RegexValidator
+        정규표현식 선언
+               │
+               ▼
+       Reflection 검사
+               │
+               ▼
+         Regex 검증
+               │
+               ▼
+        유효성 결과 반환
+```
+
+**개념 예제**
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@interface RegexValidator {
+    String regex();
+}
+```
+
+**사용 예제**
+
+```java
+class MemberRequest {
+
+    @RegexValidator(
+        regex = "^010-\\d{4}-\\d{4}$"
+    )
+    private String phone;
+}
+```
+
+**검증 엔진의 역할**
+
+- 필드에 붙은 어노테이션을 조회한다.
+- regex 속성의 문자열을 읽는다.
+- 해당 필드의 값을 가져온다.
+- Pattern 또는 Matcher로 형식을 검사한다.
+- 검사 결과에 따라 다음 처리 여부를 결정한다.
+
+※ 이 예제에서 어노테이션만 선언한다고 검증이 자동으로 실행되지는 않는다. Reflection을 사용하는 검증 처리 코드가 별도로 필요하다.
+
+**Spring과의 연결**
+
+Spring 기반 프로그램에서는 Jakarta Bean Validation의 `@Pattern` 같은 어노테이션을 활용할 수 있다.
+
+이때 검증 기능은 Java 기본 정규표현식만으로 자동 실행되는 것이 아니라, 검증 프레임워크와 Spring의 연동을 통해 수행된다.
+
+### 26. 미니 MVC 라우터의 동작 원리
+
+강의자료에서는 어노테이션과 리플렉션을 응용하여 간단한 라우터를 설계하는 방법을 설명한다.
+
+라우터는 입력된 경로와 실행할 메서드를 연결하는 역할을 수행한다.
+
+**처리 구조**
+
+```text
+        사용자 요청
+             │
+             ▼
+        요청 경로 확인
+             │
+             ▼
+      어노테이션 검색
+             │
+             ▼
+       경로 정보 비교
+             │
+             ▼
+        대상 메서드 결정
+             │
+             ▼
+       Method.invoke()
+             │
+             ▼
+          결과 반환
+```
+
+**일반적인 구현과 비교**
+
+```text
+[직접 분기 처리]
+
+if (path.equals("home")) {
+    home();
+} else if (path.equals("login")) {
+    login();
+}
+
+
+[Annotation + Reflection]
+
+@Route("home")
+public void home() {}
+
+@Route("login")
+public void login() {}
+```
+
+**핵심**
+
+- 요청 경로와 메서드의 관계를 어노테이션으로 정의할 수 있다.
+- 라우터는 런타임에 메서드의 메타데이터를 조회할 수 있다.
+- 일치하는 경로의 메서드를 동적으로 호출할 수 있다.
+
+### 27. 미니 라우터 구현 예제
+
+다음은 HTTP 서버 없이 문자열 경로를 받아 메서드를 실행하는 간단한 Java 예제이다.
+
+**Java 예제**
+
+```java
+import java.lang.annotation.*;
+import java.lang.reflect.Method;
+
+// 경로 어노테이션
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Route {
+
+    String value();
+}
+
+// 실행할 메서드
+class PageController {
+
+    @Route("home")
+    public void home() {
+        System.out.println("홈 페이지");
+    }
+
+    @Route("login")
+    public void login() {
+        System.out.println("로그인 페이지");
+    }
+}
+
+// 라우터
+public class MiniRouter {
+
+    public static void main(String[] args)
+            throws ReflectiveOperationException {
+
+        String path = "home";
+
+        PageController controller =
+            new PageController();
+
+        for (Method method :
+                PageController.class.getDeclaredMethods()) {
+
+            Route route = method.getAnnotation(
+                Route.class
+            );
+
+            if (route != null &&
+                route.value().equals(path)) {
+
+                method.invoke(controller);
+                break;
+            }
+        }
+    }
+}
+```
+
+**실행 결과**
+
+```text
+홈 페이지
+```
+
+**실행 과정**
+
+```text
+      path = "home"
+            │
+            ▼
+   PageController 검색
+            │
+            ▼
+     @Route 정보 조회
+            │
+            ▼
+      "home" 일치
+            │
+            ▼
+    home() 메서드 실행
+            │
+            ▼
+        홈 페이지
+```
+
+**핵심**
+
+- 메서드와 경로 정보를 분리할 수 있다.
+- 새로운 메서드에 @Route를 추가하여 처리 대상을 확장할 수 있다.
+- 이 예제는 라우팅 개념을 설명하기 위한 교육용 코드이다.
+- 실제 Spring MVC는 HTTP 메서드, 매개변수 바인딩, 예외 처리, 요청 매핑 등 훨씬 많은 기능을 제공한다.
+
+### 28. Java 자동화 원리와 Spring Framework
+
+Spring은 어노테이션과 런타임 메타데이터를 활용하여 다양한 자동화 기능을 제공한다.
+
+**Java 개념과 Spring 기능의 연결**
+
+| Java 개념 | Spring 활용 예시 |
+|---|---|
+| Annotation | @Component, @Service |
+| Reflection | 타입 및 메타데이터 분석 |
+| Method.invoke() | 동적 호출을 구현하는 수단 중 하나 |
+| 객체 생성 | Spring Bean 관리 |
+| @PostConstruct | 초기화 콜백 |
+| @Scheduled | 예약 작업 |
+| @GetMapping | GET 요청 매핑 |
+| AOP | 공통 관심사 분리 |
+
+**개념적인 처리 흐름**
+
+```text
+         개발자가 작성한 클래스
+                   │
+                   ▼
+           어노테이션 선언
+                   │
+                   ▼
+           Spring 컨테이너
+                   │
+                   ▼
+         컴포넌트 탐색 및 등록
+                   │
+                   ▼
+           객체 생성 및 관리
+                   │
+                   ▼
+         요청 및 이벤트 처리
+                   │
+                   ▼
+             메서드 실행
+```
+
+**주의사항**
+
+- Spring은 리플렉션 외에도 프록시, 메서드 핸들, 여러 내부 최적화 기술을 활용할 수 있다.
+- @GetMapping은 요청 경로를 선언하지만 실제 요청 처리는 Spring MVC의 여러 구성 요소가 담당한다.
+- @Scheduled는 해당 기능을 활성화하고 적절하게 설정해야 동작한다.
+- 어노테이션과 리플렉션을 이해하면 프레임워크의 내부 구조를 학습하는 데 도움이 된다.
+
+### 29. Java 라이브러리 종합 활용
+
+강의자료의 회원 관리 예시는 여러 Java 라이브러리를 하나의 기능으로 연결하는 구조이다.
+
+**회원 관리 시스템 예시**
+
+| 기능 | 활용 기술 |
+|---|---|
+| 나이 문자열 변환 | Integer.parseInt() |
+| 휴대전화 형식 검사 | Pattern.matches() |
+| 가입일 생성 | LocalDate.now() |
+| 가입 경과 기간 계산 | Period |
+| 회원 정보 문자열 조합 | StringBuilder |
+| 실행 메서드 자동 탐색 | Reflection |
+| 실행 대상 선언 | Annotation |
+
+**전체 구조**
+
+```text
+           회원 정보 입력
+                 │
+                 ▼
+           데이터 형식 검사
+              Regex
+                 │
+                 ▼
+           데이터 타입 변환
+             Wrapper
+                 │
+                 ▼
+           가입일 생성
+            java.time
+                 │
+                 ▼
+           회원 정보 생성
+                 │
+                 ▼
+          비즈니스 로직 처리
+                 │
+                 ▼
+            결과 문자열
+           StringBuilder
+                 │
+                 ▼
+              결과 출력
+```
+
+**핵심**
+
+각 라이브러리의 역할을 명확하게 구분하여 필요한 기능을 조합하는 것이 중요하다.
+
+### 30. 학습 시 주의사항
+
+| 주의사항 | 핵심 내용 |
+|---|---|
+| `==`와 equals() | 참조 동일성과 값 동등성 구분 |
+| equals()와 hashCode() | 재정의 시 동등성 규칙 유지 |
+| 참조값 대입 | 객체 복제가 아닌 참조값 복사 |
+| clone() | 기본 동작은 얕은 복사 |
+| Java 매개변수 전달 | 항상 값에 의한 전달 |
+| finalize() | 예측 가능한 자원 정리에 사용하지 않음 |
+| String | 불변성 및 반환값 확인 |
+| StringBuilder | 동기화되지 않은 가변 객체 |
+| StringBuffer | 주요 메서드 동기화, 복합 작업 별도 고려 |
+| Wrapper | null 언박싱 주의 |
+| Math | 정수 나눗셈과 형변환 주의 |
+| System.gc() | GC 실행 보장 없음 |
+| System.nanoTime() | 경과 시간 측정에 사용 |
+| LocalDateTime | 시간대 정보 없음 |
+| Period와 Duration | 날짜 기반과 시간 기반 구분 |
+| DateTimeFormatter | MM과 mm 구분 |
+| SimpleDateFormat | 가변 객체 및 스레드 안전성 주의 |
+| Regex | Java 문자열의 역슬래시 이스케이프 |
+| matches() | 전체 일치 검사 |
+| find() | 부분 일치 탐색 |
+| group() | 일치 성공 후 호출 |
+| Reflection | 접근 권한, 예외 처리, 성능 고려 |
+| getDeclaredMethods() | 반환 순서 보장 없음 |
+| Annotation | 자체적으로 기능을 실행하지 않음 |
+| @Retention | 런타임 조회에는 RUNTIME 필요 |
+| Method.invoke() | 대상 객체와 매개변수 확인 |
+| Spring | 실제 구현은 교육용 스캐너보다 복잡함 |
+
+### ✅ Day22 핵심 정리
+
+| 구분 | 핵심 개념 |
+|---|---|
+| Object | 최상위 클래스 |
+| equals() | 객체 동등성 비교 |
+| hashCode() | 객체 해시 코드 |
+| clone() | 객체 복제 지원 |
+| Shallow Copy | 내부 참조 객체를 공유할 수 있는 복사 |
+| Deep Copy | 내부 객체까지 별도 복제 |
+| Wrapper | 기본형의 객체 표현 |
+| Boxing | 기본형을 Wrapper로 변환 |
+| Unboxing | Wrapper를 기본형으로 변환 |
+| String | 불변 문자열 |
+| StringBuilder | 가변 문자열 |
+| StringBuffer | 주요 메서드가 동기화된 가변 문자열 |
+| Math | 수학 계산 |
+| System | 시스템 정보 및 실행 환경 |
+| java.time | 날짜·시간 처리 API |
+| LocalDate | 날짜 |
+| LocalTime | 시간 |
+| LocalDateTime | 날짜와 시간 |
+| Instant | 특정 시점 |
+| Period | 날짜 기반 간격 |
+| Duration | 시간 기반 간격 |
+| DecimalFormat | 숫자 형식 지정 |
+| NumberFormat | 숫자 및 통화 형식 |
+| DateTimeFormatter | 날짜·시간 형식 지정 |
+| Regex | 문자열 패턴 |
+| Pattern | 정규표현식 컴파일 |
+| Matcher | 정규표현식 검사 및 검색 |
+| matches() | 전체 일치 검사 |
+| find() | 부분 일치 검색 |
+| group() | 일치 문자열 추출 |
+| replaceAll() | 정규표현식 기반 문자열 치환 |
+| Annotation | 메타데이터 선언 |
+| @Target | 적용 대상 지정 |
+| @Retention | 유지 범위 지정 |
+| Reflection | 런타임 타입 정보 분석 |
+| Method | 리플렉션 메서드 정보 |
+| getDeclaredMethods() | 선언된 메서드 목록 조회 |
+| isAnnotationPresent() | 어노테이션 존재 확인 |
+| getAnnotation() | 어노테이션 정보 조회 |
+| invoke() | 메서드 동적 호출 |
+| Automation Scanner | 메타데이터 기반 실행 대상 검색 |
+| Routing | 요청과 처리 메서드 연결 |
+
+**최종 학습 정리**
+
+- Java 코어 라이브러리는 공통적인 데이터 처리 기능을 제공한다.
+- Object는 모든 클래스의 최상위 부모이다.
+- equals()는 객체 동등성 비교에 사용하고 hashCode()와의 규칙을 고려해야 한다.
+- 참조형 변수의 대입은 객체를 복제하지 않는다.
+- clone()의 기본 복제는 얕은 복사이다.
+- Wrapper는 기본형 데이터를 객체로 사용할 수 있도록 한다.
+- 제네릭 컬렉션에서는 Integer와 같은 Wrapper 타입을 활용한다.
+- String은 불변 객체이며 StringBuilder와 StringBuffer는 가변 객체이다.
+- Math는 수학 계산을 제공하고 System은 환경 정보와 시간 측정 기능을 제공한다.
+- java.time은 날짜 및 시간 데이터를 처리하기 위한 현대적인 API이다.
+- Period는 연·월·일 기반의 기간을 표현한다.
+- Duration은 초·나노초 기반의 시간 간격을 표현한다.
+- DecimalFormat과 NumberFormat은 숫자를 원하는 형식으로 출력한다.
+- DateTimeFormatter는 날짜와 시간을 원하는 문자열 형식으로 변환한다.
+- 정규표현식은 검증, 검색, 추출, 치환에 활용할 수 있다.
+- Pattern은 정규표현식을 컴파일하고 Matcher는 입력 문자열과 비교한다.
+- matches()는 전체 문자열 일치 여부를 검사한다.
+- find()는 문자열 내부에서 일치하는 부분을 탐색한다.
+- group()은 일치한 부분을 추출한다.
+- Java 문자열에 정규표현식을 작성할 때는 이스케이프 처리를 주의해야 한다.
+- Annotation은 클래스, 메서드, 필드 등에 메타데이터를 추가한다.
+- Reflection은 런타임에 클래스 구조와 어노테이션 정보를 분석할 수 있다.
+- Method.invoke()를 이용하면 메서드를 동적으로 호출할 수 있다.
+- Annotation과 Reflection을 결합하면 메서드 자동 검색 및 실행 시스템을 구성할 수 있다.
+- 자동화 스캐너는 Define → Attach → Search → Check → Execute 단계로 이해할 수 있다.
+- 메서드 실행 순서는 어노테이션 속성과 정렬 로직으로 지정할 수 있다.
+- 라우터는 요청 경로에 대응하는 처리 메서드를 선택하는 역할을 한다.
+- Spring Framework는 Java의 객체지향, 메타데이터, 런타임 처리 기능 등을 활용한다.
+- Java 라이브러리의 핵심은 개별 메서드 암기가 아니라 기능들을 연결하여 프로그램을 설계하는 것이다.
 
 </details>
