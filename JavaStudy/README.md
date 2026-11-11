@@ -24,6 +24,7 @@
 | **Day 20** | Java 1권 핵심 복습 및 표준 라이브러리 | JDK·JVM, 자료형·메모리, 객체지향 3대 특성, VO·DTO, java.lang, Object, String, StringBuilder·StringBuffer, Wrapper, Math·Character, System·Runtime, 컬렉션·Stream·I/O·JDBC 개요 |
 | **Day 21** | Java 코어 라이브러리 및 제네릭 심화 | java.base, Object, String, Wrapper, System, java.time, Format, Regex, Reflection, Annotation, Generic 클래스·메서드, 와일드카드, PECS, Spring 연계 |
 | **Day 22** | Java 코어 라이브러리 실전 활용 및 자동화 | Object·Clone, Wrapper, String, Math·System, java.time, Period·Duration, Format, Regex, Pattern·Matcher, Annotation, Reflection, 동적 메서드 실행, 자동화 스캐너, 미니 라우터 |
+| **Day 23** | Java 리플렉션·어노테이션·제네릭 심화 | Reflection, Class·Field·Constructor·Method, Annotation, Target·Retention, 동적 메서드 실행, Regex 심화, Generic 클래스·메서드, 타입 제한, 와일드카드, PECS, Type Erasure, API·Repository 설계 |
 
 
 
@@ -21329,5 +21330,1832 @@ Spring은 어노테이션과 런타임 메타데이터를 활용하여 다양한
 - 라우터는 요청 경로에 대응하는 처리 메서드를 선택하는 역할을 한다.
 - Spring Framework는 Java의 객체지향, 메타데이터, 런타임 처리 기능 등을 활용한다.
 - Java 라이브러리의 핵심은 개별 메서드 암기가 아니라 기능들을 연결하여 프로그램을 설계하는 것이다.
+
+</details>
+
+
+## Day23. Java 리플렉션·어노테이션·제네릭 심화
+<details>
+
+### 🎯 학습 목표
+- 리플렉션의 개념과 일반적인 메서드 호출과의 차이를 이해한다.
+- Class 객체를 획득하는 세 가지 방법을 익힌다.
+- Field, Constructor, Method를 이용한 동적 접근 방법을 이해한다.
+- 어노테이션이 메타데이터를 제공하는 원리를 이해한다.
+- @Target과 @Retention의 차이를 구분한다.
+- 어노테이션과 리플렉션을 결합한 자동화 구조를 이해한다.
+- 정규표현식을 이용한 문자열 검증, 검색, 추출, 치환을 익힌다.
+- Pattern과 Matcher의 주요 메서드를 구분한다.
+- 제네릭의 도입 목적과 타입 안정성의 의미를 이해한다.
+- 제네릭 클래스, 메서드, 인터페이스를 구현할 수 있다.
+- 제한된 타입 매개변수와 와일드카드를 이해한다.
+- PECS 원칙을 이용하여 제네릭 타입을 설계할 수 있다.
+- 타입 소거(Type Erasure)의 원리와 제네릭의 제약사항을 이해한다.
+- 제네릭을 활용한 공통 API 응답 및 Repository 설계 원리를 이해한다.
+
+---
+
+### 1. Reflection과 Annotation의 개념
+
+리플렉션(Reflection)과 어노테이션(Annotation)은 Java 프로그램의 구조를 분석하고 자동화 기능을 구현하는 데 활용되는 기술이다.
+
+**핵심 개념**
+
+| 구분 | Reflection | Annotation |
+|---|---|---|
+| 의미 | 실행 중 클래스의 구조를 분석·조작하는 기술 | 코드에 부착하는 메타데이터 |
+| 목적 | 런타임 동적 접근 및 실행 | 추가 정보와 처리 규칙 선언 |
+| 주요 요소 | Class, Field, Method, Constructor | @interface, @Target, @Retention |
+| 실행 기능 | 메서드 호출 및 객체 생성 가능 | 자체 실행 기능 없음 |
+| 대표 활용 | 동적 객체 생성, 메서드 탐색 | Spring 설정, 테스트 메서드 지정 |
+
+**동작 관계**
+
+```text id="1v57jy"
+         Java 클래스
+              │
+              ▼
+       @Annotation 선언
+              │
+              ▼
+         프로그램 실행
+              │
+              ▼
+       Reflection 검사
+              │
+              ▼
+       어노테이션 조회
+              │
+              ▼
+       해당 규칙에 따라 처리
+              │
+              ▼
+         메서드 실행
+```
+
+**핵심**
+
+- Annotation은 클래스나 메서드에 의미를 부여한다.
+- Reflection은 실행 중 클래스 구조와 어노테이션을 조회한다.
+- 두 기술을 결합하면 메타데이터 기반 자동화 시스템을 구현할 수 있다.
+
+### 2. 정적 호출과 동적 호출
+
+일반적인 Java 코드는 컴파일 시점에 호출 대상의 타입과 메서드가 확인된다.
+
+리플렉션을 사용하면 실행 중 메서드 이름이나 타입 정보를 이용하여 호출 대상을 결정할 수 있다.
+
+**일반적인 메서드 호출**
+
+```java id="cdoewd"
+class Student {
+
+    public void study() {
+        System.out.println("공부 시작");
+    }
+}
+
+Student student = new Student();
+
+student.study();
+```
+
+**리플렉션을 이용한 호출**
+
+```java id="kj98oo"
+import java.lang.reflect.Method;
+
+Student student = new Student();
+
+Class<?> clazz = student.getClass();
+
+Method method = clazz.getDeclaredMethod("study");
+
+method.invoke(student);
+```
+
+※ 두 번째 예제의 리플렉션 관련 Checked Exception은 실제 코드에서 처리하거나 전파해야 한다.
+
+**차이점**
+
+| 구분 | 일반적인 호출 | Reflection |
+|---|---|---|
+| 호출 대상 | 코드에서 직접 지정 | 실행 중 탐색 가능 |
+| 메서드 확인 | 컴파일 시 검사 | 런타임 검사 가능 |
+| 타입 안정성 | 높음 | 상대적으로 낮음 |
+| 실행 비용 | 일반적으로 적음 | 추가 비용 발생 가능 |
+| 활용 | 일반적인 비즈니스 로직 | 프레임워크 및 동적 시스템 |
+
+**핵심**
+
+일반적인 기능 구현에서는 직접 호출을 우선 사용하고, 실행 중 타입이나 메서드를 탐색해야 하는 경우 Reflection을 고려한다.
+
+### 3. Class 객체
+
+Class 객체는 Java 클래스의 런타임 타입 정보를 표현하는 객체이다.
+
+리플렉션을 사용하려면 먼저 Class 객체를 획득해야 한다.
+
+**Class 객체 획득 방법**
+
+| 방법 | 사용 예 | 특징 |
+|---|---|---|
+| `.class` | `Student.class` | 클래스 타입을 직접 지정 |
+| `getClass()` | `student.getClass()` | 객체의 실제 런타임 타입 조회 |
+| `Class.forName()` | `Class.forName("Student")` | 클래스 이름으로 동적 로드 |
+
+**Java 예제**
+
+```java id="5ge97n"
+class Student {
+}
+```
+
+```java id="flpxtd"
+Student student = new Student();
+
+// 1. 클래스 리터럴
+Class<?> c1 = Student.class;
+
+// 2. 인스턴스에서 획득
+Class<?> c2 = student.getClass();
+
+// 3. 클래스 이름으로 획득
+Class<?> c3 = Class.forName("Student");
+```
+
+※ Class.forName()은 ClassNotFoundException을 처리하거나 전파해야 하며, 패키지가 있는 클래스는 정규화된 클래스 이름을 사용해야 한다.
+
+**Class에서 조회할 수 있는 정보**
+
+- 클래스 이름
+- 패키지 정보
+- 상속 관계
+- 구현 인터페이스
+- 선언된 필드
+- 선언된 메서드
+- 생성자
+- 어노테이션
+
+**핵심**
+
+Class 객체는 Reflection을 이용하여 클래스의 내부 구조를 탐색하기 위한 시작점이다.
+
+### 4. Field를 이용한 필드 접근
+
+Field는 클래스에 선언된 필드 정보를 나타낸다.
+
+리플렉션을 통해 필드 이름과 타입을 조회하고 값을 읽거나 변경할 수 있다.
+
+**Java 예제**
+
+```java id="rggp76"
+class Member {
+
+    private String name = "홍길동";
+}
+```
+
+**필드 정보 조회 및 값 변경**
+
+```java id="j4gvtq"
+import java.lang.reflect.Field;
+
+Member member = new Member();
+
+Class<?> clazz = Member.class;
+
+// 필드 조회
+Field field = clazz.getDeclaredField("name");
+
+// 접근 검사 해제 시도
+field.setAccessible(true);
+
+// 필드값 변경
+field.set(member, "김철수");
+
+// 필드값 조회
+String value = (String) field.get(member);
+
+System.out.println(value);
+// 김철수
+```
+
+※ Reflection 관련 Checked Exception은 처리하거나 전파해야 한다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `getDeclaredField()` | 해당 클래스에 선언된 필드 검색 |
+| `getDeclaredFields()` | 선언된 필드 목록 조회 |
+| `get()` | 필드값 읽기 |
+| `set()` | 필드값 변경 |
+| `setAccessible()` | 접근 검사 해제 요청 |
+
+**주의사항**
+
+- private 필드에 대한 접근은 캡슐화 원칙과 충돌할 수 있다.
+- setAccessible(true)가 항상 접근을 허용하는 것은 아니다.
+- Java 모듈 시스템과 실행 환경에 따라 접근이 제한될 수 있다.
+- 일반 애플리케이션 코드에서 private 필드를 무분별하게 변경하는 것은 권장되지 않는다.
+
+### 5. Constructor를 이용한 동적 객체 생성
+
+Constructor는 생성자에 대한 정보를 제공한다.
+
+리플렉션을 이용하면 실행 중 생성자를 조회하고 객체를 생성할 수 있다.
+
+**Java 예제**
+
+```java id="wgxuad"
+class Member {
+
+    private String name;
+    private int age;
+
+    public Member(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+
+**동적 객체 생성**
+
+```java id="qu815e"
+import java.lang.reflect.Constructor;
+
+Class<Member> clazz = Member.class;
+
+Constructor<Member> constructor =
+    clazz.getDeclaredConstructor(
+        String.class,
+        int.class
+    );
+
+Member member =
+    constructor.newInstance("홍길동", 20);
+```
+
+**동작 구조**
+
+```text id="em91cn"
+         Member.class
+               │
+               ▼
+     getDeclaredConstructor()
+               │
+               ▼
+       생성자 정보 획득
+               │
+               ▼
+         newInstance()
+               │
+               ▼
+         Member 객체 생성
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `getDeclaredConstructor()` | 특정 생성자 검색 |
+| `getDeclaredConstructors()` | 선언된 생성자 목록 조회 |
+| `newInstance()` | 해당 생성자를 이용하여 객체 생성 |
+
+**핵심**
+
+리플렉션은 컴파일 시점에 직접 new를 호출하는 코드 없이도 실행 중 객체를 생성할 수 있다.
+
+### 6. Method를 이용한 동적 실행
+
+Method는 클래스의 메서드 정보를 표현한다.
+
+**Java 예제**
+
+```java id="6u35af"
+class MemberService {
+
+    public void hello(String name, int age) {
+
+        System.out.println(
+            name + " : " + age
+        );
+    }
+}
+```
+
+**메서드 검색 및 실행**
+
+```java id="69e1bg"
+import java.lang.reflect.Method;
+
+MemberService service = new MemberService();
+
+Class<?> clazz = MemberService.class;
+
+Method method = clazz.getDeclaredMethod(
+    "hello",
+    String.class,
+    int.class
+);
+
+method.invoke(service, "홍길동", 20);
+```
+
+**실행 결과**
+
+```text id="8npl9c"
+홍길동 : 20
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `getDeclaredMethod()` | 특정 메서드 검색 |
+| `getDeclaredMethods()` | 해당 클래스가 선언한 메서드 조회 |
+| `getMethods()` | 상속받은 public 메서드를 포함하여 조회 |
+| `invoke()` | 메서드 동적 호출 |
+
+**핵심**
+
+- invoke()의 첫 번째 인자는 메서드를 호출할 대상 객체이다.
+- 이후 인자는 실제 메서드에 전달할 매개변수이다.
+- 메서드 이름뿐 아니라 매개변수 타입까지 일치해야 한다.
+- 정적 메서드는 invoke()의 대상 객체로 null을 전달할 수 있다.
+
+### 7. getDeclared와 get의 차이
+
+리플렉션에서 메서드 이름에 Declared가 포함된 경우와 그렇지 않은 경우의 조회 범위를 구분해야 한다.
+
+| 메서드 | 조회 범위 |
+|---|---|
+| `getDeclaredFields()` | 해당 클래스에서 선언한 모든 필드 |
+| `getFields()` | 접근 가능한 public 필드 및 상속된 public 필드 |
+| `getDeclaredMethods()` | 해당 클래스에서 선언한 모든 메서드 |
+| `getMethods()` | public 메서드 및 상속된 public 메서드 |
+
+**핵심**
+
+- Declared는 해당 클래스에서 직접 선언한 멤버를 대상으로 한다.
+- getMethods()는 상속된 public 메서드도 포함한다.
+- 멤버 정보를 조회할 수 있다는 것과 실제로 접근할 수 있다는 것은 다르다.
+
+### 8. 어노테이션(Annotation)의 역할
+
+어노테이션은 코드에 부착하는 메타데이터이다.
+
+컴파일러나 프레임워크가 특정 대상을 식별하고 처리 규칙을 결정하는 데 사용한다.
+
+**대표적인 어노테이션**
+
+| 어노테이션 | 목적 |
+|---|---|
+| `@Override` | 메서드 재정의 검사 |
+| `@Deprecated` | 사용 비권장 선언 |
+| `@SuppressWarnings` | 지정한 경고 억제 |
+| `@FunctionalInterface` | 함수형 인터페이스 규칙 검사 |
+| `@Target` | 어노테이션 적용 대상 지정 |
+| `@Retention` | 어노테이션 유지 범위 지정 |
+
+**Java 예제**
+
+```java id="acnv5s"
+class Parent {
+
+    public void hello() {
+        System.out.println("Parent");
+    }
+}
+
+class Child extends Parent {
+
+    @Override
+    public void hello() {
+        System.out.println("Child");
+    }
+}
+```
+
+**핵심**
+
+어노테이션은 코드에 추가 정보를 부여하지만, 어노테이션 자체가 일반적인 Java 메서드를 자동으로 실행하는 것은 아니다.
+
+### 9. 사용자 정의 어노테이션
+
+사용자는 @interface 키워드를 이용하여 직접 어노테이션을 선언할 수 있다.
+
+**어노테이션 정의**
+
+```java id="5m63x5"
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Execute {
+
+    int order() default 0;
+}
+```
+
+**사용 예제**
+
+```java id="zbpdqo"
+class StudentService {
+
+    @Execute(order = 1)
+    public void initialize() {
+        System.out.println("초기화");
+    }
+
+    @Execute(order = 2)
+    public void insert() {
+        System.out.println("데이터 등록");
+    }
+}
+```
+
+**구성 요소**
+
+| 요소 | 역할 |
+|---|---|
+| `@interface` | 어노테이션 정의 |
+| `order()` | 어노테이션의 속성 |
+| `default` | 속성의 기본값 |
+| `@Target` | 적용할 코드 요소 지정 |
+| `@Retention` | 어노테이션 유지 범위 지정 |
+
+**핵심**
+
+사용자 정의 어노테이션을 통해 코드에 실행 순서나 설정값 등의 메타데이터를 저장할 수 있다.
+
+### 10. @Target과 @Retention
+
+@Target은 어노테이션을 적용할 위치를 제한한다.
+
+**@Target**
+
+| ElementType | 대상 |
+|---|---|
+| TYPE | 클래스, 인터페이스, enum 등 |
+| FIELD | 필드 |
+| METHOD | 메서드 |
+| CONSTRUCTOR | 생성자 |
+| PARAMETER | 매개변수 |
+
+@Retention은 어노테이션 정보를 얼마나 오래 유지할지 지정한다.
+
+**@Retention**
+
+| RetentionPolicy | 유지 범위 |
+|---|---|
+| SOURCE | 소스 코드 수준 |
+| CLASS | 클래스 파일까지 |
+| RUNTIME | 실행 중 리플렉션으로 조회 가능 |
+
+**예제**
+
+```java id="ni3zuu"
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface MyAnnotation {
+}
+```
+
+**핵심**
+
+- 런타임에서 어노테이션을 검색하려면 RUNTIME 유지 정책이 필요하다.
+- @Retention을 생략하면 기본 정책은 CLASS이다.
+- @Target을 생략하면 다양한 선언 위치에 사용할 수 있다.
+
+### 11. Annotation과 Reflection 결합
+
+어노테이션과 리플렉션을 결합하면 메서드를 자동으로 검색하고 실행하는 시스템을 만들 수 있다.
+
+**처리 과정**
+
+```text id="n0w4fo"
+        @Execute 선언
+              │
+              ▼
+       메서드에 적용
+              │
+              ▼
+       클래스 정보 조회
+              │
+              ▼
+       메서드 목록 검색
+              │
+              ▼
+     어노테이션 존재 검사
+              │
+              ▼
+        조건에 맞게 처리
+              │
+              ▼
+          동적 실행
+```
+
+**어노테이션 검사**
+
+```java id="se58jk"
+import java.lang.reflect.Method;
+
+Class<?> clazz = StudentService.class;
+
+Method[] methods = clazz.getDeclaredMethods();
+
+for (Method method : methods) {
+
+    if (method.isAnnotationPresent(
+            Execute.class)) {
+
+        System.out.println(method.getName());
+    }
+}
+```
+
+**어노테이션 속성 조회**
+
+```java id="t8f13d"
+Execute annotation =
+    method.getAnnotation(Execute.class);
+
+int order = annotation.order();
+```
+
+**핵심**
+
+- isAnnotationPresent()로 어노테이션의 존재를 확인한다.
+- getAnnotation()으로 어노테이션 객체와 속성을 조회한다.
+- 조회된 정보를 이용하여 실행 순서나 처리 조건을 결정할 수 있다.
+
+### 12. 어노테이션 기반 자동 실행 시스템
+
+**Java 예제**
+
+```java id="5wn3g9"
+import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Execute {
+    int order();
+}
+
+class TaskService {
+
+    @Execute(order = 2)
+    public void save() {
+        System.out.println("데이터 저장");
+    }
+
+    @Execute(order = 1)
+    public void initialize() {
+        System.out.println("초기화");
+    }
+
+    public void delete() {
+        System.out.println("실행 제외");
+    }
+}
+
+public class AnnotationRunner {
+
+    public static void main(String[] args)
+            throws ReflectiveOperationException {
+
+        TaskService service = new TaskService();
+
+        Method[] methods =
+            TaskService.class.getDeclaredMethods();
+
+        Arrays.stream(methods)
+            .filter(method ->
+                method.isAnnotationPresent(Execute.class)
+            )
+            .sorted(Comparator.comparingInt(method ->
+                method.getAnnotation(Execute.class).order()
+            ))
+            .forEach(method -> {
+                try {
+                    method.invoke(service);
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+    }
+}
+```
+
+**실행 결과**
+
+```text id="j3vu37"
+초기화
+데이터 저장
+```
+
+**동작 원리**
+
+1. @Execute 어노테이션을 정의한다.
+2. 실행 대상 메서드에 적용한다.
+3. Reflection으로 메서드 목록을 조회한다.
+4. 어노테이션이 있는 메서드만 필터링한다.
+5. order 속성으로 실행 순서를 정렬한다.
+6. invoke()로 실제 메서드를 호출한다.
+
+**핵심**
+
+이 구조는 프레임워크에서 메타데이터를 활용해 처리 대상을 찾아내는 원리를 이해하기 위한 기초 예제이다.
+
+### 13. Reflection과 Annotation의 실무 활용
+
+강의자료에서는 두 기술이 다양한 Java 프레임워크와 라이브러리에서 활용된다는 점을 강조한다.
+
+| 기술 | 대표 어노테이션 | 활용 목적 |
+|---|---|---|
+| Spring | @Controller, @Autowired | 컴포넌트 및 의존성 관리 |
+| JUnit | @Test, @BeforeEach | 테스트 메서드 탐색 및 실행 |
+| JPA | @Entity, @Id | 객체와 DB 테이블의 매핑 |
+| Lombok | @Getter, @Builder | 컴파일 시 코드 생성 |
+| Jackson | @JsonProperty, @JsonIgnore | JSON 변환 규칙 설정 |
+
+**주의**
+
+위 기술들이 모두 리플렉션만으로 동작하는 것은 아니다.
+
+예를 들어 Lombok은 주로 컴파일 단계에서 코드를 생성하며, Spring은 리플렉션 외에도 여러 메커니즘을 사용한다.
+
+**Spring에서의 개념적 흐름**
+
+```text id="9u60pj"
+         Spring 실행
+              │
+              ▼
+      설정 및 클래스 탐색
+              │
+              ▼
+       어노테이션 확인
+              │
+              ▼
+       Bean 정의 등록
+              │
+              ▼
+       객체 생성 및 의존성 연결
+              │
+              ▼
+        프로그램 기능 실행
+```
+
+### 14. Reflection 사용 시 주의사항
+
+| 주의사항 | 설명 |
+|---|---|
+| 접근 제어 | private 접근을 무조건 허용하지 않음 |
+| 실행 비용 | 동적 탐색 및 호출에 추가 비용 발생 가능 |
+| 타입 안정성 | 컴파일 시 확인할 수 없는 오류 발생 가능 |
+| 예외 처리 | ReflectiveOperationException 계열 고려 |
+| 메서드 순서 | getDeclaredMethods()의 반환 순서 보장 없음 |
+| 보안·유지보수 | 캡슐화를 불필요하게 우회하지 않도록 주의 |
+| 일반적인 호출 | 가능하면 직접 호출과 타입 기반 설계를 우선 고려 |
+
+**핵심**
+
+리플렉션은 프레임워크와 도구 구현에 유용하지만, 일반적인 애플리케이션 코드에서 무분별하게 사용하는 것은 피해야 한다.
+
+---
+
+### 15. 정규표현식(Regex) 심화
+
+정규표현식은 문자열 패턴을 정의하여 검색, 검증, 추출, 치환 작업을 수행하는 기술이다.
+
+**주요 활용**
+
+| 기능 | 용도 |
+|---|---|
+| Validation | 입력 형식 검사 |
+| Search | 특정 문자열 패턴 탐색 |
+| Extraction | 문자열 일부 추출 |
+| Replacement | 특정 패턴의 문자열 치환 |
+
+**주요 정규표현식 기호**
+
+| 기호 | 의미 |
+|---|---|
+| `.` | 임의의 문자 한 개(기본적으로 줄바꿈 제외) |
+| `\d` | 숫자 |
+| `\D` | 숫자가 아닌 문자 |
+| `\w` | 단어 문자 |
+| `\W` | 단어 문자가 아닌 문자 |
+| `\s` | 공백 문자 |
+| `\S` | 공백이 아닌 문자 |
+| `[a-z]` | 소문자 영문 |
+| `[A-Z]` | 대문자 영문 |
+| `[가-힣]` | 지정한 한글 음절 범위 |
+| `^` | 입력 시작 |
+| `$` | 입력 끝 |
+| `*` | 0개 이상 |
+| `+` | 1개 이상 |
+| `?` | 0개 또는 1개 |
+| `{n,m}` | n개 이상 m개 이하 |
+
+**핵심**
+
+정규표현식의 기본 기호를 이해하면 입력값 검증과 텍스트 분석 코드를 간결하게 작성할 수 있다.
+
+### 16. Pattern과 Matcher
+
+Pattern은 정규표현식을 컴파일한 객체이고 Matcher는 문자열에 패턴을 적용하는 객체이다.
+
+**처리 구조**
+
+```text id="prcfbk"
+      정규표현식 문자열
+             │
+             ▼
+       Pattern.compile()
+             │
+             ▼
+          Pattern
+             │
+             ▼
+        matcher(text)
+             │
+             ▼
+          Matcher
+             │
+      ┌──────┴──────┐
+      │             │
+      ▼             ▼
+   matches()       find()
+    전체 검사      부분 탐색
+```
+
+**Java 예제**
+
+```java id="idvnws"
+import java.util.regex.*;
+
+String text = "Java123Spring456";
+
+Pattern pattern = Pattern.compile("\\d+");
+
+Matcher matcher = pattern.matcher(text);
+
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+```
+
+**실행 결과**
+
+```text id="yg36gh"
+123
+456
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| `matches()` | 입력 전체가 패턴과 일치하는지 검사 |
+| `find()` | 다음 일치 부분 검색 |
+| `group()` | 현재 일치 문자열 반환 |
+| `group(n)` | 지정한 그룹의 문자열 반환 |
+| `start()` | 일치 부분의 시작 위치 |
+| `end()` | 일치 부분의 끝 다음 위치 |
+
+### 17. matches()와 find()의 차이
+
+**matches()**
+
+```java id="oj359y"
+String text = "Java123Spring456";
+
+System.out.println(text.matches("\\d+"));
+// false
+```
+
+문자열 전체가 숫자로만 구성되어 있지 않으므로 false를 반환한다.
+
+**find()**
+
+```java id="rwzwyf"
+import java.util.regex.*;
+
+Matcher matcher = Pattern.compile("\\d+")
+    .matcher("Java123Spring456");
+
+while (matcher.find()) {
+    System.out.println(matcher.group());
+}
+```
+
+**실행 결과**
+
+```text id="y0grrg"
+123
+456
+```
+
+**비교**
+
+| 구분 | matches() | find() |
+|---|---|---|
+| 검사 범위 | 전체 문자열 | 부분 문자열 |
+| 반환 타입 | boolean | boolean |
+| 대표 사용 | 회원가입 입력 검사 | 로그 분석, 데이터 추출 |
+
+**핵심**
+
+- 전체 검증은 matches()를 사용한다.
+- 부분 검색은 find()를 사용한다.
+- find()는 반복 호출하여 여러 일치 결과를 검색할 수 있다.
+
+### 18. Group과 문자열 추출
+
+정규표현식의 괄호는 일치한 문자열을 그룹으로 구분하는 데 사용할 수 있다.
+
+**Java 예제**
+
+```java id="d3cqxg"
+import java.util.regex.*;
+
+String text = "이름:홍길동 나이:25";
+
+Pattern pattern = Pattern.compile(
+    "이름:(\\S+)\\s+나이:(\\d+)"
+);
+
+Matcher matcher = pattern.matcher(text);
+
+if (matcher.find()) {
+    System.out.println(matcher.group(1));
+    System.out.println(matcher.group(2));
+}
+```
+
+**실행 결과**
+
+```text id="whml2d"
+홍길동
+25
+```
+
+**그룹 구조**
+
+```text id="lszsl5"
+이름:홍길동 나이:25
+      │         │
+      ▼         ▼
+   group(1)  group(2)
+```
+
+**핵심**
+
+- group(0)은 전체 일치 문자열이다.
+- group(1)부터 괄호로 만든 그룹을 반환한다.
+- 일치 성공 여부를 확인한 후 group()을 사용해야 한다.
+
+### 19. 탐욕적 수량자와 최소 수량자
+
+정규표현식에는 가능한 많은 문자를 소비하려는 탐욕적 수량자(Greedy Quantifier)와 가능한 적은 문자를 소비하려는 최소 수량자(Reluctant Quantifier)가 있다.
+
+**비교**
+
+| 구분 | 탐욕적 수량자 | 최소 수량자 |
+|---|---|---|
+| 대표 표현 | `.*` | `.*?` |
+| 동작 | 가능한 많은 문자 소비 | 필요한 최소한의 문자 소비 |
+| 활용 | 넓은 범위 일치 | 짧은 구간별 검색 |
+
+**Java 예제**
+
+```java id="yd0iiw"
+import java.util.regex.*;
+
+String text = "<h1>Java</h1><h2>Spring</h2>";
+
+Matcher greedy = Pattern.compile("<.*>")
+    .matcher(text);
+
+Matcher reluctant = Pattern.compile("<.*?>")
+    .matcher(text);
+
+if (greedy.find()) {
+    System.out.println(greedy.group());
+}
+
+while (reluctant.find()) {
+    System.out.println(reluctant.group());
+}
+```
+
+**탐욕적 결과**
+
+```text id="ujal5n"
+<h1>Java</h1><h2>Spring</h2>
+```
+
+**최소 수량자 결과**
+
+```text id="0y76se"
+<h1>
+</h1>
+<h2>
+</h2>
+```
+
+**주의사항**
+
+정규표현식으로 단순한 태그 패턴을 설명할 수는 있지만, 실제 복잡한 HTML이나 XML 문서 분석에는 전용 파서를 사용하는 것이 적합하다.
+
+### 20. 전방 탐색(Lookahead)
+
+전방 탐색은 현재 위치 이후의 문자열이 특정 조건을 만족하는지 검사하는 정규표현식 기능이다.
+
+**주요 문법**
+
+| 표현 | 의미 |
+|---|---|
+| `(?=...)` | 긍정형 전방 탐색 |
+| `(?!...)` | 부정형 전방 탐색 |
+
+**비밀번호 형식 검사 예제**
+
+```java id="zyn55l"
+String password = "Abcd1234!";
+
+String regex =
+    "^(?=.*[A-Z])" +
+    "(?=.*[a-z])" +
+    "(?=.*\\d)" +
+    "(?=.*[!@#$%^&*])" +
+    ".{8,20}$";
+
+boolean valid = password.matches(regex);
+
+System.out.println(valid); // true
+```
+
+**검증 조건**
+
+- 영문 대문자가 최소 1개 포함된다.
+- 영문 소문자가 최소 1개 포함된다.
+- 숫자가 최소 1개 포함된다.
+- 지정한 특수문자가 최소 1개 포함된다.
+- 전체 길이가 8~20자이다.
+
+**주의사항**
+
+정규표현식이 형식 규칙을 만족한다고 해서 비밀번호가 안전하다는 의미는 아니다. 실제 인증 시스템에서는 비밀번호 저장 방식과 보안 정책도 함께 고려해야 한다.
+
+### 21. replaceAll()을 이용한 문자열 정제
+
+replaceAll()은 정규표현식과 일치하는 문자열을 지정한 값으로 치환한다.
+
+**숫자만 추출**
+
+```java id="e85pwd"
+String text = "PRD-2026-001";
+
+String result = text.replaceAll("[^0-9]", "");
+
+System.out.println(result);
+// 2026001
+```
+
+**숫자 제거**
+
+```java id="f8c3sx"
+String text = "Java123Spring456";
+
+String result = text.replaceAll("\\d+", "");
+
+System.out.println(result);
+// JavaSpring
+```
+
+**주요 메서드 비교**
+
+| 메서드 | 역할 |
+|---|---|
+| `replace()` | 문자나 문자열을 그대로 치환 |
+| `replaceAll()` | 정규표현식에 일치하는 모든 부분 치환 |
+| `replaceFirst()` | 첫 번째 일치 부분만 치환 |
+
+**핵심**
+
+정규표현식은 데이터 검증, 검색, 추출, 치환을 하나의 패턴 언어로 표현할 수 있다.
+
+### 22. Java 정규표현식 사용 시 주의사항
+
+Java 문자열에서 정규표현식의 역슬래시를 표현할 때는 추가적인 이스케이프가 필요하다.
+
+**정규표현식**
+
+```regex id="nni91l"
+\d+
+```
+
+**Java 문자열**
+
+```java id="ztmwgi"
+String regex = "\\d+";
+```
+
+**주의사항**
+
+- 정규표현식의 `\d`는 Java 문자열에서 `"\\d"`로 작성한다.
+- 패턴 검사와 데이터의 실제 유효성 검사는 서로 다른 문제이다.
+- 입력 데이터가 길거나 복잡하면 정규표현식 처리 성능도 고려해야 한다.
+- 복잡한 정규표현식은 테스트 코드와 함께 관리하는 것이 좋다.
+
+---
+
+### 23. 제네릭(Generic)의 필요성
+
+제네릭은 클래스, 인터페이스, 메서드에서 사용할 타입을 매개변수로 정의하는 기능이다.
+
+제네릭을 사용하면 잘못된 타입의 데이터를 컴파일 시점에 발견할 수 있다.
+
+**제네릭을 사용하지 않는 경우**
+
+```java id="mhr5kn"
+class Box {
+
+    private Object data;
+
+    public void setData(Object data) {
+        this.data = data;
+    }
+
+    public Object getData() {
+        return data;
+    }
+}
+```
+
+**사용 예제**
+
+```java id="33oxp6"
+Box box = new Box();
+
+box.setData(100);
+
+// 실행 중 형변환 오류 가능
+String value = (String) box.getData();
+```
+
+**문제점**
+
+- Object는 여러 참조 타입을 저장할 수 있다.
+- 값을 꺼낼 때 명시적인 형변환이 필요하다.
+- 잘못된 형변환은 ClassCastException을 발생시킬 수 있다.
+
+**제네릭 사용**
+
+```java id="nwpj4v"
+class Box<T> {
+
+    private T data;
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public T getData() {
+        return data;
+    }
+}
+```
+
+```java id="xnswlu"
+Box<String> box = new Box<>();
+
+box.setData("Java");
+
+String value = box.getData();
+```
+
+**핵심**
+
+제네릭은 런타임의 잘못된 형변환 가능성을 컴파일 단계에서 줄여 타입 안정성과 재사용성을 높인다.
+
+### 24. 제네릭 타입 매개변수
+
+타입 매개변수는 제네릭 클래스나 메서드에서 사용할 타입을 나타내는 변수이다.
+
+**자주 사용하는 타입 매개변수 이름**
+
+| 기호 | 의미 |
+|---|---|
+| T | Type |
+| E | Element |
+| K | Key |
+| V | Value |
+| N | Number |
+| R | Return Type |
+
+**제네릭 클래스**
+
+```java id="gux7vu"
+class Box<T> {
+
+    private T value;
+
+    public void set(T value) {
+        this.value = value;
+    }
+
+    public T get() {
+        return value;
+    }
+}
+```
+
+**사용 예제**
+
+```java id="qpytjo"
+Box<String> textBox = new Box<>();
+
+textBox.set("Hello");
+
+Box<Integer> numberBox = new Box<>();
+
+numberBox.set(100);
+```
+
+**주의사항**
+
+- 타입 매개변수 이름은 Java 문법상 반드시 T, E, K 등이어야 하는 것은 아니다.
+- 일반적으로 개발자 사이의 가독성을 위해 관례적인 이름을 사용한다.
+- 제네릭은 기본형이 아닌 참조 타입을 타입 인자로 사용한다.
+
+### 25. 멀티 타입 제네릭
+
+제네릭 클래스는 여러 타입 매개변수를 선언할 수 있다.
+
+**Java 예제**
+
+```java id="5mirdz"
+class Pair<K, V> {
+
+    private K key;
+    private V value;
+
+    public Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public K getKey() {
+        return key;
+    }
+
+    public V getValue() {
+        return value;
+    }
+}
+```
+
+**사용 예제**
+
+```java id="6gpvzd"
+Pair<String, Integer> pair =
+    new Pair<>("홍길동", 100);
+
+System.out.println(pair.getKey());
+System.out.println(pair.getValue());
+```
+
+**활용 사례**
+
+- ID와 데이터의 묶음
+- Key와 Value 구조
+- 요청 ID와 처리 결과
+- 서로 다른 타입을 가진 두 값의 전달
+
+### 26. 제네릭 메서드(Generic Method)
+
+제네릭 메서드는 메서드 자체에서 타입 매개변수를 선언한다.
+
+**Java 예제**
+
+```java id="sovexc"
+public class GenericUtil {
+
+    public static <T> void print(T value) {
+
+        System.out.println(value);
+    }
+
+    public static void main(String[] args) {
+
+        print("Java");
+
+        print(100);
+
+        print(3.14);
+    }
+}
+```
+
+**제네릭 클래스와 제네릭 메서드**
+
+| 구분 | 제네릭 클래스 | 제네릭 메서드 |
+|---|---|---|
+| 타입 선언 위치 | 클래스 이름 뒤 | 반환 타입 앞 |
+| 타입 적용 범위 | 클래스의 타입 매개변수 사용 범위 | 메서드 내부 |
+| 타입 결정 | 클래스 사용 시 | 메서드 호출 시 |
+| 예시 | `class Box<T>` | `<T> void print(T value)` |
+
+**핵심**
+
+제네릭 메서드는 클래스 전체를 제네릭으로 만들지 않아도 특정 메서드를 다양한 타입으로 재사용할 수 있게 한다.
+
+### 27. 제한된 타입 매개변수(Bounded Type)
+
+제네릭은 extends를 이용하여 사용할 수 있는 타입의 상한을 제한할 수 있다.
+
+**Java 예제**
+
+```java id="73lo0d"
+class NumberBox<T extends Number> {
+
+    private T value;
+
+    public NumberBox(T value) {
+        this.value = value;
+    }
+
+    public double getDoubleValue() {
+        return value.doubleValue();
+    }
+}
+```
+
+**사용 예제**
+
+```java id="l980k7"
+NumberBox<Integer> box1 =
+    new NumberBox<>(100);
+
+NumberBox<Double> box2 =
+    new NumberBox<>(3.14);
+
+// NumberBox<String> box3 =
+//     new NumberBox<>("Java"); // 컴파일 오류
+```
+
+**타입 계층**
+
+```text id="6v7yhy"
+             Number
+                │
+       ┌────────┼─────────┐
+       │        │         │
+       ▼        ▼         ▼
+    Integer   Double     Float
+
+    <T extends Number>
+```
+
+**핵심**
+
+- Number와 하위 타입만 사용할 수 있다.
+- 제한된 타입의 공통 메서드를 안전하게 호출할 수 있다.
+- extends는 제네릭 타입 제한에서 클래스와 인터페이스에 모두 사용할 수 있다.
+
+### 28. 와일드카드(Wildcard)
+
+와일드카드는 제네릭 타입 인자를 정확하게 고정하지 않고 유연하게 사용할 때 사용하는 문법이다.
+
+**주요 문법**
+
+| 문법 | 의미 |
+|---|---|
+| `<?>` | 타입이 정해지지 않은 경우 |
+| `<? extends T>` | T 또는 하위 타입 |
+| `<? super T>` | T 또는 상위 타입 |
+
+**와일드카드 예제**
+
+```java id="c8v5i5"
+import java.util.List;
+
+public static void printList(List<?> list) {
+
+    for (Object value : list) {
+        System.out.println(value);
+    }
+}
+```
+
+**사용 예제**
+
+```java id="qdqi2a"
+printList(List.of("Java", "Spring"));
+
+printList(List.of(10, 20, 30));
+```
+
+**핵심**
+
+- List<?>는 다양한 요소 타입의 리스트를 받을 수 있다.
+- List<String>과 List<Integer>를 동일한 메서드에서 처리할 수 있다.
+- List<?>에는 일반적으로 null 이외의 값을 추가할 수 없다.
+
+### 29. PECS 원칙
+
+PECS는 제네릭 와일드카드를 선택할 때 사용하는 설계 원칙이다.
+
+**PECS = Producer Extends, Consumer Super**
+
+**구조**
+
+```text id="xhptzz"
+               PECS
+                 │
+        ┌────────┴────────┐
+        │                 │
+        ▼                 ▼
+      Producer         Consumer
+        │                 │
+        ▼                 ▼
+      extends            super
+        │                 │
+        ▼                 ▼
+      읽기 중심         쓰기 중심
+```
+
+**Producer Extends**
+
+```java id="mwa2os"
+import java.util.List;
+
+public static double sum(
+        List<? extends Number> numbers) {
+
+    double total = 0;
+
+    for (Number number : numbers) {
+        total += number.doubleValue();
+    }
+
+    return total;
+}
+```
+
+**사용 예제**
+
+```java id="zerpbc"
+List<Integer> numbers = List.of(10, 20, 30);
+
+System.out.println(sum(numbers));
+// 60.0
+```
+
+**Consumer Super**
+
+```java id="278kro"
+import java.util.List;
+
+public static void addNumbers(
+        List<? super Integer> list) {
+
+    list.add(10);
+    list.add(20);
+}
+```
+
+**사용 예제**
+
+```java id="f90uoh"
+List<Number> numbers = new java.util.ArrayList<>();
+
+addNumbers(numbers);
+```
+
+**비교**
+
+| 구분 | extends | super |
+|---|---|---|
+| 제한 방향 | 상한 | 하한 |
+| 주요 활용 | 데이터 읽기 | 데이터 추가 |
+| 안전하게 읽는 타입 | 상한 타입 | 일반적으로 Object |
+| 안전하게 추가 가능한 값 | 일반적으로 null만 가능 | 하한 타입 및 그 하위 타입 |
+
+**핵심**
+
+- 데이터를 꺼내 사용하는 쪽에서는 extends를 고려한다.
+- 데이터를 받아 저장하는 쪽에서는 super를 고려한다.
+- 구체적인 타입을 정확하게 알 수 없는 경우 불가능한 연산이 생긴다.
+
+### 30. 제네릭과 컬렉션 프레임워크
+
+제네릭은 컬렉션에서 요소 타입을 안전하게 관리하는 데 가장 많이 활용된다.
+
+**주요 컬렉션**
+
+| 컬렉션 | 선언 예 | 특징 |
+|---|---|---|
+| List | `List<String>` | 순서 유지, 중복 허용 |
+| Set | `Set<Integer>` | 중복 요소 허용하지 않음 |
+| Map | `Map<String, Integer>` | Key-Value 구조 |
+
+**Java 예제**
+
+```java id="8a2cr2"
+import java.util.*;
+
+List<String> names = new ArrayList<>();
+
+names.add("Java");
+names.add("Spring");
+
+Set<Integer> numbers = new HashSet<>();
+
+numbers.add(10);
+numbers.add(10);
+
+Map<String, Integer> scores = new HashMap<>();
+
+scores.put("Java", 90);
+scores.put("Spring", 95);
+```
+
+**핵심**
+
+- 컬렉션은 다양한 데이터를 관리하는 구조이다.
+- 제네릭은 저장할 요소의 타입을 명확하게 지정한다.
+- 컴파일러가 잘못된 타입 사용을 검사한다.
+- 타입 안정성과 코드 가독성을 높일 수 있다.
+
+### 31. 제네릭을 활용한 공통 API 응답
+
+제네릭을 사용하면 여러 종류의 응답 데이터를 하나의 공통 구조로 표현할 수 있다.
+
+**Java 예제**
+
+```java id="uem1d8"
+class ApiResponse<T> {
+
+    private boolean success;
+    private String message;
+    private T data;
+
+    public ApiResponse(
+            boolean success,
+            String message,
+            T data) {
+
+        this.success = success;
+        this.message = message;
+        this.data = data;
+    }
+
+    public T getData() {
+        return data;
+    }
+}
+```
+
+**문자열 데이터 응답**
+
+```java id="9vdgse"
+ApiResponse<String> response =
+    new ApiResponse<>(
+        true,
+        "조회 성공",
+        "Hello Java"
+    );
+```
+
+**회원 객체 응답**
+
+```java id="36ad9a"
+record Member(Long id, String name) {
+}
+
+ApiResponse<Member> response =
+    new ApiResponse<>(
+        true,
+        "회원 조회 성공",
+        new Member(1L, "홍길동")
+    );
+```
+
+**핵심**
+
+응답 데이터의 타입은 달라도 응답 구조는 재사용할 수 있다.
+
+### 32. 제네릭을 활용한 Repository 설계
+
+Repository는 데이터를 저장하거나 조회하는 기능을 추상화하는 구조이다.
+
+제네릭을 사용하면 서로 다른 데이터 타입에 대해 동일한 메서드 계약을 정의할 수 있다.
+
+**제네릭 Repository 인터페이스**
+
+```java id="rclfik"
+interface Repository<T, ID> {
+
+    void save(T data);
+
+    T findById(ID id);
+
+    void delete(ID id);
+}
+```
+
+**회원 Repository**
+
+```java id="7gi1ia"
+class Member {
+
+    private Integer id;
+    private String name;
+}
+```
+
+```java id="itvvh4"
+interface MemberRepository
+        extends Repository<Member, Integer> {
+}
+```
+
+**상품 Repository**
+
+```java id="c1x21p"
+class Product {
+
+    private Long id;
+    private String name;
+}
+```
+
+```java id="ribda4"
+interface ProductRepository
+        extends Repository<Product, Long> {
+}
+```
+
+**구조**
+
+```text id="rwsccf"
+           Repository<T, ID>
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+        ▼                   ▼
+ MemberRepository     ProductRepository
+        │                   │
+        ▼                   ▼
+  Member, Integer       Product, Long
+```
+
+**핵심**
+
+- Repository의 기본 기능을 제네릭 인터페이스로 정의한다.
+- 데이터 타입과 ID 타입을 외부에서 지정한다.
+- 여러 Repository에 공통적인 메서드 계약을 적용한다.
+- Spring Data JPA 등의 Repository 구조를 이해하는 기초가 된다.
+
+### 33. 타입 소거(Type Erasure)
+
+Java 제네릭은 컴파일 시점에 타입 검사를 수행하고, 일반적으로 컴파일 과정에서 타입 매개변수 정보를 소거한다.
+
+**컴파일 전**
+
+```java id="5nx2mr"
+List<String> names = new ArrayList<>();
+
+List<Integer> numbers = new ArrayList<>();
+```
+
+**개념적 구조**
+
+```text id="b8gapy"
+           Compile Time
+                 │
+       ┌─────────┴─────────┐
+       │                   │
+       ▼                   ▼
+   List<String>       List<Integer>
+       │                   │
+       └─────────┬─────────┘
+                 │
+                 ▼
+            Type Erasure
+                 │
+                 ▼
+          Runtime List 타입
+```
+
+**주요 특징**
+
+- 제네릭 타입 검사는 주로 컴파일 시점에 수행된다.
+- 대부분의 타입 매개변수 정보는 런타임에 소거된다.
+- 타입 안정성은 컴파일러가 검사하는 중요한 기능이다.
+- 실제 클래스의 제네릭 선언 정보 등 일부 메타데이터는 리플렉션으로 조회할 수 있다.
+
+**주의사항**
+
+```java id="kkr1oq"
+// 다음 표현은 컴파일 오류
+
+// if (names instanceof List<String>) {
+// }
+```
+
+런타임에 List<String>의 구체적인 타입 인자를 직접 검사할 수 없기 때문이다.
+
+### 34. 제네릭의 주요 제한사항
+
+| 제한사항 | 잘못된 예 | 대안 |
+|---|---|---|
+| 기본형 직접 사용 | `List<int>` | `List<Integer>` |
+| 타입 매개변수 생성 | `new T()` | 생성자 참조 또는 Class 전달 |
+| 제네릭 배열 직접 생성 | `new T[10]` | 컬렉션 사용 등 |
+| 타입 인자 런타임 검사 | `instanceof List<String>` | 검사 가능한 타입 사용 |
+| static에서 클래스 T 사용 | `static T value` | 별도 타입 설계 |
+
+**예제**
+
+```java id="j0d4ry"
+class Box<T> {
+
+    private T value;
+
+    // 다음 코드는 컴파일 오류
+    // private static T sharedValue;
+
+    // public T create() {
+    //     return new T();
+    // }
+}
+```
+
+**핵심**
+
+제네릭의 사용 목적과 타입 소거의 한계를 함께 이해해야 올바른 설계가 가능하다.
+
+### 35. Java 프레임워크와 제네릭의 관계
+
+제네릭은 Java 프레임워크에서 데이터 타입을 안전하고 유연하게 처리하는 데 활용된다.
+
+**대표 활용**
+
+| 기술 | 제네릭 활용 |
+|---|---|
+| Collection Framework | List<T>, Set<T>, Map<K,V> |
+| Spring Data | Repository<T, ID> |
+| API 응답 객체 | ApiResponse<T> |
+| Optional | Optional<T> |
+| Stream | Stream<T> |
+| 비동기 처리 | CompletableFuture<T> |
+
+**핵심**
+
+제네릭을 이해하면 공통 컴포넌트, Repository, DTO, API 응답 구조를 보다 쉽게 설계하고 활용할 수 있다.
+
+---
+
+### 36. Day23 학습 내용 통합
+
+이번 학습에서 다룬 핵심 기술은 크게 세 가지이다.
+
+| 기술 | 핵심 목적 | 대표 기능 |
+|---|---|---|
+| Reflection + Annotation | 런타임 메타데이터 기반 동적 처리 | 클래스 탐색, 메서드 호출 |
+| Regex | 문자열 검증 및 가공 | 검색, 추출, 치환 |
+| Generic | 컴파일 시 타입 안정성 확보 | 타입 매개변수, 와일드카드 |
+
+**전체 구조**
+
+```text id="hqyotf"
+           Java Programming
+                   │
+       ┌───────────┼───────────┐
+       │           │           │
+       ▼           ▼           ▼
+  Annotation     Generic      Regex
+  Reflection
+       │           │           │
+       ▼           ▼           ▼
+    동적 실행    타입 안정성   데이터 검증
+       │           │           │
+       └───────────┼───────────┘
+                   │
+                   ▼
+          Framework 기반 개발
+```
+
+### 37. 학습 시 주의사항
+
+| 주의사항 | 핵심 내용 |
+|---|---|
+| Reflection | 런타임 타입과 멤버 정보 조회 |
+| Class 객체 | 타입 정보의 시작점 |
+| getDeclared... | 해당 클래스에서 직접 선언한 멤버 조회 |
+| setAccessible(true) | 접근 제한을 항상 우회할 수 있는 것은 아님 |
+| Method.invoke() | 대상 객체와 매개변수 타입 확인 |
+| Annotation | 메타데이터 자체는 기능을 실행하지 않음 |
+| @Retention | 런타임 조회 시 RUNTIME 필요 |
+| @Target | 적용 가능한 코드 요소 지정 |
+| Regex | Java 문자열의 역슬래시 이스케이프 |
+| matches() | 전체 문자열 검사 |
+| find() | 부분 문자열 검색 |
+| group() | 일치 성공 후 추출 |
+| Greedy / Reluctant | 탐욕적·최소 수량자 구분 |
+| Lookahead | 추가 조건 검사 |
+| Generic | 컴파일 시 타입 안정성 |
+| 제네릭 클래스 | 타입 매개변수 사용 범위 이해 |
+| 제네릭 메서드 | 독립적으로 타입 매개변수 선언 |
+| extends | 상한 타입 제한 |
+| super | 하한 타입 제한 |
+| PECS | Producer Extends, Consumer Super |
+| Type Erasure | 제네릭 타입 정보의 런타임 제한 |
+| 기본형 타입 | Wrapper 클래스로 사용 |
+| new T() | 타입 소거로 직접 생성 불가 |
+| Repository | 데이터 및 ID 타입 분리 설계 |
+
+### ✅ Day23 핵심 정리
+
+| 학습 개념 | 핵심 내용 |
+|---|---|
+| Reflection | 런타임에 클래스 정보를 조회·조작하는 기술 |
+| Class | 타입 정보 |
+| Field | 필드 정보 및 값 접근 |
+| Constructor | 생성자 정보 및 객체 생성 |
+| Method | 메서드 정보 및 동적 호출 |
+| getDeclaredMethods() | 선언된 메서드 목록 조회 |
+| getDeclaredFields() | 선언된 필드 목록 조회 |
+| newInstance() | 생성자를 통한 동적 객체 생성 |
+| invoke() | 메서드 동적 호출 |
+| Annotation | 코드에 부착하는 메타데이터 |
+| @interface | 사용자 정의 어노테이션 선언 |
+| @Target | 어노테이션 적용 대상 |
+| @Retention | 어노테이션 유지 범위 |
+| RUNTIME | 실행 중 어노테이션 조회 가능 |
+| isAnnotationPresent() | 어노테이션 존재 확인 |
+| getAnnotation() | 어노테이션 정보 획득 |
+| Regex | 문자열 패턴 검사 |
+| Pattern | 정규표현식 컴파일 |
+| Matcher | 문자열 패턴 검색 |
+| matches() | 전체 일치 검사 |
+| find() | 부분 일치 검색 |
+| group() | 일치한 문자열 추출 |
+| replaceAll() | 패턴 기반 문자열 치환 |
+| Greedy | 가능한 많은 문자 소비 |
+| Reluctant | 필요한 최소한의 문자 소비 |
+| Lookahead | 다음 문자열의 조건 확인 |
+| Generic | 타입 안정성과 재사용성 |
+| Type Parameter | 타입 매개변수 |
+| Generic Class | 타입 매개변수를 가진 클래스 |
+| Generic Method | 타입 매개변수를 가진 메서드 |
+| Multi-Type Generic | 여러 타입 매개변수 선언 |
+| Bounded Type | 제네릭 타입의 상한 제한 |
+| Wildcard | 타입 인자의 유연한 범위 지정 |
+| extends | 상한 제한 및 읽기 중심 활용 |
+| super | 하한 제한 및 쓰기 중심 활용 |
+| PECS | Producer Extends, Consumer Super |
+| Repository<T,ID> | 데이터 및 ID 타입을 분리한 저장소 계약 |
+| ApiResponse<T> | 공통 API 응답 구조 |
+| Type Erasure | 컴파일 과정의 제네릭 타입 소거 |
+
+**최종 학습 정리**
+
+- Reflection은 런타임에 클래스의 구조를 분석하고 동적으로 기능을 실행할 수 있게 한다.
+- Class는 런타임 타입 정보를 제공하며 Field, Method, Constructor 탐색의 시작점이다.
+- Field는 필드값을 읽거나 변경하는 기능을 제공한다.
+- Constructor를 이용하면 런타임에 생성자를 선택하고 객체를 생성할 수 있다.
+- Method.invoke()는 메서드를 동적으로 호출하는 기능이다.
+- Annotation은 코드에 부착하는 메타데이터이며 그 자체로 기능을 실행하지 않는다.
+- @Target은 어노테이션 적용 대상을, @Retention은 유지 범위를 지정한다.
+- RUNTIME으로 유지되는 어노테이션은 실행 중 조회할 수 있다.
+- Annotation과 Reflection을 결합하면 메타데이터 기반 자동화 시스템을 구현할 수 있다.
+- Reflection은 캡슐화, 타입 안정성, 성능 비용 등을 고려하여 사용해야 한다.
+- 정규표현식은 문자열의 검증, 검색, 추출, 치환에 활용된다.
+- Pattern은 정규표현식을 컴파일하며 Matcher는 실제 입력과 패턴을 비교한다.
+- matches()는 입력 전체를 검사하고 find()는 일치하는 부분을 검색한다.
+- group()은 정규표현식의 그룹을 이용하여 데이터를 추출한다.
+- Greedy와 Reluctant는 문자열을 소비하는 범위가 다르다.
+- Lookahead는 특정 문자열 조건을 검사할 때 활용할 수 있다.
+- Java 문자열에서 정규표현식의 역슬래시를 작성할 때 이스케이프에 주의해야 한다.
+- 제네릭은 타입 매개변수를 이용해 코드의 재사용성과 컴파일 시 타입 안정성을 높인다.
+- 제네릭 클래스는 타입을 지정하여 동일한 구조를 다양한 데이터에 사용할 수 있다.
+- 제네릭 메서드는 메서드 호출 시 타입을 추론하거나 지정할 수 있다.
+- 제한된 타입 매개변수는 extends로 허용할 타입의 상한을 지정한다.
+- 와일드카드는 제네릭 타입 인자의 범위를 유연하게 처리한다.
+- PECS는 Producer Extends, Consumer Super를 의미한다.
+- 타입 소거는 Java 제네릭의 중요한 구현 특징이며 런타임 타입 검사에 제약을 만든다.
+- 제네릭을 이용하면 API 응답 구조와 Repository 인터페이스를 공통화할 수 있다.
+- Reflection, Annotation, Regex, Generic은 Java 프레임워크를 이해하기 위한 중요한 기반 기술이다.
 
 </details>
