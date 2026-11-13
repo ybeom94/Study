@@ -38,6 +38,8 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 22** | Java 코어 라이브러리 실전 활용 및 자동화 | Annotation, Reflection, Pattern, Matcher |
 | **Day 23** | Java 리플렉션·어노테이션·제네릭 심화 | Class, Method, Wildcard, PECS, Type Erasure |
 | **Day 24** | Java 컬렉션 프레임워크 및 제네릭 활용 | List, Set, Queue, Map, Iterator, Comparator |
+| **Day 25** | Java 컬렉션 프레임워크 실전 활용 | 컬렉션 선택, Iterator, Map 순회, Collections, 불변 컬렉션, Generic, PECS |
+
 
 ---
 
@@ -1589,6 +1591,339 @@ while (iterator.hasNext()) {
 </details>
 
 ---
+
+
+## Day25. Java 컬렉션 프레임워크 실전 활용
+
+<details>
+<summary>📖 핵심 내용 보기</summary>
+
+### 🎯 학습 목표
+
+컬렉션 구현체의 차이를 이해하고, 데이터 특성에 맞는 자료구조와 제네릭을 활용하여 효율적인 데이터 관리 구조를 설계한다.
+
+### 1. 컬렉션 선택 기준
+
+컬렉션은 데이터의 저장 방식과 필요한 작업에 따라 선택한다.
+
+| 요구사항 | 대표 구현체 | 선택 이유 |
+|---|---|---|
+| 일반적인 목록 관리 | ArrayList | 빠른 인덱스 조회 |
+| 양끝 삽입·삭제 | ArrayDeque, LinkedList | 효율적인 양끝 연산 |
+| 중복 제거 | HashSet | 해시 기반 중복 검사 |
+| 중복 제거 및 정렬 | TreeSet | 정렬된 집합 관리 |
+| Key 기반 검색 | HashMap | 빠른 Key 조회 |
+| Key 정렬 및 범위 검색 | TreeMap | 정렬된 Key 관리 |
+| FIFO 대기열 | ArrayDeque | 선입선출 처리 |
+| 우선순위 처리 | PriorityQueue | 우선순위에 따른 처리 |
+
+**핵심**
+
+- List는 순서를 유지하고 중복을 허용한다.
+- Set은 중복을 허용하지 않으며 구현체에 따라 순서가 다르다.
+- Map은 Key-Value 구조이며 Key의 중복을 허용하지 않는다.
+- 컬렉션 선택 시 조회, 삽입, 삭제, 정렬 요구사항을 고려한다.
+
+### 2. 주요 구현 클래스 비교
+
+| 구현체 | 내부 구조 및 특징 | 주의사항 |
+|---|---|---|
+| ArrayList | 배열 기반, 인덱스 조회 O(1) | 중간 삽입·삭제 시 요소 이동 |
+| LinkedList | 이중 연결 리스트 | 인덱스 탐색 O(n) |
+| Vector | 동기화된 주요 메서드 제공 | 레거시 구현체 |
+| HashSet | 해시 기반 중복 검사 | 순서 보장하지 않음 |
+| TreeSet | 정렬 트리 기반 | 정렬 기준 필요 |
+| HashMap | 해시 기반 Key-Value 저장 | 순서 보장하지 않음 |
+| Hashtable | 동기화된 주요 메서드 제공 | null Key·Value 불가 |
+
+**주의**
+
+- LinkedList의 중간 삽입·삭제가 항상 ArrayList보다 빠르지는 않다.
+- HashSet의 중복 판단에는 equals()와 hashCode()의 일관성이 중요하다.
+- TreeSet은 Comparable 또는 Comparator의 비교 결과로 중복을 판단한다.
+- Vector와 Hashtable의 메서드 동기화만으로 모든 복합 연산의 스레드 안전성이 보장되지는 않는다.
+
+### 3. Iterator와 ListIterator 활용
+
+Iterator는 컬렉션을 순차적으로 탐색하는 인터페이스이다.
+
+| 구분 | Iterator | ListIterator |
+|---|---|---|
+| 순방향 탐색 | 가능 | 가능 |
+| 역방향 탐색 | 불가능 | 가능 |
+| 요소 삭제 | 가능 | 가능 |
+| 요소 추가·교체 | 불가능 | 가능 |
+| 사용 대상 | Collection 계열 | List 전용 |
+
+**Iterator를 이용한 요소 삭제**
+
+```java
+import java.util.*;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        List<Integer> scores =
+                new ArrayList<>(List.of(90, 45, 80, 30));
+
+        Iterator<Integer> iterator = scores.iterator();
+
+        while (iterator.hasNext()) {
+
+            if (iterator.next() < 60) {
+                iterator.remove();
+            }
+        }
+
+        System.out.println(scores); // [90, 80]
+    }
+}
+```
+
+**핵심**
+
+- hasNext(): 다음 요소 존재 여부 확인
+- next(): 다음 요소 반환
+- remove(): 마지막으로 반환한 요소 삭제
+- ListIterator는 previous(), add(), set() 등을 추가로 제공한다.
+
+**주의:** Iterator 순회 중 컬렉션을 직접 구조적으로 수정하면 ConcurrentModificationException이 발생할 수 있다.
+
+### 4. Map 순회와 중복 제거
+
+**Map 순회**
+
+Map은 Collection 인터페이스를 상속하지 않으므로 entrySet() 등을 통해 순회한다.
+
+```java
+Map<Integer, String> members = new HashMap<>();
+
+members.put(1001, "홍길동");
+members.put(1002, "김철수");
+
+for (Map.Entry<Integer, String> entry :
+        members.entrySet()) {
+
+    System.out.println(
+        entry.getKey() + " : " + entry.getValue()
+    );
+}
+```
+
+**List 중복 제거**
+
+```java
+List<String> names =
+        List.of("Java", "Spring", "Java");
+
+Set<String> unique = new HashSet<>(names);
+
+System.out.println(unique.size()); // 2
+```
+
+※ 두 예제는 `java.util.*`를 import한 메서드 내부 코드이다.
+
+**핵심**
+
+- keySet(): Key 순회
+- values(): Value 순회
+- entrySet(): Key와 Value를 함께 순회
+- HashSet 생성자에 List를 전달하면 중복 요소를 제거할 수 있다.
+- HashSet 변환 후에는 원래 List의 순서가 보장되지 않는다.
+
+### 5. Collections 유틸리티
+
+Collections는 컬렉션의 정렬, 검색, 순서 변경 등을 지원하는 유틸리티 클래스이다.
+
+| 메서드 | 역할 |
+|---|---|
+| sort() | List 정렬 |
+| reverse() | 순서 뒤집기 |
+| shuffle() | 무작위 섞기 |
+| max() | 최댓값 조회 |
+| min() | 최솟값 조회 |
+| binarySearch() | 정렬된 List에서 이진 탐색 |
+
+**Java 예제**
+
+```java
+List<Integer> numbers =
+        new ArrayList<>(List.of(30, 10, 20));
+
+Collections.sort(numbers);
+
+System.out.println(numbers); // [10, 20, 30]
+
+Collections.reverse(numbers);
+
+System.out.println(numbers); // [30, 20, 10]
+```
+
+※ `java.util.*`를 import한 메서드 내부 코드이다.
+
+**주의**
+
+- Collection은 인터페이스, Collections는 유틸리티 클래스이다.
+- sort()와 reverse()는 원본 List를 변경한다.
+- binarySearch()는 해당 비교 기준에 따라 정렬된 데이터에 사용한다.
+
+### 6. 제네릭과 컬렉션의 결합
+
+제네릭은 컬렉션에 저장할 데이터 타입을 지정하여 컴파일 시 타입 안정성을 확보한다.
+
+**제네릭 클래스와 메서드**
+
+| 구분 | 특징 |
+|---|---|
+| Generic Class | 객체 생성 시 타입 인자 지정 |
+| Generic Method | 메서드 호출 시 타입 인자 결정 또는 추론 |
+
+**주요 타입 매개변수**
+
+| 기호 | 의미 |
+|---|---|
+| T | Type |
+| E | Element |
+| K | Key |
+| V | Value |
+
+**와일드카드와 PECS**
+
+| 문법 | 의미 |
+|---|---|
+| `<?>` | 알 수 없는 타입 |
+| `<? extends T>` | T 또는 하위 타입 |
+| `<? super T>` | T 또는 상위 타입 |
+
+```text
+PECS (Producer Extends, Consumer Super)
+
+Producer Extends → 읽기 중심
+Consumer Super   → 쓰기 중심
+```
+
+**핵심**
+
+- 제네릭은 잘못된 타입 저장을 컴파일 단계에서 방지한다.
+- 타입 인자의 구체적인 정보는 일반적으로 타입 소거의 영향을 받는다.
+- List<Integer>는 List<Number>의 하위 타입이 아니다.
+
+### 7. 불변 컬렉션과 수정 불가능한 뷰
+
+Java는 컬렉션의 변경을 제한하는 여러 방법을 제공한다.
+
+| 구분 | 특징 |
+|---|---|
+| List.of() | 변경 불가능한 List 생성 |
+| Set.of() | 변경 불가능한 Set 생성 |
+| Map.of() | 변경 불가능한 Map 생성 |
+| Collections.unmodifiableList() | 기존 List의 수정 불가능한 뷰 생성 |
+
+**Java 예제**
+
+```java
+List<String> names =
+        List.of("Java", "Spring");
+
+// names.add("Oracle");
+// UnsupportedOperationException 발생
+```
+
+**unmodifiableList()와의 차이**
+
+```java
+List<String> original = new ArrayList<>();
+
+original.add("Java");
+
+List<String> view =
+        Collections.unmodifiableList(original);
+
+original.add("Spring");
+
+System.out.println(view); // [Java, Spring]
+```
+
+※ 두 예제는 `java.util.*`를 import한 메서드 내부 코드이다.
+
+**주의**
+
+- List.of()는 null 요소를 허용하지 않는다.
+- unmodifiableList()는 원본이 변경되면 뷰에도 변경 내용이 반영될 수 있다.
+- 수정 불가능한 컬렉션이라도 내부 요소 객체까지 불변인 것은 아니다.
+
+### 8. 실무 데이터 관리 구조
+
+여러 컬렉션을 조합하면 기능에 맞는 데이터 관리 구조를 설계할 수 있다.
+
+**도서 관리 시스템 예시**
+
+| 기능 | 자료구조 | 목적 |
+|---|---|---|
+| 전체 도서 목록 | ArrayList | 목록 저장 및 조회 |
+| ISBN 중복 검사 | HashSet | 중복 데이터 방지 |
+| 도서번호 검색 | HashMap | Key 기반 빠른 조회 |
+| 도서 정렬 | Collections, Comparator | 정렬 조건 적용 |
+| 대출 대기열 | ArrayDeque | FIFO 처리 |
+
+**Spring Boot와의 연결**
+
+| 계층 | 활용 예시 |
+|---|---|
+| Controller | `ApiResponse<List<Member>>` |
+| Service | `List<Member>` |
+| Repository | `JpaRepository<Member, Long>` |
+
+**핵심**
+
+- 하나의 컬렉션으로 모든 기능을 처리할 필요는 없다.
+- 기능에 적합한 컬렉션을 조합하여 데이터 구조를 구성한다.
+- 컬렉션과 제네릭은 Spring Boot의 데이터 처리 및 응답 구조에서도 활용된다.
+
+### ✅ Day25 핵심 정리
+
+- 컬렉션은 데이터의 순서, 중복, 검색, 정렬 요구사항에 따라 선택한다.
+- ArrayList는 일반적인 목록 관리, HashSet은 중복 제거에 적합하다.
+- TreeSet과 TreeMap은 정렬이 필요한 데이터에 활용한다.
+- HashMap은 Key 기반 데이터 조회에 사용한다.
+- Iterator는 컬렉션 순회와 요소 삭제에 활용한다.
+- Map 순회 시 Key와 Value가 모두 필요하면 entrySet()을 사용한다.
+- Collections는 정렬 및 검색 기능을 제공하는 유틸리티 클래스이다.
+- 제네릭은 타입 안정성을 제공하며 PECS는 와일드카드 선택 원칙이다.
+- List.of()와 unmodifiableList()는 변경을 제한하지만 동작 방식이 다르다.
+- 실무에서는 여러 컬렉션을 목적에 맞게 조합하여 사용한다.
+
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## ✅ Java Day1~24 최종 핵심 정리
 
