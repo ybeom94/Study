@@ -39,6 +39,7 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 23** | Java 리플렉션·어노테이션·제네릭 심화 | Class, Method, Wildcard, PECS, Type Erasure |
 | **Day 24** | Java 컬렉션 프레임워크 및 제네릭 활용 | List, Set, Queue, Map, Iterator, Comparator |
 | **Day 25** | Java 컬렉션 프레임워크 실전 활용 | 컬렉션 선택, Iterator, Map 순회, Collections, 불변 컬렉션, Generic, PECS |
+| **Day 26** | Java 멀티스레드 및 스레드 풀 | Thread, Runnable, 생명주기, synchronized, volatile, ExecutorService, Future, ThreadPoolExecutor, Virtual Thread, @Async |
 
 
 ---
@@ -1897,15 +1898,469 @@ System.out.println(view); // [Java, Spring]
 </details>
 
 
+---
 
+## Day26. Java 멀티스레드 및 스레드 풀
 
+<details>
+<summary>📖 핵심 내용 보기</summary>
 
+### 🎯 학습 목표
 
+Java의 멀티스레드 실행 구조와 동기화 원리를 이해하고, 스레드 풀과 가상 스레드를 활용하여 비동기 작업을 효율적으로 관리한다.
 
+### 1. 프로세스와 스레드
 
+스레드(Thread)는 프로세스 내부에서 작업을 수행하는 실행 흐름이다.
 
+| 구분 | Process | Thread |
+|---|---|---|
+| 의미 | 실행 중인 프로그램 | 프로세스 내부의 실행 단위 |
+| 메모리 | 프로세스별 독립된 주소 공간 | 같은 프로세스의 메모리 공유 |
+| 생성 비용 | 상대적으로 큼 | 상대적으로 작음 |
+| 데이터 공유 | IPC 등의 별도 수단 필요 | 공유 객체에 접근 가능 |
+| 주요 목적 | 프로그램 실행 및 격리 | 동시 작업 처리 |
 
+**멀티스레드(Multithreading)**
 
+하나의 프로세스에서 여러 스레드가 작업을 동시에 또는 번갈아 수행하는 방식이다.
+
+```text
+Process
+   │
+   ├── Thread A : 데이터 조회
+   │
+   ├── Thread B : 데이터 처리
+   │
+   └── Thread C : 결과 전송
+```
+
+**핵심**
+
+- 동시성(Concurrency): 여러 작업을 겹치는 시간 동안 진행한다.
+- 병렬성(Parallelism): 여러 작업을 실제로 동시에 실행한다.
+- 멀티스레드는 응답성과 처리량 개선에 활용할 수 있다.
+- 공유 데이터에 접근할 경우 동기화가 필요할 수 있다.
+
+### 2. 스레드 생성 및 실행
+
+Java에서는 Thread 클래스와 Runnable 인터페이스를 이용하여 스레드를 생성할 수 있다.
+
+| 방법 | 특징 |
+|---|---|
+| Thread 상속 | run() 메서드 재정의 |
+| Runnable 구현 | 작업 정의와 스레드 객체 분리 |
+| Lambda | Runnable을 간결하게 구현 |
+
+**Java 예제**
+
+```java
+public class Main {
+
+    public static void main(String[] args)
+            throws InterruptedException {
+
+        Runnable task = () ->
+                System.out.println(
+                    Thread.currentThread().getName()
+                );
+
+        Thread thread = new Thread(task);
+
+        thread.start();
+        thread.join();
+    }
+}
+```
+
+**start()와 run()의 차이**
+
+| 메서드 | 역할 |
+|---|---|
+| start() | 새로운 스레드의 실행을 시작 |
+| run() | 현재 스레드에서 일반 메서드처럼 호출 |
+
+**주의사항**
+
+- 새로운 스레드를 실행하려면 start()를 호출한다.
+- run()을 직접 호출하면 새로운 스레드가 생성되지 않는다.
+- 하나의 Thread 객체에 start()를 두 번 호출할 수 없다.
+- 작업을 정의하는 방식으로는 Runnable을 우선 고려할 수 있다.
+
+### 3. 스레드 생명주기와 제어
+
+스레드는 생성부터 종료까지 여러 상태를 거친다.
+
+| 상태 | 의미 |
+|---|---|
+| NEW | 스레드 객체 생성 |
+| RUNNABLE | 실행 가능 또는 실행 중 |
+| BLOCKED | synchronized 모니터 락 획득 대기 |
+| WAITING | 다른 작업이나 신호를 무기한 대기 |
+| TIMED_WAITING | 지정된 시간 동안 대기 |
+| TERMINATED | 실행 종료 |
+
+**생명주기 개념**
+
+```text
+        NEW
+         │
+       start()
+         │
+         ▼
+      RUNNABLE
+         │
+    ┌────┼─────────┐
+    │    │         │
+    ▼    ▼         ▼
+ BLOCKED WAITING TIMED_WAITING
+    │    │         │
+    └────┴─────────┘
+         │
+         ▼
+      RUNNABLE
+         │
+     실행 완료
+         │
+         ▼
+     TERMINATED
+```
+
+**주요 제어 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| start() | 새로운 스레드 시작 |
+| sleep() | 현재 스레드 일정 시간 대기 |
+| join() | 대상 스레드의 종료 대기 |
+| interrupt() | 대상 스레드에 인터럽트 요청 |
+| getState() | 현재 스레드 상태 조회 |
+| setPriority() | 스레드 우선순위 설정 |
+
+**주의사항**
+
+- sleep()은 보유 중인 모니터 락을 자동으로 해제하지 않는다.
+- join()은 대상 스레드의 작업 완료를 기다린다.
+- interrupt()는 강제 종료가 아니라 인터럽트 요청이다.
+- 스레드 우선순위가 실행 순서를 보장하지는 않는다.
+
+### 4. 스레드 동기화(Synchronization)
+
+여러 스레드가 공유 데이터를 동시에 변경하면 경쟁 상태(Race Condition)가 발생할 수 있다.
+
+**주요 개념**
+
+| 개념 | 역할 |
+|---|---|
+| Race Condition | 실행 순서에 따라 결과가 달라지는 문제 |
+| synchronized | 공유 자원에 대한 상호 배제 |
+| volatile | 변수 변경의 가시성 보장 |
+| wait() | 모니터 락 해제 후 대기 |
+| notify() | 대기 중인 스레드 하나에 알림 |
+| notifyAll() | 대기 중인 스레드 전체에 알림 |
+
+**synchronized 예제**
+
+```java
+public class Main {
+
+    static class Counter {
+
+        private int value;
+
+        public synchronized void increment() {
+            value++;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static void main(String[] args)
+            throws InterruptedException {
+
+        Counter counter = new Counter();
+
+        Runnable task = () -> {
+            for (int i = 0; i < 1000; i++) {
+                counter.increment();
+            }
+        };
+
+        Thread a = new Thread(task);
+        Thread b = new Thread(task);
+
+        a.start();
+        b.start();
+
+        a.join();
+        b.join();
+
+        System.out.println(counter.getValue()); // 2000
+    }
+}
+```
+
+**synchronized와 volatile 비교**
+
+| 구분 | synchronized | volatile |
+|---|---|---|
+| 목적 | 상호 배제 및 가시성 | 가시성 및 접근 순서 보장 |
+| 락 사용 | O | X |
+| 복합 연산 보호 | 가능 | 불가능 |
+| 대표 활용 | 공유 상태 변경 보호 | 상태 플래그 |
+
+**주의사항**
+
+- `count++`는 읽기·증가·쓰기로 이루어진 복합 연산이다.
+- volatile만으로 `count++`의 원자성이 보장되지는 않는다.
+- synchronized는 동일한 모니터 락을 사용하는 스레드 사이에서 동작한다.
+- wait(), notify(), notifyAll()은 해당 객체의 모니터 락을 보유한 상태에서 호출해야 한다.
+
+### 5. 스레드 풀(Thread Pool)
+
+스레드 풀은 스레드를 관리하고 재사용하여 작업을 처리하는 구조이다.
+
+**기본 동작**
+
+```text
+     작업 요청
+         │
+         ▼
+      작업 큐
+         │
+         ▼
+     Thread Pool
+    ┌────┼────┐
+    ▼    ▼    ▼
+ Thread Thread Thread
+    │    │    │
+    └────┼────┘
+         ▼
+      작업 완료
+```
+
+**주요 인터페이스 및 클래스**
+
+| 구분 | 역할 |
+|---|---|
+| Executor | 작업 실행 추상화 |
+| ExecutorService | 작업 제출 및 실행기 생명주기 관리 |
+| ThreadPoolExecutor | 스레드 풀의 세부 설정 |
+| ScheduledExecutorService | 지연 및 주기적 작업 실행 |
+
+**주요 스레드 풀 생성 방법**
+
+| 메서드 | 특징 |
+|---|---|
+| newFixedThreadPool(n) | 고정된 수의 스레드를 중심으로 운영 |
+| newSingleThreadExecutor() | 하나의 작업 실행 스레드 사용 |
+| newCachedThreadPool() | 필요에 따라 스레드 생성 및 재사용 |
+| newScheduledThreadPool(n) | 예약·주기적 작업 실행 |
+
+**핵심**
+
+- 매번 스레드를 생성하는 비용을 줄일 수 있다.
+- 작업 제출과 실행을 분리할 수 있다.
+- 스레드 수와 작업 큐를 적절히 관리해야 한다.
+
+**주의:** 고정 크기 스레드 풀도 작업 큐가 무제한으로 증가할 수 있으므로 실제 서버에서는 대기 작업량을 고려해야 한다.
+
+### 6. ExecutorService와 Future
+
+ExecutorService는 스레드 풀에 작업을 제출하고 실행을 관리한다.
+
+**execute()와 submit()**
+
+| 메서드 | 특징 |
+|---|---|
+| execute() | Runnable 작업 실행, Future 반환하지 않음 |
+| submit() | 작업 제출 후 Future 반환 |
+| Future.get() | 작업 결과 조회, 필요 시 완료까지 대기 |
+| shutdown() | 새 작업 제출 중단 및 기존 작업 완료 허용 |
+| shutdownNow() | 실행 중인 작업의 중단을 시도 |
+
+**Java 예제**
+
+```java
+import java.util.concurrent.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws Exception {
+
+        ExecutorService pool =
+                Executors.newFixedThreadPool(2);
+
+        try {
+
+            pool.execute(() ->
+                    System.out.println("작업 수행")
+            );
+
+            Future<Integer> result =
+                    pool.submit(() -> 100);
+
+            System.out.println(result.get()); // 100
+
+        } finally {
+            pool.shutdown();
+        }
+    }
+}
+```
+
+**Runnable과 Callable 비교**
+
+| 구분 | Runnable | Callable |
+|---|---|---|
+| 메서드 | run() | call() |
+| 반환값 | 없음 | 있음 |
+| Checked Exception 선언 | 불가능 | 가능 |
+| 주요 활용 | 결과가 필요 없는 작업 | 결과가 필요한 작업 |
+
+**주의사항**
+
+- Future.get()은 결과가 준비되지 않았다면 호출 스레드를 대기시킨다.
+- submit()은 실행 중 발생한 예외를 Future를 통해 확인할 수 있다.
+- shutdown()은 기존 작업의 즉시 종료를 의미하지 않는다.
+- 작업 완료나 종료를 기다릴 때는 Future 또는 awaitTermination() 등을 사용한다.
+
+### 7. ThreadPoolExecutor 동작 원리
+
+ThreadPoolExecutor는 스레드 수와 작업 대기 큐를 설정하여 실행 자원을 관리한다.
+
+**주요 설정**
+
+| 설정 | 역할 |
+|---|---|
+| corePoolSize | 기본 스레드 수 |
+| maximumPoolSize | 최대 스레드 수 |
+| workQueue | 대기 작업 저장 |
+| keepAliveTime | 유휴 스레드 유지 시간 |
+| RejectedExecutionHandler | 작업 거부 시 처리 정책 |
+
+**대표적인 작업 처리 순서**
+
+```text
+      작업 요청
+          │
+          ▼
+   Core 스레드 여유?
+      │        │
+     Yes       No
+      │        │
+      ▼        ▼
+   스레드     Queue 저장
+   생성         │
+             큐 포화?
+              │    │
+             No   Yes
+              │    │
+              ▼    ▼
+             대기  Max 스레드 생성
+                        │
+                   최대치 초과?
+                        │
+                        ▼
+                    작업 거부
+```
+
+※ 위 흐름은 일반적인 ThreadPoolExecutor의 작업 제출 동작을 단순화한 것이며, 실제 처리는 큐 종류와 설정에 따라 달라진다.
+
+**핵심**
+
+- 기본 스레드 수와 최대 스레드 수를 별도로 관리할 수 있다.
+- 작업 큐가 가득 차면 추가 스레드 생성 또는 작업 거부가 발생할 수 있다.
+- 서버 부하에 따라 스레드 수와 큐 크기를 조절해야 한다.
+
+### 8. Java 21 가상 스레드와 Spring Boot 비동기
+
+**가상 스레드(Virtual Thread)**
+
+Java 21에서는 가상 스레드를 정식 기능으로 제공한다.
+
+| 구분 | 플랫폼 스레드 | 가상 스레드 |
+|---|---|---|
+| 관리 | OS 스레드에 대응 | JVM이 경량 스레드로 관리 |
+| 생성 비용 | 상대적으로 큼 | 상대적으로 작음 |
+| 주요 활용 | 일반 작업, CPU 작업 등 | 대량의 동시 I/O 작업 |
+| 대표 API | Thread, ExecutorService | Thread.startVirtualThread(), newVirtualThreadPerTaskExecutor() |
+
+**Java 21 예제**
+
+```java
+import java.util.concurrent.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws Exception {
+
+        try (ExecutorService executor =
+                Executors.newVirtualThreadPerTaskExecutor()) {
+
+            Future<String> future =
+                    executor.submit(() -> "작업 완료");
+
+            System.out.println(future.get());
+        }
+    }
+}
+```
+
+**주의사항**
+
+- 가상 스레드는 모든 작업을 병렬로 실행하는 기술이 아니다.
+- 대량의 I/O 대기 작업에서 특히 유용하다.
+- CPU 연산 중심 작업의 처리 성능이 자동으로 향상되지는 않는다.
+
+**Spring Boot @Async**
+
+Spring에서는 @Async를 이용하여 메서드를 비동기적으로 실행할 수 있다.
+
+```text
+Controller
+    │
+    ▼
+Service 호출
+    │
+    ▼
+@Async 프록시
+    │
+    ▼
+Executor / Thread Pool
+    │
+    ▼
+비동기 작업 실행
+```
+
+**핵심**
+
+- @EnableAsync로 비동기 메서드 실행 기능을 활성화한다.
+- @Async는 설정된 Executor를 통해 작업을 실행한다.
+- 기본적인 Spring 프록시 방식에서는 동일 객체 내부의 직접 메서드 호출에 @Async가 적용되지 않는다.
+- 스레드 풀 설정과 예외 처리 정책을 함께 고려해야 한다.
+
+### ✅ Day26 핵심 정리
+
+- 프로세스는 실행 중인 프로그램이고 스레드는 내부 실행 흐름이다.
+- 멀티스레드는 여러 작업을 동시에 또는 번갈아 처리한다.
+- start()는 새로운 스레드를 시작하고 run()은 일반 메서드 호출이다.
+- 스레드는 NEW, RUNNABLE, BLOCKED, WAITING, TIMED_WAITING, TERMINATED 상태를 가진다.
+- synchronized는 공유 데이터에 대한 상호 배제를 제공한다.
+- volatile은 가시성을 보장하지만 복합 연산의 원자성을 보장하지 않는다.
+- 스레드 풀은 스레드를 관리하고 재사용하여 작업을 실행한다.
+- ExecutorService는 작업 제출과 실행기 생명주기를 관리한다.
+- execute()는 Future를 반환하지 않고 submit()은 Future를 반환한다.
+- Future.get()은 비동기 작업 결과를 조회하며 필요하면 대기한다.
+- ThreadPoolExecutor는 기본 스레드 수, 최대 스레드 수, 작업 큐를 관리한다.
+- Java 21 가상 스레드는 대량의 동시 I/O 작업 처리에 유용하다.
+- Spring Boot에서는 @Async와 Executor를 이용하여 비동기 작업을 처리할 수 있다.
+
+</details>
 
 
 
