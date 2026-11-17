@@ -40,6 +40,8 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 24** | Java 컬렉션 프레임워크 및 제네릭 활용 | List, Set, Queue, Map, Iterator, Comparator |
 | **Day 25** | Java 컬렉션 프레임워크 실전 활용 | 컬렉션 선택, Iterator, Map 순회, Collections, 불변 컬렉션, Generic, PECS |
 | **Day 26** | Java 멀티스레드 및 스레드 풀 | Thread, Runnable, 생명주기, synchronized, volatile, ExecutorService, Future, ThreadPoolExecutor, Virtual Thread, @Async |
+| **Day 27** | Java 멀티스레드 심화 및 I/O | 멀티스레드 서버, 동기화, ThreadPoolExecutor, Callable·Future, java.io, File, Byte·Character Stream, Buffered I/O, Serialization, JSON |
+
 
 
 ---
@@ -2362,6 +2364,462 @@ Executor / Thread Pool
 
 </details>
 
+
+---
+
+## Day27. Java 멀티스레드 심화 및 I/O
+
+<details>
+<summary>📖 핵심 내용 보기</summary>
+
+### 🎯 학습 목표
+
+멀티스레드 서버의 동작 원리와 스레드 풀의 자원 관리 방법을 이해하고, Java I/O 스트림을 활용하여 파일과 객체 데이터를 안전하게 읽고 쓸 수 있다.
+
+### 1. 멀티스레드 서버와 동시성
+
+멀티스레드는 하나의 프로세스에서 여러 실행 흐름을 이용하여 작업을 처리하는 방식이다.
+
+**싱글스레드와 멀티스레드 비교**
+
+| 구분 | 싱글스레드 | 멀티스레드 |
+|---|---|---|
+| 작업 처리 | 하나의 실행 흐름 | 여러 실행 흐름 |
+| I/O 대기 | 다른 작업 진행을 방해할 수 있음 | 다른 스레드에서 작업 진행 가능 |
+| 자원 관리 | 상대적으로 단순 | 동기화 및 자원 관리 필요 |
+| 주요 활용 | 순차 작업 | 동시 요청 및 I/O 처리 |
+
+**멀티스레드 서버 처리 구조**
+
+```text
+          Client 요청
+               │
+               ▼
+         ServerSocket
+               │
+            accept()
+               │
+               ▼
+           연결 수락
+               │
+               ▼
+       작업 실행 스레드
+               │
+               ▼
+          요청 및 응답
+```
+
+- ServerSocket.accept()는 연결 요청이 도착할 때까지 대기할 수 있다.
+- 클라이언트의 요청 처리를 별도 스레드에 위임하면 서버는 다음 연결을 수락할 수 있다.
+- 클라이언트마다 스레드를 무제한 생성하면 메모리 및 스케줄링 비용이 증가한다.
+
+**핵심**
+
+동시성(Concurrency)은 여러 작업의 진행 시간을 겹치게 하는 것이며, 병렬성(Parallelism)은 여러 작업을 실제로 동시에 실행하는 것이다.
+
+### 2. 경쟁 상태와 동기화
+
+경쟁 상태(Race Condition)는 여러 스레드가 공유 데이터에 접근할 때 실행 순서에 따라 결과가 달라지는 문제이다.
+
+**대표적인 동기화 방법**
+
+| 구분 | 역할 |
+|---|---|
+| synchronized | 동일 모니터를 이용한 상호 배제 |
+| wait() | 모니터 락을 해제하고 대기 |
+| notify() | 대기 중인 스레드 하나에 알림 |
+| notifyAll() | 대기 중인 스레드 전체에 알림 |
+
+**synchronized 예제**
+
+```java
+class Counter {
+
+    private int count;
+
+    public synchronized void increment() {
+        count++;
+    }
+
+    public synchronized int getCount() {
+        return count;
+    }
+}
+```
+
+**핵심**
+
+- `count++`는 원자적 연산이 아니므로 동시 접근 시 값이 손실될 수 있다.
+- synchronized는 동일한 모니터 락을 사용하는 스레드 사이에서 임계 영역을 보호한다.
+- wait()는 모니터 락을 해제하고 대기한다.
+- notify()는 대기 중인 스레드를 깨우지만 즉시 락을 넘기는 것은 아니다.
+
+**주의사항**
+
+- wait(), notify(), notifyAll()은 해당 객체의 모니터 락을 보유한 상태에서 호출해야 한다.
+- wait()에서 깨어나면 조건을 다시 확인해야 하므로 일반적으로 while문과 함께 사용한다.
+- 스레드 간 락 획득 순서가 꼬이면 교착 상태(Deadlock)가 발생할 수 있다.
+
+### 3. 스레드 풀과 ExecutorService
+
+스레드 풀(Thread Pool)은 스레드를 관리하고 재사용하여 작업을 처리하는 구조이다.
+
+**Thread Pool 처리 흐름**
+
+```text
+       작업 요청
+           │
+           ▼
+        작업 큐
+           │
+           ▼
+       Thread Pool
+      ┌────┼────┐
+      ▼    ▼    ▼
+   Thread Thread Thread
+      │    │    │
+      └────┼────┘
+           │
+           ▼
+        작업 완료
+```
+
+**주요 스레드 풀**
+
+| 생성 메서드 | 특징 |
+|---|---|
+| newFixedThreadPool(n) | 고정된 수의 작업 스레드 중심으로 운영 |
+| newCachedThreadPool() | 필요에 따라 스레드 생성 및 재사용 |
+| newSingleThreadExecutor() | 단일 작업 실행 스레드 사용 |
+| newScheduledThreadPool(n) | 지연 및 주기적 작업 실행 |
+
+**ThreadPoolExecutor 주요 설정**
+
+| 설정 | 역할 |
+|---|---|
+| corePoolSize | 기본 스레드 수 |
+| maximumPoolSize | 최대 스레드 수 |
+| workQueue | 대기 작업 저장 |
+| keepAliveTime | 유휴 스레드 유지 시간 |
+| RejectedExecutionHandler | 작업 거부 정책 |
+
+**핵심**
+
+- 스레드 풀은 작업 실행과 스레드 관리를 분리한다.
+- 실행 중인 작업이 많으면 작업이 큐에서 대기할 수 있다.
+- 큐와 스레드의 수용 한도를 초과하면 작업이 거부될 수 있다.
+- ThreadPoolExecutor는 실행 자원과 과부하 정책을 직접 설정할 수 있다.
+
+**주의사항**
+
+- 무제한 스레드 생성은 메모리 고갈 및 문맥 교환 비용 증가를 유발할 수 있다.
+- newFixedThreadPool()은 기본적으로 제한 없는 작업 큐를 사용하므로 대기 작업 증가에 주의해야 한다.
+- shutdown()은 새 작업을 받지 않으며 제출된 작업의 완료를 허용한다.
+
+### 4. Callable과 Future를 이용한 결과 관리
+
+Runnable은 결과를 반환하지 않는 작업을 정의하고, Callable은 결과를 반환할 수 있는 작업을 정의한다.
+
+**Runnable과 Callable 비교**
+
+| 구분 | Runnable | Callable |
+|---|---|---|
+| 메서드 | run() | call() |
+| 반환값 | 없음 | 있음 |
+| Checked Exception 선언 | 불가능 | 가능 |
+| 주요 활용 | 결과가 필요 없는 작업 | 결과가 필요한 작업 |
+
+**Future 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| get() | 결과 반환, 필요 시 대기 |
+| isDone() | 작업 완료 여부 |
+| isCancelled() | 취소 여부 |
+| cancel() | 작업 취소 시도 |
+
+**Java 예제**
+
+```java
+import java.util.concurrent.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws Exception {
+
+        ExecutorService pool =
+                Executors.newFixedThreadPool(2);
+
+        try {
+            Future<Integer> future =
+                    pool.submit(() -> 10 + 20);
+
+            System.out.println(future.get()); // 30
+
+        } finally {
+            pool.shutdown();
+        }
+    }
+}
+```
+
+**주의사항**
+
+- Future.get()은 작업이 완료되지 않았다면 호출 스레드를 대기시킨다.
+- cancel(true)는 실행 중인 작업에 인터럽트를 요청하지만 종료를 보장하지 않는다.
+- submit()으로 제출한 작업의 예외는 Future.get()에서 확인할 수 있다.
+- Spring Boot의 @Async도 Executor를 통한 비동기 실행 구조와 연결된다.
+
+### 5. Java I/O와 스트림(Stream)
+
+Java I/O(Input/Output)는 프로그램이 외부 데이터를 읽거나 외부로 출력하기 위한 기능이다.
+
+**Input과 Output**
+
+```text
+파일 / 키보드 / 네트워크
+            │
+            ▼
+        Input Stream
+            │
+            ▼
+       Java Program
+            │
+            ▼
+       Output Stream
+            │
+            ▼
+파일 / 화면 / 네트워크
+```
+
+**I/O 스트림 종류**
+
+| 구분 | Byte Stream | Character Stream |
+|---|---|---|
+| 처리 대상 | 바이트 데이터 | 문자 데이터 |
+| 입력 | InputStream | Reader |
+| 출력 | OutputStream | Writer |
+| 대표 용도 | 이미지, 바이너리 파일 | 텍스트 파일 |
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| File | 파일 및 디렉터리 경로와 정보 관리 |
+| FileInputStream | 파일에서 바이트 읽기 |
+| FileOutputStream | 파일에 바이트 쓰기 |
+| FileReader | 파일에서 문자 읽기 |
+| FileWriter | 파일에 문자 쓰기 |
+| BufferedReader | 버퍼를 이용한 효율적인 문자 읽기 |
+| BufferedWriter | 버퍼를 이용한 효율적인 문자 쓰기 |
+
+**핵심**
+
+- 스트림은 데이터가 이동하는 흐름을 표현한다.
+- 입력 스트림과 출력 스트림은 역할이 구분된다.
+- 바이너리 데이터는 바이트 스트림으로 처리한다.
+- 텍스트 데이터는 문자 스트림을 이용하여 처리할 수 있다.
+
+### 6. File 클래스와 바이트 스트림
+
+File 클래스는 파일이나 디렉터리의 경로 및 메타데이터를 관리한다.
+
+**File 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| exists() | 파일 또는 디렉터리 존재 여부 |
+| getName() | 이름 조회 |
+| length() | 파일 크기 조회 |
+| mkdir() | 디렉터리 생성 |
+| mkdirs() | 상위 디렉터리까지 생성 |
+| createNewFile() | 새 파일 생성 시도 |
+| delete() | 파일 또는 빈 디렉터리 삭제 |
+
+**주의:** File은 파일 내용을 직접 읽거나 쓰는 클래스가 아니다.
+
+**바이트 스트림**
+
+| 클래스 | 역할 |
+|---|---|
+| FileInputStream | 파일의 바이트 데이터 읽기 |
+| FileOutputStream | 파일에 바이트 데이터 쓰기 |
+| BufferedInputStream | 버퍼 기반 바이트 입력 |
+| BufferedOutputStream | 버퍼 기반 바이트 출력 |
+| DataInputStream | 기본형 데이터를 바이트 형식으로 읽기 |
+| DataOutputStream | 기본형 데이터를 바이트 형식으로 쓰기 |
+
+**핵심**
+
+- File은 경로와 파일 정보를 관리한다.
+- 실제 데이터 입출력에는 스트림을 사용한다.
+- InputStream.read()는 더 이상 읽을 바이트가 없으면 -1을 반환한다.
+- 바이너리 파일을 복사할 때는 InputStream과 OutputStream을 사용할 수 있다.
+
+### 7. 문자 스트림과 Buffered I/O
+
+문자 스트림은 텍스트 데이터를 읽고 쓰기 위해 사용한다.
+
+**Reader와 Writer**
+
+| 클래스 | 역할 |
+|---|---|
+| FileReader | 파일에서 문자 읽기 |
+| FileWriter | 파일에 문자 쓰기 |
+| BufferedReader | 문자 입력 버퍼 및 readLine() 제공 |
+| BufferedWriter | 문자 출력 버퍼 및 newLine() 제공 |
+
+**Java 예제**
+
+```java
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        // 파일 쓰기
+        try (BufferedWriter writer =
+                new BufferedWriter(
+                    new FileWriter(
+                        "study.txt",
+                        StandardCharsets.UTF_8
+                    ))) {
+
+            writer.write("Java IO");
+            writer.newLine();
+            writer.write("Thread");
+        }
+
+        // 파일 읽기
+        try (BufferedReader reader =
+                new BufferedReader(
+                    new FileReader(
+                        "study.txt",
+                        StandardCharsets.UTF_8
+                    ))) {
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+    }
+}
+```
+
+**Buffered I/O의 장점**
+
+- 버퍼를 이용하여 작은 입출력 요청을 묶어 처리한다.
+- 실제 저장 장치에 대한 입출력 호출 횟수를 줄일 수 있다.
+- BufferedReader의 readLine()으로 텍스트를 줄 단위로 읽을 수 있다.
+
+**주의사항**
+
+- Reader.read()는 파일 끝에서 -1을 반환한다.
+- BufferedReader.readLine()은 파일 끝에서 null을 반환한다.
+- FileWriter의 append 옵션을 사용하면 기존 파일 끝에 내용을 추가할 수 있다.
+- try-with-resources를 사용하면 작업 종료 시 스트림을 자동으로 닫을 수 있다.
+
+### 8. 객체 직렬화와 JSON
+
+직렬화(Serialization)는 객체의 상태를 저장하거나 전송할 수 있는 데이터 형식으로 변환하는 과정이다.
+
+**Java 객체 직렬화**
+
+| 클래스 및 인터페이스 | 역할 |
+|---|---|
+| Serializable | 직렬화 가능 객체 표시 |
+| ObjectOutputStream | 객체를 직렬화하여 출력 |
+| ObjectInputStream | 직렬화된 객체 복원 |
+| writeObject() | 객체 직렬화 |
+| readObject() | 객체 역직렬화 |
+
+**직렬화 및 역직렬화 흐름**
+
+```text
+       Java Object
+            │
+            ▼
+    ObjectOutputStream
+            │
+            ▼
+      Binary Data
+            │
+            ▼
+    ObjectInputStream
+            │
+            ▼
+       Java Object
+```
+
+**Java 직렬화와 JSON 비교**
+
+| 구분 | Java 직렬화 | JSON |
+|---|---|---|
+| 데이터 형식 | Java 전용 바이너리 형식 | 텍스트 형식 |
+| 주요 용도 | Java 객체 상태 저장·복원 | 시스템 간 데이터 교환 |
+| 호환성 | Java 중심 | 다양한 언어에서 지원 |
+| 대표 활용 | 내부 객체 직렬화 | 웹 API 요청 및 응답 |
+
+**JSON 예시**
+
+```json
+{
+  "sabun": 1,
+  "name": "홍길동"
+}
+```
+
+**실무 활용**
+
+```text
+텍스트 파일
+    │
+    ▼
+FileReader
+    │
+    ▼
+BufferedReader
+    │
+    ▼
+Java Object
+    │
+    ├── ObjectOutputStream → 바이너리 파일
+    │
+    └── JSON 변환 → 웹 API
+```
+
+**주의사항**
+
+- ObjectOutputStream으로 직렬화할 클래스는 일반적으로 Serializable을 구현해야 한다.
+- Java 기본 직렬화는 클래스 변경과 보안 문제를 고려해야 한다.
+- 신뢰할 수 없는 데이터의 Java 역직렬화는 보안 위험이 있으므로 피하는 것이 좋다.
+- JSON 변환은 일반적으로 Jackson 등의 라이브러리를 이용한다.
+- 파일과 스트림은 사용 후 반드시 적절히 닫아야 한다.
+
+### ✅ Day27 핵심 정리
+
+- 멀티스레드는 여러 작업을 동시에 또는 번갈아 수행할 수 있도록 한다.
+- 멀티스레드 서버는 여러 클라이언트의 요청을 처리하는 데 활용된다.
+- 경쟁 상태는 공유 데이터의 접근 순서에 따라 결과가 달라지는 문제이다.
+- synchronized는 공유 자원의 임계 영역을 보호한다.
+- Thread Pool은 스레드를 관리하고 재사용하여 자원 사용을 제어한다.
+- ThreadPoolExecutor는 스레드 수, 작업 큐, 작업 거부 정책 등을 설정한다.
+- Callable은 결과를 반환할 수 있으며 Future는 비동기 작업의 결과를 관리한다.
+- Java I/O는 외부 데이터를 읽고 쓰는 기능을 제공한다.
+- File은 파일과 디렉터리의 경로 및 정보를 관리한다.
+- 바이트 스트림은 바이너리 데이터, 문자 스트림은 텍스트 데이터 처리에 활용한다.
+- BufferedReader와 BufferedWriter는 버퍼를 이용한 효율적인 문자 입출력을 지원한다.
+- try-with-resources는 I/O 자원의 자동 정리에 사용한다.
+- 직렬화는 객체의 상태를 저장하거나 전송 가능한 데이터 형태로 변환한다.
+- JSON은 서로 다른 언어와 시스템 사이의 데이터 교환에 널리 사용된다.
+
+</details>
 
 
 
