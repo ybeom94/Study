@@ -6,8 +6,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class GenieThreadPool
 {
+    @Getter 
     private static List<Music> musicList = new ArrayList<>();
     private final int threadNum = 4;
 

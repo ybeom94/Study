@@ -41,6 +41,8 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 25** | Java 컬렉션 프레임워크 실전 활용 | 컬렉션 선택, Iterator, Map 순회, Collections, 불변 컬렉션, Generic, PECS |
 | **Day 26** | Java 멀티스레드 및 스레드 풀 | Thread, Runnable, 생명주기, synchronized, volatile, ExecutorService, Future, ThreadPoolExecutor, Virtual Thread, @Async |
 | **Day 27** | Java 멀티스레드 심화 및 I/O | 멀티스레드 서버, 동기화, ThreadPoolExecutor, Callable·Future, java.io, File, Byte·Character Stream, Buffered I/O, Serialization, JSON |
+| **Day 28** | Java I/O 아키텍처 및 스트림 활용 | Byte·Character Stream, Buffered I/O, InputStreamReader·OutputStreamWriter, Data Stream, Serialization, File·Path·Files, try-with-resources |
+
 
 
 
@@ -2821,6 +2823,554 @@ Java Object
 
 </details>
 
+
+---
+
+## Day28. Java I/O 아키텍처 및 스트림 활용
+
+<details>
+<summary>📖 핵심 내용 보기</summary>
+
+### 🎯 학습 목표
+
+Java I/O 스트림의 구조와 역할을 이해하고, 데이터 종류와 처리 목적에 맞는 스트림을 조합하여 파일 입출력, 직렬화 및 자원 관리를 구현한다.
+
+### 1. Java I/O와 스트림 선택 기준
+
+스트림(Stream)은 프로그램과 외부 장치 사이에서 데이터가 이동하는 통로이다.
+
+**입출력의 기본 구조**
+
+```text
+외부 데이터 ── Input ──▶ Java Program
+외부 데이터 ◀─ Output ── Java Program
+```
+
+**스트림 종류**
+
+| 구분 | 바이트 스트림 | 문자 스트림 |
+|---|---|---|
+| 처리 단위 | byte | char |
+| 입력 | InputStream | Reader |
+| 출력 | OutputStream | Writer |
+| 주요 데이터 | 이미지, 영상, PDF, 바이너리 | TXT, CSV, 텍스트 |
+
+**스트림 선택 기준**
+
+| 처리 목적 | 주요 클래스 |
+|---|---|
+| 바이너리 파일 읽기 | FileInputStream |
+| 바이너리 파일 쓰기 | FileOutputStream |
+| 텍스트 파일 읽기 | FileReader |
+| 텍스트 파일 쓰기 | FileWriter |
+| 효율적인 문자 입출력 | BufferedReader, BufferedWriter |
+| 기본형 데이터 입출력 | DataInputStream, DataOutputStream |
+| 객체 직렬화 | ObjectInputStream, ObjectOutputStream |
+| 형식화된 문자 출력 | PrintStream, PrintWriter |
+
+**핵심**
+
+- 데이터의 종류에 따라 바이트 또는 문자 스트림을 선택한다.
+- 입력과 출력의 방향에 따라 사용하는 클래스가 다르다.
+- 여러 스트림을 결합하여 기능을 확장할 수 있다.
+
+### 2. 바이트 스트림과 파일 복사
+
+바이트 스트림은 데이터를 1바이트 단위로 처리하는 입출력 스트림이다.
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| read() | 1바이트 읽기 |
+| read(byte[]) | 바이트 배열로 읽기 |
+| write(int) | 1바이트 쓰기 |
+| write(byte[], int, int) | 지정한 범위의 바이트 쓰기 |
+| close() | 스트림 닫기 |
+
+**바이너리 파일 복사 예제**
+
+```java
+import java.io.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        try (InputStream in =
+                    new FileInputStream("photo.jpg");
+             OutputStream out =
+                    new FileOutputStream("copy.jpg")) {
+
+            byte[] buffer = new byte[8192];
+            int length;
+
+            while ((length = in.read(buffer)) != -1) {
+                out.write(buffer, 0, length);
+            }
+        }
+    }
+}
+```
+
+※ 실행 전에 `photo.jpg` 파일이 있어야 한다.
+
+**핵심**
+
+- FileInputStream은 파일의 바이트를 읽는다.
+- FileOutputStream은 파일에 바이트를 기록한다.
+- read()는 파일 끝에서 -1을 반환한다.
+- 배열을 사용하면 한 번에 여러 바이트를 처리할 수 있다.
+
+**주의사항**
+
+- read(byte[])가 항상 배열 전체를 채우는 것은 아니다.
+- write()에는 실제 읽은 길이를 전달해야 한다.
+- 바이너리 파일을 문자 스트림으로 처리하면 데이터가 손상될 수 있다.
+
+### 3. 문자 스트림과 텍스트 입출력
+
+문자 스트림은 텍스트 데이터를 문자 단위로 읽고 쓰는 스트림이다.
+
+**주요 클래스**
+
+| 클래스 | 역할 |
+|---|---|
+| FileReader | 파일의 문자 데이터 읽기 |
+| FileWriter | 파일에 문자 데이터 쓰기 |
+| BufferedReader | 버퍼 기반 문자 입력 |
+| BufferedWriter | 버퍼 기반 문자 출력 |
+
+**문자 스트림 예제**
+
+```java
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        try (Writer writer = new FileWriter(
+                "memo.txt",
+                StandardCharsets.UTF_8,
+                true)) {
+
+            writer.write("자바 입출력\n");
+        }
+
+        try (Reader reader = new FileReader(
+                "memo.txt",
+                StandardCharsets.UTF_8)) {
+
+            int ch;
+
+            while ((ch = reader.read()) != -1) {
+                System.out.print((char) ch);
+            }
+        }
+    }
+}
+```
+
+**FileWriter 생성 옵션**
+
+| 옵션 | 동작 |
+|---|---|
+| append = false | 기존 파일 내용 덮어쓰기 |
+| append = true | 기존 파일 끝에 내용 추가 |
+
+**핵심**
+
+- Reader와 Writer는 텍스트 처리에 사용한다.
+- 문자 인코딩을 명시하면 환경에 따른 문자 깨짐을 줄일 수 있다.
+- FileWriter의 append 옵션으로 기존 파일에 내용을 이어 쓸 수 있다.
+
+### 4. 보조 스트림과 버퍼·문자 변환
+
+보조 스트림은 기존 스트림을 감싸 추가 기능을 제공하는 스트림이다.
+
+**주요 보조 스트림**
+
+| 클래스 | 역할 |
+|---|---|
+| BufferedInputStream | 버퍼 기반 바이트 입력 |
+| BufferedOutputStream | 버퍼 기반 바이트 출력 |
+| BufferedReader | 버퍼 기반 문자 입력 |
+| BufferedWriter | 버퍼 기반 문자 출력 |
+| InputStreamReader | 바이트를 문자로 디코딩 |
+| OutputStreamWriter | 문자를 바이트로 인코딩 |
+
+**스트림 연결 구조**
+
+```text
+FileInputStream
+      │
+      ▼
+InputStreamReader
+      │
+      ▼
+BufferedReader
+      │
+      ▼
+Java Program
+```
+
+**문자 변환과 버퍼를 결합한 예제**
+
+```java
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        try (BufferedReader reader =
+                new BufferedReader(
+                    new InputStreamReader(
+                        new FileInputStream("memo.txt"),
+                        StandardCharsets.UTF_8))) {
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+    }
+}
+```
+
+**주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| readLine() | 한 줄씩 읽기 |
+| newLine() | 줄 구분자 쓰기 |
+| flush() | 버퍼에 남은 출력 데이터 전달 |
+| close() | 스트림과 관련 자원 닫기 |
+
+**핵심**
+
+- 보조 스트림은 기존 스트림을 감싸 기능을 확장한다.
+- 버퍼는 작은 입출력 작업을 묶어 처리하여 호출 횟수를 줄일 수 있다.
+- InputStreamReader와 OutputStreamWriter는 문자 인코딩 변환을 담당한다.
+- readLine()은 파일 끝에서 null을 반환한다.
+
+**주의사항**
+
+- 문자 인코딩과 디코딩에 사용하는 문자셋이 일치해야 한다.
+- flush()는 버퍼의 데이터를 전달하지만 디스크 영구 저장까지 보장하지 않는다.
+- 보조 스트림을 닫으면 일반적으로 연결된 하위 스트림도 닫힌다.
+
+### 5. 기본형 스트림과 프린트 스트림
+
+**DataInputStream / DataOutputStream**
+
+기본형 데이터를 지정된 바이너리 형식으로 읽고 쓰는 보조 스트림이다.
+
+| 메서드 | 역할 |
+|---|---|
+| writeInt() / readInt() | int 저장 및 복원 |
+| writeDouble() / readDouble() | double 저장 및 복원 |
+| writeBoolean() / readBoolean() | boolean 저장 및 복원 |
+| writeUTF() / readUTF() | 수정 UTF-8 형식의 문자열 저장 및 복원 |
+
+**기본형 데이터 저장 예제**
+
+```java
+import java.io.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        try (DataOutputStream out =
+                new DataOutputStream(
+                    new FileOutputStream("score.dat"))) {
+
+            out.writeInt(100);
+            out.writeDouble(95.5);
+        }
+
+        try (DataInputStream in =
+                new DataInputStream(
+                    new FileInputStream("score.dat"))) {
+
+            System.out.println(in.readInt());    // 100
+            System.out.println(in.readDouble()); // 95.5
+        }
+    }
+}
+```
+
+**PrintStream / PrintWriter**
+
+데이터를 읽기 쉬운 문자 형식으로 출력할 때 사용한다.
+
+| 메서드 | 역할 |
+|---|---|
+| print() | 값 출력 |
+| println() | 값 출력 후 줄바꿈 |
+| printf() | 형식 지정 출력 |
+
+**주의사항**
+
+- DataOutputStream과 DataInputStream은 쓰기·읽기 순서 및 타입을 일치시켜야 한다.
+- 기본형 데이터 스트림은 사람이 읽는 텍스트 형식이 아니다.
+- PrintStream과 PrintWriter는 형식화된 출력에 사용한다.
+
+### 6. 객체 직렬화(Serialization)
+
+객체 직렬화는 Java 객체의 상태를 바이트 데이터로 변환하는 기능이다.
+
+**직렬화 구조**
+
+```text
+Java Object
+     │
+     ▼
+ObjectOutputStream
+     │
+     ▼
+Binary File
+     │
+     ▼
+ObjectInputStream
+     │
+     ▼
+Java Object
+```
+
+**주요 구성 요소**
+
+| 요소 | 역할 |
+|---|---|
+| Serializable | 직렬화 가능 여부 표시 |
+| ObjectOutputStream | 객체 직렬화 |
+| ObjectInputStream | 객체 역직렬화 |
+| writeObject() | 객체 저장 |
+| readObject() | 객체 복원 |
+| transient | 기본 직렬화 대상에서 필드 제외 |
+| serialVersionUID | 직렬화 클래스 버전 식별 |
+
+**Java 예제**
+
+```java
+import java.io.*;
+
+class Student implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    String name;
+    transient String password;
+
+    Student(String name, String password) {
+        this.name = name;
+        this.password = password;
+    }
+}
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException, ClassNotFoundException {
+
+        try (ObjectOutputStream out =
+                new ObjectOutputStream(
+                    new FileOutputStream("student.dat"))) {
+
+            out.writeObject(
+                new Student("홍길동", "secret")
+            );
+        }
+
+        try (ObjectInputStream in =
+                new ObjectInputStream(
+                    new FileInputStream("student.dat"))) {
+
+            Student student =
+                    (Student) in.readObject();
+
+            System.out.println(student.name);     // 홍길동
+            System.out.println(student.password); // null
+        }
+    }
+}
+```
+
+**주의사항**
+
+- Serializable은 직렬화를 허용하는 마커 인터페이스이다.
+- transient 필드는 기본 직렬화에서 제외되어 복원 시 기본값을 가진다.
+- transient는 암호화 기능이 아니다.
+- 신뢰할 수 없는 데이터의 Java 역직렬화는 보안 위험이 있으므로 피해야 한다.
+- 웹 API 데이터 교환에는 일반적으로 JSON 등의 형식을 사용한다.
+
+### 7. File, Path, Files를 이용한 파일 관리
+
+Java는 파일 경로와 파일 작업을 관리하기 위한 API를 제공한다.
+
+| 구분 | 역할 |
+|---|---|
+| File | 기존 파일·디렉터리 경로 및 정보 관리 |
+| Path | 파일 시스템의 경로 표현 |
+| Files | 파일 생성·복사·이동·삭제 및 입출력 |
+| StandardCopyOption | 복사·이동 옵션 설정 |
+
+**Files 주요 메서드**
+
+| 메서드 | 역할 |
+|---|---|
+| exists() | 경로 존재 여부 |
+| createDirectories() | 디렉터리 생성 |
+| readString() | 텍스트 파일 읽기 |
+| writeString() | 텍스트 파일 쓰기 |
+| copy() | 파일 복사 |
+| move() | 파일 이동 |
+| deleteIfExists() | 존재하는 파일 또는 빈 디렉터리 삭제 |
+
+**Java 예제**
+
+```java
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws IOException {
+
+        Path dir = Path.of("data");
+
+        Files.createDirectories(dir);
+
+        Path source = dir.resolve("memo.txt");
+
+        Files.writeString(
+            source, "Java I/O", StandardCharsets.UTF_8
+        );
+
+        String text = Files.readString(
+            source, StandardCharsets.UTF_8
+        );
+
+        System.out.println(text);
+
+        Files.copy(
+            source,
+            dir.resolve("copy.txt"),
+            StandardCopyOption.REPLACE_EXISTING
+        );
+    }
+}
+```
+
+**핵심**
+
+- Path는 파일 시스템 경로를 표현한다.
+- Files는 파일과 디렉터리를 조작하는 유틸리티이다.
+- 간단한 파일 읽기·쓰기는 Files API로 처리할 수 있다.
+- 복잡한 스트림 구성 없이 파일 복사와 이동을 수행할 수 있다.
+
+**주의사항**
+
+- Files.readString()은 파일 내용을 메모리에 읽으므로 대용량 파일에는 주의한다.
+- 덮어쓰기 옵션이 없으면 기존 대상 파일 때문에 복사에 실패할 수 있다.
+- 파일 작업은 IOException 등 예외 처리를 고려해야 한다.
+
+### 8. try-with-resources와 I/O 파이프라인 설계
+
+I/O 스트림은 파일 핸들 등의 자원을 사용하므로 작업이 끝나면 적절하게 닫아야 한다.
+
+**try-with-resources**
+
+- AutoCloseable을 구현한 자원을 자동으로 닫는다.
+- 정상 종료와 예외 발생 시 모두 자원 정리를 수행한다.
+- 여러 자원을 선언하면 선언의 역순으로 닫는다.
+
+**I/O 선택 흐름**
+
+```text
+처리할 데이터 확인
+         │
+         ▼
+    텍스트 데이터인가?
+      │          │
+     Yes         No
+      │          │
+      ▼          ▼
+ Reader/Writer  InputStream/OutputStream
+      │          │
+      ▼          ▼
+ 인코딩 변환?   데이터 종류 확인
+      │          │
+      ▼          ├── 기본형 → Data Stream
+ InputStreamReader│
+ OutputStreamWriter
+                 └── 객체 → Object Stream
+      │          │
+      └────┬─────┘
+           │
+           ▼
+      성능 개선 필요?
+           │
+           ▼
+     Buffered Stream
+           │
+           ▼
+    try-with-resources
+           │
+           ▼
+         작업 종료
+```
+
+**실전 활용 기준**
+
+| 상황 | 권장 방법 |
+|---|---|
+| 이미지·영상 등 바이너리 복사 | FileInputStream / FileOutputStream |
+| 대용량 바이너리 복사 | 버퍼를 이용한 반복 읽기·쓰기 |
+| 텍스트 한 줄씩 읽기 | BufferedReader |
+| 텍스트 파일 생성·수정 | FileWriter / BufferedWriter |
+| 문자셋 변환 | InputStreamReader / OutputStreamWriter |
+| 기본형 데이터 저장 | DataOutputStream |
+| Java 객체 상태 저장 | ObjectOutputStream |
+| 간단한 텍스트 파일 처리 | Files.readString() / writeString() |
+| 파일 복사·이동·삭제 | Files.copy() / move() / deleteIfExists() |
+
+**강의자료 종합 실습**
+
+1. 이름과 나이를 텍스트 파일로 저장한 뒤 다시 읽기
+2. 10MB 이상의 이미지 파일을 버퍼로 안전하게 복사하기
+3. Student 객체를 직렬화하여 파일에 저장하고 복원하기
+
+### ✅ Day28 핵심 정리
+
+- Java I/O는 데이터를 읽고 쓰기 위한 스트림 기반 구조이다.
+- InputStream과 OutputStream은 바이트 데이터를 처리한다.
+- Reader와 Writer는 문자 데이터를 처리한다.
+- FileInputStream과 FileOutputStream은 바이너리 파일 입출력에 사용한다.
+- FileReader와 FileWriter는 텍스트 파일 입출력에 사용한다.
+- 보조 스트림은 기존 스트림을 감싸 추가 기능을 제공한다.
+- BufferedReader와 BufferedWriter는 버퍼 기반 문자 입출력을 지원한다.
+- InputStreamReader와 OutputStreamWriter는 바이트와 문자 사이의 인코딩 변환을 담당한다.
+- DataInputStream과 DataOutputStream은 기본형 데이터를 저장하고 복원한다.
+- PrintStream과 PrintWriter는 형식화된 문자 출력에 사용한다.
+- ObjectOutputStream과 ObjectInputStream은 객체 직렬화와 역직렬화를 지원한다.
+- transient는 기본 직렬화 대상에서 특정 필드를 제외한다.
+- File은 파일 정보, Path는 경로, Files는 파일 작업을 관리한다.
+- try-with-resources는 I/O 자원을 안전하게 정리하는 데 사용한다.
+- I/O 설계에서는 데이터 종류, 저장 위치, 처리 방식에 맞는 스트림을 선택해야 한다.
+
+</details>
 
 
 
