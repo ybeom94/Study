@@ -42,6 +42,7 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 26** | Java 멀티스레드 및 스레드 풀 | Thread, Runnable, 생명주기, synchronized, volatile, ExecutorService, Future, ThreadPoolExecutor, Virtual Thread, @Async |
 | **Day 27** | Java 멀티스레드 심화 및 I/O | 멀티스레드 서버, 동기화, ThreadPoolExecutor, Callable·Future, java.io, File, Byte·Character Stream, Buffered I/O, Serialization, JSON |
 | **Day 28** | Java I/O 아키텍처 및 스트림 활용 | Byte·Character Stream, Buffered I/O, InputStreamReader·OutputStreamWriter, Data Stream, Serialization, File·Path·Files, try-with-resources |
+| **Day 29** | Java I/O 및 네트워크 프로그래밍 | I/O 복습, TCP/IP, ServerSocket, Socket, Blocking I/O, Multi-Client, Thread, Protocol, Vector, Chat Server |
 
 
 
@@ -3372,6 +3373,527 @@ I/O 스트림은 파일 핸들 등의 자원을 사용하므로 작업이 끝나
 
 </details>
 
+
+---
+
+## Day29. Java I/O 및 네트워크 프로그래밍
+
+<details>
+<summary>📖 핵심 내용 보기</summary>
+
+### 🎯 학습 목표
+
+Java I/O의 주요 클래스를 복습하고, TCP 소켓 통신의 동작 원리와 멀티스레드를 이용한 다중 클라이언트 서버 구조를 이해한다.
+
+### 1. Java I/O 핵심 복습
+
+Java I/O는 프로그램과 외부 데이터 사이에서 데이터를 읽고 쓰기 위한 기능이다.
+
+**주요 I/O 클래스**
+
+| 클래스 | 역할 | 주요 메서드 |
+|---|---|---|
+| BufferedReader | 문자 데이터 읽기 | readLine() |
+| BufferedWriter | 문자 데이터 쓰기 | write(), newLine() |
+| BufferedInputStream | 버퍼 기반 바이트 읽기 | read() |
+| BufferedOutputStream | 버퍼 기반 바이트 쓰기 | write(), flush() |
+| ObjectInputStream | 객체 역직렬화 | readObject() |
+| ObjectOutputStream | 객체 직렬화 | writeObject() |
+| Files | 파일 생성·복사·삭제 등 | copy(), delete(), readString() |
+
+**스트림 선택 기준**
+
+- 텍스트 처리: Reader / Writer
+- 바이너리 처리: InputStream / OutputStream
+- 객체 저장 및 복원: ObjectInputStream / ObjectOutputStream
+- 파일 및 디렉터리 관리: Path / Files
+
+**핵심**
+
+- 스트림은 데이터가 이동하는 통로이다.
+- 버퍼를 사용하면 입출력 호출 횟수를 줄일 수 있다.
+- 작업이 끝난 스트림은 적절하게 닫아야 한다.
+- try-with-resources는 자원 정리를 자동으로 처리한다.
+
+### 2. Java 네트워크와 TCP 소켓 통신
+
+네트워크 프로그래밍은 서로 다른 컴퓨터 또는 프로세스가 네트워크를 통해 데이터를 주고받도록 구현하는 것이다.
+
+**주요 개념**
+
+| 개념 | 역할 |
+|---|---|
+| Server | 서비스를 제공하고 연결을 수락 |
+| Client | 서버에 연결하여 서비스 이용 |
+| IP Address | 네트워크에서 호스트를 식별하는 주소 |
+| Port | 호스트 내부의 통신 서비스 구분 |
+| TCP | 연결 지향적이며 신뢰성 있는 바이트 스트림 제공 |
+| Socket | 네트워크 통신의 종단점 |
+
+**ServerSocket과 Socket**
+
+| 클래스 | 역할 | 주요 메서드 |
+|---|---|---|
+| ServerSocket | 서버에서 연결 요청 대기 | accept(), close() |
+| Socket | 연결된 상대와 데이터 통신 | getInputStream(), getOutputStream(), close() |
+
+**TCP 통신의 기본 구조**
+
+```text
+     Server                         Client
+        │                              │
+        ▼                              │
+ ServerSocket(3355)                    │
+        │                              │
+        ▼                              ▼
+     accept() ◀────────────── new Socket(IP, Port)
+        │                              │
+        ▼                              ▼
+      Socket ◀──── TCP 연결 ────▶ Socket
+        │                              │
+        └──────── 데이터 송수신 ────────┘
+                       │
+                       ▼
+                   연결 종료
+```
+
+**핵심**
+
+- ServerSocket은 서버에서 클라이언트의 연결 요청을 수락한다.
+- Socket은 실제 데이터 송수신을 담당한다.
+- 서버와 클라이언트는 IP 주소와 포트를 이용해 연결한다.
+- TCP는 데이터의 순서와 신뢰성을 제공하지만 메시지 경계 자체를 보장하지 않는다.
+
+### 3. ServerSocket과 Socket 기본 사용
+
+**TCP 통신의 5단계**
+
+1. 서버 실행 및 ServerSocket 생성
+2. 클라이언트의 Socket 연결 요청
+3. 서버의 accept()를 통한 연결 수락
+4. 입력·출력 스트림을 이용한 데이터 송수신
+5. Socket 및 관련 자원 종료
+
+**서버 예제 — Server.java**
+
+```java
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+
+public class Server {
+
+    public static void main(String[] args) throws IOException {
+
+        try (ServerSocket server = new ServerSocket(3355);
+             Socket socket = server.accept();
+             BufferedReader in = new BufferedReader(
+                 new InputStreamReader(
+                     socket.getInputStream(),
+                     StandardCharsets.UTF_8
+                 ));
+             PrintWriter out = new PrintWriter(
+                 new OutputStreamWriter(
+                     socket.getOutputStream(),
+                     StandardCharsets.UTF_8
+                 ), true)) {
+
+            String message = in.readLine();
+
+            if (message != null) {
+                out.println("서버 응답: " + message);
+            }
+        }
+    }
+}
+```
+
+**클라이언트 예제 — Client.java**
+
+```java
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+
+public class Client {
+
+    public static void main(String[] args) throws IOException {
+
+        try (Socket socket = new Socket("127.0.0.1", 3355);
+             BufferedReader in = new BufferedReader(
+                 new InputStreamReader(
+                     socket.getInputStream(),
+                     StandardCharsets.UTF_8
+                 ));
+             PrintWriter out = new PrintWriter(
+                 new OutputStreamWriter(
+                     socket.getOutputStream(),
+                     StandardCharsets.UTF_8
+                 ), true)) {
+
+            out.println("안녕하세요");
+
+            System.out.println(in.readLine());
+        }
+    }
+}
+```
+
+**실행 결과**
+
+```text
+서버 응답: 안녕하세요
+```
+
+※ 두 파일을 별도로 컴파일하고 서버를 먼저 실행한 뒤 클라이언트를 실행한다.
+
+**핵심**
+
+- accept()는 클라이언트 연결을 수락하고 Socket을 반환한다.
+- getInputStream()은 데이터 수신에 사용한다.
+- getOutputStream()은 데이터 송신에 사용한다.
+- TCP 소켓의 입출력 스트림은 필요에 따라 문자 스트림으로 변환할 수 있다.
+
+### 4. Blocking I/O와 다중 클라이언트 처리
+
+Blocking I/O는 입출력 작업이 완료될 때까지 호출한 스레드가 대기할 수 있는 방식이다.
+
+**대표적인 블로킹 메서드**
+
+| 메서드 | 대기 상황 |
+|---|---|
+| accept() | 새로운 연결 요청 대기 |
+| read() | 읽을 데이터 대기 |
+| readLine() | 줄 구분자 또는 스트림 종료까지 대기 |
+
+**1:1 통신의 한계**
+
+```text
+       Server
+          │
+          ▼
+       accept()
+          │
+          ▼
+       Client A
+          │
+          ▼
+      readLine() 대기
+          │
+          ▼
+ Client B, C의 처리가 지연될 수 있음
+```
+
+**멀티스레드 처리 구조**
+
+```text
+               Server
+                  │
+                  ▼
+             ServerSocket
+                  │
+                accept()
+                  │
+        ┌─────────┼─────────┐
+        │         │         │
+        ▼         ▼         ▼
+     Client A  Client B  Client C
+        │         │         │
+        ▼         ▼         ▼
+     Thread A  Thread B  Thread C
+        │         │         │
+        └─────────┼─────────┘
+                  │
+                  ▼
+             동시 요청 처리
+```
+
+**핵심**
+
+- 클라이언트별 통신 작업을 별도 스레드에 할당할 수 있다.
+- 서버는 한 클라이언트의 readLine() 대기로 다른 연결 처리가 중단되지 않도록 구성할 수 있다.
+- Thread.start()는 새로운 실행 흐름을 시작한다.
+- Thread.run()을 직접 호출하면 현재 스레드에서 실행된다.
+
+**주의사항**
+
+클라이언트마다 스레드를 무제한 생성하면 자원 부족 문제가 발생할 수 있다. 실제 서버에서는 스레드 풀, 가상 스레드, NIO 등의 대안을 고려한다.
+
+### 5. 다중 클라이언트 채팅 서버 구조
+
+강의자료에서는 Server, Client, ServerSocket, Thread, Vector를 조합하여 다중 사용자 채팅 서버를 구성한다.
+
+**주요 구성 요소**
+
+| 구성 요소 | 역할 |
+|---|---|
+| Server | 전체 채팅 서버 관리 |
+| ServerSocket | 클라이언트 연결 대기 |
+| Client | 개별 클라이언트의 통신 담당 |
+| Thread | 클라이언트별 요청 처리 |
+| Vector<Client> | 접속 중인 클라이언트 목록 관리 |
+| BufferedReader | 클라이언트 메시지 읽기 |
+| OutputStream | 클라이언트에 메시지 전송 |
+
+**서버의 기본 처리 순서**
+
+```text
+       Server 실행
+             │
+             ▼
+    ServerSocket 생성
+             │
+             ▼
+     클라이언트 연결 대기
+             │
+             ▼
+         accept()
+             │
+             ▼
+     Client 담당 객체 생성
+             │
+             ▼
+     접속자 목록에 추가
+             │
+             ▼
+        Thread 시작
+             │
+             ▼
+       메시지 수신·처리
+```
+
+**강의자료의 핵심 구조**
+
+```java
+Socket socket = serverSocket.accept();
+
+Client client = new Client(socket);
+
+clients.add(client);
+
+client.start();
+```
+
+※ 위 코드는 서버의 접속 처리 부분을 나타낸 예시이다. ServerSocket, Client, clients는 별도로 정의된 상태를 가정한다.
+
+**핵심**
+
+- 서버는 연결을 수락하고 클라이언트별 담당 객체를 생성한다.
+- 각 Client는 자신의 Socket과 입출력 스트림을 관리한다.
+- 접속자 목록은 전체 메시지 전송과 사용자 관리에 사용한다.
+- 여러 스레드가 접속자 목록을 공유하므로 동시 접근을 고려해야 한다.
+
+**주의사항**
+
+Vector는 주요 메서드에 동기화를 제공하지만, 반복 순회와 수정이 결합된 작업 전체의 안전성을 자동으로 보장하지는 않는다.
+
+### 6. 메시지 프로토콜(Protocol)
+
+프로토콜은 서버와 클라이언트 사이에서 데이터를 어떤 형식과 규칙으로 교환할지 정의한 약속이다.
+
+**강의자료의 채팅 프로토콜**
+
+| 기능 번호 | 기능 | 역할 |
+|---|---|---|
+| 100 | LOGIN | 사용자 로그인 및 접속 등록 |
+| 200 | WAITCHAT | 전체 사용자에게 메시지 전송 |
+| 300 | CHATEND | 채팅 종료 및 로그아웃 |
+| 400 | INFO | 특정 사용자 정보 조회 |
+
+**메시지 형식 예제**
+
+```text
+100|hong|홍길동|서울
+```
+
+| 데이터 | 의미 |
+|---|---|
+| 100 | 기능 번호 |
+| hong | 사용자 ID |
+| 홍길동 | 사용자 이름 |
+| 서울 | 주소 |
+
+**StringTokenizer**
+
+```java
+import java.util.StringTokenizer;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        String message = "100|hong|홍길동|서울";
+
+        StringTokenizer tokenizer =
+                new StringTokenizer(message, "|");
+
+        int protocol =
+                Integer.parseInt(tokenizer.nextToken());
+
+        String id = tokenizer.nextToken();
+        String name = tokenizer.nextToken();
+        String address = tokenizer.nextToken();
+
+        System.out.println(protocol);
+        System.out.println(id);
+        System.out.println(name);
+        System.out.println(address);
+    }
+}
+```
+
+**프로토콜 분기**
+
+```text
+      메시지 수신
+           │
+           ▼
+      기능 번호 추출
+           │
+           ▼
+    switch(protocol)
+           │
+    ┌──────┼──────┬──────┐
+    ▼      ▼      ▼      ▼
+   100    200    300    400
+  LOGIN  CHAT  LOGOUT   INFO
+```
+
+**핵심**
+
+- 메시지 앞부분의 기능 번호로 처리할 동작을 구분한다.
+- 구분자를 사용하여 여러 필드를 하나의 문자열로 전달할 수 있다.
+- StringTokenizer는 구분자를 기준으로 데이터를 분리한다.
+- 서버와 클라이언트는 동일한 프로토콜 형식을 사용해야 한다.
+
+**주의사항**
+
+- 잘못된 기능 번호와 데이터 개수에 대한 검증이 필요하다.
+- 구분자가 데이터에 포함되는 경우 처리 규칙이 필요하다.
+- TCP는 메시지 경계를 보장하지 않으므로 줄 구분자 또는 길이 정보 등의 메시지 구분 규칙이 필요하다.
+
+### 7. 특정 사용자 전송과 전체 전송
+
+다중 클라이언트 서버에서는 메시지의 전송 대상을 구분해야 한다.
+
+**메시지 전송 방식**
+
+| 방식 | 의미 | 활용 |
+|---|---|---|
+| messageTo() | 특정 사용자에게 전송 | 로그인 결과, 개인 정보 |
+| messageAll() | 모든 접속자에게 전송 | 전체 채팅, 입장·퇴장 알림 |
+
+**전송 구조**
+
+```text
+          Server
+             │
+       ┌─────┴─────┐
+       │           │
+       ▼           ▼
+   messageTo()  messageAll()
+       │           │
+       ▼       ┌───┼───┐
+   Client A    A   B   C
+```
+
+**로그인 처리 과정**
+
+1. 클라이언트의 로그인 요청 수신
+2. 기능 번호와 사용자 정보 분리
+3. 기존 사용자에게 입장 메시지 전송
+4. 새로운 클라이언트를 접속자 목록에 등록
+5. 새 사용자에게 기존 접속자 정보 전송
+
+**핵심**
+
+- 특정 사용자 전송은 해당 Socket의 출력 스트림을 사용한다.
+- 전체 전송은 접속자 목록을 순회하며 메시지를 전송한다.
+- 로그인과 로그아웃 시 접속자 목록이 변경된다.
+- 목록 조회와 변경이 동시에 발생할 수 있으므로 동기화가 중요하다.
+
+### 8. 안전한 로그아웃과 서버 자원 관리
+
+네트워크 프로그램은 정상 종료와 비정상 연결 종료 모두 처리해야 한다.
+
+**대표적인 연결 종료 상황**
+
+- 클라이언트의 정상 로그아웃
+- 네트워크 연결 끊김
+- 입출력 예외 발생
+- 서버 종료
+- 클라이언트 프로그램 강제 종료
+
+**readLine()의 반환값**
+
+```java
+String message;
+
+while ((message = reader.readLine()) != null) {
+    // 메시지 처리
+}
+```
+
+- 메시지가 있으면 문자열을 반환한다.
+- 상대가 출력 스트림을 정상 종료하고 데이터가 모두 소진되면 null을 반환할 수 있다.
+- 연결 오류가 발생하면 IOException이 발생할 수 있다.
+
+**자원 정리 구조**
+
+```text
+    연결 종료 감지
+           │
+           ▼
+     수신 반복 종료
+           │
+           ▼
+   접속자 목록에서 제거
+           │
+           ▼
+      입출력 자원 정리
+           │
+           ▼
+       Socket 종료
+```
+
+**주요 주의사항**
+
+| 항목 | 주의사항 |
+|---|---|
+| readLine() | null 반환 및 IOException 처리 |
+| Socket | 연결 종료 시 자원 정리 |
+| Thread | 강제 종료보다 정상적인 종료 흐름 설계 |
+| Vector | 순회와 변경이 동시에 발생하지 않도록 관리 |
+| OutputStream | 전송 오류 및 문자 인코딩 고려 |
+| Protocol | 잘못된 요청과 데이터 형식 검증 |
+| ServerSocket | 서버 종료 시 연결 대기 자원 정리 |
+
+**실무 연결**
+
+- 1:1 Socket 통신은 네트워크 통신의 기초이다.
+- 멀티스레드 서버는 여러 클라이언트의 요청을 처리할 수 있다.
+- 프로토콜 설계는 서버와 클라이언트의 통신 규칙을 정의한다.
+- 접속자 관리와 메시지 전송은 채팅 서버 및 실시간 서비스의 기본 구조가 된다.
+- 실제 운영 서버에서는 동시 접속 수, 자원 제한, 오류 처리, 보안 등을 추가로 고려해야 한다.
+
+### ✅ Day29 핵심 정리
+
+- Java I/O는 외부 데이터를 읽고 쓰는 스트림 기반 구조이다.
+- 네트워크 통신은 서버와 클라이언트 사이의 데이터 교환이다.
+- TCP는 연결 지향적이며 신뢰성 있는 바이트 스트림을 제공한다.
+- ServerSocket은 연결 요청을 기다리고 Socket은 실제 데이터 송수신을 담당한다.
+- accept()는 클라이언트 연결을 수락한다.
+- getInputStream()과 getOutputStream()은 Socket 통신에 사용한다.
+- Blocking I/O는 데이터 또는 연결을 기다리는 동안 스레드가 대기할 수 있다.
+- 다중 클라이언트 서버는 각 클라이언트의 작업을 별도 스레드에 할당할 수 있다.
+- Vector는 접속자 목록을 관리하는 데 사용할 수 있으나 복합 연산의 동기화가 필요하다.
+- 프로토콜은 서버와 클라이언트가 데이터를 교환하는 형식과 규칙이다.
+- StringTokenizer는 구분자를 이용한 문자열 분리에 사용한다.
+- messageTo()는 특정 사용자 전송, messageAll()은 전체 사용자 전송을 의미한다.
+- 로그아웃 및 연결 종료 시 접속자 목록과 입출력 자원을 정리해야 한다.
+- 실제 서버에서는 스레드 수, 공유 데이터, 프로토콜 검증 및 예외 처리를 함께 고려해야 한다.
+
+</details>
 
 
 
