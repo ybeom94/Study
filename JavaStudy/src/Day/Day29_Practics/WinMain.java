@@ -13,6 +13,7 @@ public class WinMain extends JFrame implements ActionListener, Runnable
     JTextField textField;
     JButton connectBtn;
     JButton exitBtn;
+    JScrollBar scrollBar;
 
     String name;
 
@@ -27,6 +28,7 @@ public class WinMain extends JFrame implements ActionListener, Runnable
         textArea = new JTextArea();
         textArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollBar = scrollPane.getVerticalScrollBar();
         textField = new JTextField(30);
         textField.setEnabled(false);
         connectBtn = new JButton("접속");
@@ -46,6 +48,8 @@ public class WinMain extends JFrame implements ActionListener, Runnable
         connectBtn.addActionListener(this);
         exitBtn.addActionListener(this);
         textField.addActionListener(this);
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
     public static void main(String[] args)
@@ -68,7 +72,7 @@ public class WinMain extends JFrame implements ActionListener, Runnable
             try
             {
                 // 서버 연결
-                socket = new Socket("localhost", 3355);
+                socket = new Socket("192.168.0.31", 11111);
                 // 요청 위치, 응답 위치
                 out = socket.getOutputStream(); // 서버로 전송
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream())); // 요청에 대한 응답값 받는다.
@@ -127,6 +131,7 @@ public class WinMain extends JFrame implements ActionListener, Runnable
                 String msg = in.readLine();
                 // 받은 값을 TextArea에 출력
                 textArea.append(msg + "\n");
+                scrollBar.setValue(scrollBar.getMaximum());
             }
         } 
         catch (Exception e)

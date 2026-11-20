@@ -43,6 +43,7 @@ Java의 기본 문법부터 객체지향 프로그래밍, 표준 라이브러리
 | **Day 27** | Java 멀티스레드 심화 및 I/O | 멀티스레드 서버, 동기화, ThreadPoolExecutor, Callable·Future, java.io, File, Byte·Character Stream, Buffered I/O, Serialization, JSON |
 | **Day 28** | Java I/O 아키텍처 및 스트림 활용 | Byte·Character Stream, Buffered I/O, InputStreamReader·OutputStreamWriter, Data Stream, Serialization, File·Path·Files, try-with-resources |
 | **Day 29** | Java I/O 및 네트워크 프로그래밍 | I/O 복습, TCP/IP, ServerSocket, Socket, Blocking I/O, Multi-Client, Thread, Protocol, Vector, Chat Server |
+| **Day 30** | Java JDBC·람다·Stream 및 Oracle 기초 | 관계형 DB, DBMS, PK·FK, 무결성, 관계대수, Oracle XE, JDBC, PreparedStatement, Lambda, Functional Interface, Stream API |
 
 
 
@@ -3892,6 +3893,702 @@ while ((message = reader.readLine()) != null) {
 - messageTo()는 특정 사용자 전송, messageAll()은 전체 사용자 전송을 의미한다.
 - 로그아웃 및 연결 종료 시 접속자 목록과 입출력 자원을 정리해야 한다.
 - 실제 서버에서는 스레드 수, 공유 데이터, 프로토콜 검증 및 예외 처리를 함께 고려해야 한다.
+
+</details>
+
+
+---
+
+## Day30. Java JDBC·람다·Stream 및 Oracle 기초
+
+<details>
+<summary>📖 핵심 내용 보기</summary>
+
+### 🎯 학습 목표
+
+관계형 데이터베이스의 구조와 무결성 제약조건을 이해하고, JDBC를 이용한 데이터베이스 연결 및 SQL 실행 방법을 익힌다. 또한 람다식과 Stream API를 활용하여 조회한 데이터를 효율적으로 처리한다.
+
+### 1. Java 네트워크 핵심 복습
+
+Java 소켓 통신은 서버와 클라이언트가 네트워크를 통해 데이터를 주고받는 구조이다.
+
+**1:N 다중 클라이언트 서버**
+
+| 구성 요소 | 역할 |
+|---|---|
+| ServerSocket | 클라이언트 연결 요청 대기 |
+| Socket | 연결된 상대와 데이터 송수신 |
+| Thread | 클라이언트별 통신 작업 실행 |
+| Vector | 접속 중인 클라이언트 목록 관리 |
+| Protocol | 메시지 형식 및 처리 규칙 정의 |
+
+**다중 클라이언트 채팅 서버 구조**
+
+```text
+           Server
+              │
+              ▼
+         ServerSocket
+              │
+            accept()
+              │
+      ┌───────┼───────┐
+      │       │       │
+      ▼       ▼       ▼
+   Client A Client B Client C
+      │       │       │
+      ▼       ▼       ▼
+   Thread A Thread B Thread C
+      │       │       │
+      └───────┼───────┘
+              │
+              ▼
+         메시지 처리
+```
+
+**핵심**
+
+- ServerSocket은 연결을 수락하고 Socket은 실제 통신을 수행한다.
+- 클라이언트별 스레드를 사용하면 여러 연결을 동시에 처리할 수 있다.
+- 접속자 목록을 순회하면 전체 사용자에게 메시지를 전송할 수 있다.
+- 프로토콜은 메시지의 의미와 처리 방법을 정의한다.
+
+**주의사항**
+
+- TCP는 바이트 스트림을 제공하며 메시지 경계를 보장하지 않는다.
+- 공유 접속자 목록에 여러 스레드가 접근할 때 동기화를 고려해야 한다.
+- 클라이언트마다 스레드를 무제한 생성하지 않도록 자원을 관리해야 한다.
+
+### 2. 데이터베이스와 DBMS
+
+데이터베이스(Database)는 관련 데이터를 일정한 규칙에 따라 체계적으로 저장한 데이터의 집합이다.
+
+DBMS(Database Management System)는 데이터베이스를 생성하고 관리하는 소프트웨어이다.
+
+**주요 개념**
+
+| 개념 | 설명 |
+|---|---|
+| Data | 가공되지 않은 데이터 |
+| Database | 체계적으로 저장된 데이터 집합 |
+| DBMS | 데이터베이스 관리 소프트웨어 |
+| RDBMS | 관계형 데이터베이스 관리 시스템 |
+| SQL | 관계형 데이터베이스를 다루는 언어 |
+| Transaction | 하나의 논리적인 작업 단위 |
+
+**파일 시스템과 DBMS 비교**
+
+| 구분 | 파일 시스템 | DBMS |
+|---|---|---|
+| 데이터 관리 | 개별 파일 중심 | 통합 관리 |
+| 데이터 중복 | 발생하기 쉬움 | 중복 최소화 가능 |
+| 동시 접근 | 별도 처리 필요 | 동시성 제어 기능 제공 |
+| 무결성 | 응용 프로그램에서 관리 | 제약조건으로 관리 가능 |
+| 백업·복구 | 별도 구현 필요 | 관련 기능 제공 |
+
+**데이터베이스 시스템의 구성**
+
+```text
+사용자
+   │
+   ▼
+응용 프로그램
+   │
+   ▼
+  DBMS
+   │
+   ▼
+데이터베이스
+```
+
+**3단계 스키마 구조**
+
+| 단계 | 역할 |
+|---|---|
+| 외부 스키마 | 사용자별 데이터 표현 |
+| 개념 스키마 | 데이터베이스 전체 논리 구조 |
+| 내부 스키마 | 실제 저장 및 접근 구조 |
+
+**핵심**
+
+- 데이터 독립성은 저장 구조나 논리 구조의 변경 영향을 줄이기 위한 개념이다.
+- 물리적 데이터 독립성은 내부 스키마 변경의 영향을 줄인다.
+- 논리적 데이터 독립성은 개념 스키마 변경의 영향을 줄인다.
+
+### 3. 관계형 데이터 모델과 무결성
+
+관계형 데이터 모델은 데이터를 행과 열로 구성된 테이블 형태로 표현한다.
+
+**주요 용어**
+
+| 용어 | 의미 |
+|---|---|
+| Relation | 관계형 테이블 |
+| Tuple | 테이블의 행 |
+| Attribute | 테이블의 열 |
+| Domain | 속성이 가질 수 있는 값의 범위 |
+| Degree | 속성의 개수 |
+| Cardinality | 튜플의 개수 |
+| Schema | 데이터베이스 구조 정의 |
+| Instance | 특정 시점의 실제 데이터 |
+
+**키(Key)의 종류**
+
+| 키 | 역할 |
+|---|---|
+| Super Key | 행을 유일하게 식별할 수 있는 속성 집합 |
+| Candidate Key | 최소성을 만족하는 슈퍼키 |
+| Primary Key(PK) | 대표 식별자로 선택한 후보키 |
+| Alternate Key | 기본키로 선택되지 않은 후보키 |
+| Foreign Key(FK) | 다른 테이블의 키를 참조하는 제약조건 |
+
+**주요 무결성 제약조건**
+
+| 제약조건 | 의미 |
+|---|---|
+| 개체 무결성 | 기본키는 중복되거나 NULL일 수 없음 |
+| 참조 무결성 | 외래키 값은 참조 대상과 일관되어야 함 |
+| 도메인 무결성 | 속성값이 정해진 형식과 범위를 만족해야 함 |
+
+**Oracle SQL 예제**
+
+```sql
+CREATE TABLE STUDENT (
+    ID NUMBER PRIMARY KEY,
+    NAME VARCHAR2(50) NOT NULL,
+    AGE NUMBER CHECK (AGE >= 0),
+    DEPT_ID NUMBER
+);
+```
+
+**핵심**
+
+- PK는 각 행을 구분하는 대표 식별자이다.
+- FK는 테이블 사이의 참조 관계를 유지한다.
+- NOT NULL은 NULL을 금지한다.
+- CHECK는 데이터의 값에 조건을 부여한다.
+- 무결성 제약조건은 잘못된 데이터 저장을 방지한다.
+
+**주의사항**
+
+외래키가 있다고 해서 해당 열에 반드시 값이 존재해야 하는 것은 아니다. NULL 허용 여부는 별도의 NOT NULL 제약조건 등으로 결정한다.
+
+### 4. 관계대수와 SQL
+
+관계대수(Relational Algebra)는 관계형 데이터베이스에서 원하는 데이터를 얻기 위한 연산 체계이다.
+
+**주요 관계대수 연산**
+
+| 연산 | 기호 | SQL 대응 개념 |
+|---|---|---|
+| 선택(Selection) | σ | WHERE |
+| 추출(Projection) | π | SELECT 열 지정 |
+| 합집합(Union) | ∪ | UNION |
+| 차집합(Difference) | − | MINUS |
+| 카티션 프로덕트 | × | CROSS JOIN |
+| 조인(Join) | ⋈ | JOIN |
+
+**선택과 추출**
+
+- 선택: 조건에 맞는 행을 선택한다.
+- 추출: 필요한 열을 선택한다.
+
+**SQL 예제**
+
+```sql
+-- 조건에 맞는 행 조회
+SELECT *
+FROM STUDENT
+WHERE AGE >= 20;
+
+-- 필요한 열만 조회
+SELECT NAME, AGE
+FROM STUDENT;
+
+-- 두 테이블 연결
+SELECT S.NAME, D.DEPT_NAME
+FROM STUDENT S
+JOIN DEPARTMENT D
+    ON S.DEPT_ID = D.DEPT_ID;
+```
+
+※ JOIN 예제는 DEPARTMENT 테이블이 존재한다고 가정한다.
+
+**핵심**
+
+- WHERE는 행을 조건에 따라 필터링한다.
+- SELECT는 조회할 열을 지정한다.
+- JOIN은 공통 조건을 기준으로 여러 테이블을 연결한다.
+- UNION은 결과를 합치고 중복 행을 제거한다.
+- MINUS는 Oracle에서 차집합을 구할 때 사용한다.
+
+**주의사항**
+
+순수 관계대수의 추출은 중복을 허용하지 않지만, SQL의 일반 SELECT는 중복 행을 반환할 수 있다. 중복 제거가 필요하면 DISTINCT를 사용한다.
+
+### 5. Oracle Database와 SQL Developer
+
+Oracle Database는 관계형 데이터를 저장하고 관리하는 RDBMS이다.
+
+강의자료에서는 Oracle Database 18c XE 설치와 SQL Plus, SQL Developer를 이용한 접속 과정을 다룬다.
+
+**주요 도구**
+
+| 도구 | 역할 |
+|---|---|
+| Oracle Database XE | 학습 및 개발용 Oracle Database |
+| SQL Plus | 명령줄 SQL 실행 도구 |
+| SQL Developer | GUI 기반 데이터베이스 개발·관리 도구 |
+| Oracle JDBC Driver | Java와 Oracle Database 연결 |
+
+**기본 접속 정보**
+
+| 항목 | 설명 |
+|---|---|
+| Host | 데이터베이스 서버 주소 |
+| Port | 데이터베이스 리스너 포트 |
+| Username | 데이터베이스 사용자 계정 |
+| Password | 계정 비밀번호 |
+| SID / Service Name | 접속 대상 데이터베이스 식별 |
+
+**SQL Developer 연결 흐름**
+
+```text
+Oracle Database 실행
+        │
+        ▼
+SQL Developer 실행
+        │
+        ▼
+새 데이터베이스 연결 생성
+        │
+        ▼
+Host / Port / 사용자 정보 입력
+        │
+        ▼
+접속 테스트
+        │
+        ▼
+SQL 실행
+```
+
+**SQL 실행 예제**
+
+```sql
+SELECT * FROM DEPT;
+```
+
+※ DEPT 테이블은 해당 계정에서 접근 가능한 경우에만 조회할 수 있다.
+
+**주의사항**
+
+- 강의자료의 설치 화면은 Oracle 18c XE 기준으로 작성되었다.
+- 실제 접속에 사용하는 SID 또는 Service Name은 설치 환경에 따라 다르다.
+- Oracle JDBC 연결에는 해당 환경에 맞는 JDBC Driver가 필요하다.
+- SYS, SYSTEM 같은 관리 계정보다 학습용 일반 계정을 사용하는 것이 좋다.
+- 데이터베이스 비밀번호를 소스 코드나 Git 저장소에 공개하지 않는다.
+- 접속 문제를 해결하기 위해 방화벽 전체를 비활성화하지 않는다.
+
+### 6. JDBC를 이용한 데이터베이스 처리
+
+JDBC(Java Database Connectivity)는 Java에서 데이터베이스에 연결하고 SQL을 실행하기 위한 표준 API이다.
+
+**JDBC 구조**
+
+```text
+Java Application
+        │
+        ▼
+     JDBC API
+        │
+        ▼
+    JDBC Driver
+        │
+        ▼
+ Oracle Database
+```
+
+**JDBC 주요 인터페이스 및 클래스**
+
+| 구성 요소 | 역할 |
+|---|---|
+| DriverManager | JDBC 연결 생성 |
+| Connection | 데이터베이스 연결 |
+| PreparedStatement | 매개변수를 사용하는 SQL 실행 |
+| ResultSet | SELECT 결과 조회 |
+| SQLException | JDBC 작업 오류 표현 |
+
+**JDBC 처리 순서**
+
+1. JDBC Driver 준비
+2. 데이터베이스 연결
+3. SQL 작성 및 PreparedStatement 생성
+4. SQL 실행
+5. 결과 처리
+6. 자원 해제
+
+**SQL 실행 메서드**
+
+| 메서드 | 주요 용도 | 반환값 |
+|---|---|---|
+| executeQuery() | SELECT | ResultSet |
+| executeUpdate() | INSERT, UPDATE, DELETE | 변경된 행 수(int) |
+
+**JDBC 조회 예제**
+
+```java
+import java.sql.*;
+
+public class Main {
+
+    public static void main(String[] args)
+            throws SQLException {
+
+        String url = "jdbc:oracle:thin:@localhost:1521/XEPDB1";
+        String user = "YOUR_USER";
+        String password = "YOUR_PASSWORD";
+
+        String sql =
+                "SELECT NAME FROM STUDENT WHERE AGE >= ?";
+
+        try (Connection conn =
+                     DriverManager.getConnection(
+                         url, user, password);
+             PreparedStatement ps =
+                     conn.prepareStatement(sql)) {
+
+            ps.setInt(1, 20);
+
+            try (ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    System.out.println(
+                        rs.getString("NAME")
+                    );
+                }
+            }
+        }
+    }
+}
+```
+
+※ 실행하려면 Oracle Database, JDBC Driver, STUDENT 테이블 및 실제 계정 정보가 필요하다. 접속 URL은 예시이며 설치 환경에 따라 달라질 수 있다.
+
+**PreparedStatement의 장점**
+
+- SQL 문장과 매개변수 값을 분리한다.
+- SQL Injection 위험을 줄이는 데 도움이 된다.
+- 동일한 SQL을 서로 다른 값으로 반복 실행하기 편리하다.
+
+**트랜잭션(Transaction)**
+
+```text
+트랜잭션 시작
+      │
+      ▼
+  SQL 작업 수행
+      │
+      ▼
+    성공 여부
+    │      │
+   성공    실패
+    │      │
+    ▼      ▼
+  COMMIT ROLLBACK
+```
+
+- commit(): 트랜잭션의 변경 사항 확정
+- rollback(): 확정되지 않은 변경 사항 취소
+- setAutoCommit(false): 자동 커밋을 해제하여 트랜잭션 직접 관리
+
+**주의사항**
+
+- PreparedStatement에는 사용자 입력값을 문자열 연결로 삽입하지 않는다.
+- ResultSet은 next()를 통해 행 단위로 이동한다.
+- Connection, PreparedStatement, ResultSet은 적절히 닫아야 한다.
+- 여러 SQL 작업을 하나의 단위로 처리해야 한다면 트랜잭션을 고려한다.
+
+### 7. 람다식과 함수형 인터페이스
+
+람다식(Lambda Expression)은 함수형 인터페이스의 동작을 간결하게 표현하는 문법이다.
+
+**기본 문법**
+
+```text
+(매개변수) -> 표현식
+
+(매개변수) -> {
+    실행문;
+}
+```
+
+**함수형 인터페이스**
+
+함수형 인터페이스는 추상 메서드가 하나인 인터페이스이다.
+
+```java
+@FunctionalInterface
+interface Calculator {
+    int add(int a, int b);
+}
+```
+
+**람다식 구현**
+
+```java
+Calculator calculator = (a, b) -> a + b;
+
+System.out.println(calculator.add(10, 20));
+// 30
+```
+
+**주요 함수형 인터페이스**
+
+| 인터페이스 | 추상 메서드 | 역할 |
+|---|---|---|
+| Supplier<T> | get() | 값을 공급 |
+| Consumer<T> | accept(T) | 값을 소비 |
+| Function<T,R> | apply(T) | 값을 변환 |
+| Predicate<T> | test(T) | 조건 검사 |
+
+**람다식 예제**
+
+```java
+import java.util.function.*;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        Supplier<String> supplier = () -> "Java";
+
+        Consumer<String> consumer =
+                System.out::println;
+
+        Function<String, Integer> function =
+                String::length;
+
+        Predicate<Integer> predicate =
+                age -> age >= 20;
+
+        consumer.accept(supplier.get());
+
+        System.out.println(
+            function.apply("Spring")
+        ); // 6
+
+        System.out.println(
+            predicate.test(20)
+        ); // true
+    }
+}
+```
+
+**메서드 참조(Method Reference)**
+
+```text
+람다식:      x -> System.out.println(x)
+
+메서드 참조: System.out::println
+```
+
+**주의사항**
+
+- 람다식은 함수형 인터페이스에 사용한다.
+- @FunctionalInterface는 함수형 인터페이스 조건을 컴파일 시 검사한다.
+- 람다식에서 캡처하는 지역 변수는 final 또는 사실상 final이어야 한다.
+- 람다식은 익명 클래스와 this의 의미가 다르다.
+
+### 8. Stream API와 데이터 파이프라인
+
+Stream API는 컬렉션 등의 데이터를 선언적인 방식으로 처리하기 위한 API이다.
+
+**Stream 처리 구조**
+
+```text
+Source
+  │
+  ▼
+Stream 생성
+  │
+  ▼
+중간 연산(Intermediate)
+  │
+  ├── filter()
+  ├── map()
+  ├── sorted()
+  └── distinct()
+  │
+  ▼
+최종 연산(Terminal)
+  │
+  ├── forEach()
+  ├── count()
+  ├── collect()
+  └── reduce()
+  │
+  ▼
+처리 결과
+```
+
+**중간 연산**
+
+| 메서드 | 역할 |
+|---|---|
+| filter() | 조건에 맞는 요소 선택 |
+| map() | 요소를 다른 값으로 변환 |
+| flatMap() | 중첩된 데이터를 하나의 스트림으로 펼침 |
+| sorted() | 요소 정렬 |
+| distinct() | 중복 제거 |
+| limit() | 앞에서부터 지정한 개수만 선택 |
+| skip() | 앞에서부터 지정한 개수 건너뛰기 |
+
+**최종 연산**
+
+| 메서드 | 역할 |
+|---|---|
+| forEach() | 요소별 작업 실행 |
+| count() | 요소 개수 반환 |
+| collect() | 결과를 컬렉션 등으로 수집 |
+| reduce() | 요소를 하나의 결과로 누적 |
+| average() | 숫자 스트림의 평균 계산 |
+
+**Stream 활용 예제**
+
+```java
+import java.util.*;
+import java.util.stream.*;
+
+public class Main {
+
+    record Student(
+        String name,
+        int score,
+        String dept
+    ) {}
+
+    public static void main(String[] args) {
+
+        List<Student> students = List.of(
+            new Student("홍길동", 90, "개발"),
+            new Student("김철수", 70, "기획"),
+            new Student("이영희", 85, "개발")
+        );
+
+        // 80점 이상 학생을 점수 내림차순으로 정렬
+        List<String> names = students.stream()
+            .filter(s -> s.score() >= 80)
+            .sorted(
+                Comparator.comparingInt(
+                    Student::score
+                ).reversed()
+            )
+            .map(Student::name)
+            .toList();
+
+        System.out.println(names);
+        // [홍길동, 이영희]
+
+        // 전체 평균 점수
+        double average = students.stream()
+            .mapToInt(Student::score)
+            .average()
+            .orElse(0.0);
+
+        System.out.println(average);
+        // 81.666...
+
+        // 부서별 그룹화
+        Map<String, List<Student>> groups =
+            students.stream().collect(
+                Collectors.groupingBy(Student::dept)
+            );
+
+        System.out.println(groups.keySet());
+    }
+}
+```
+
+**flatMap과 groupingBy**
+
+| 메서드 | 주요 활용 |
+|---|---|
+| flatMap() | 여러 목록을 하나의 스트림으로 평탄화 |
+| groupingBy() | 지정한 기준으로 데이터를 그룹화 |
+| mapToInt() | 객체에서 정숫값 추출 |
+| average() | 숫자 스트림의 평균 계산 |
+
+**Stream의 특징**
+
+- 중간 연산은 기본적으로 지연 실행(Lazy Evaluation)된다.
+- 최종 연산이 실행되면서 필요한 데이터 처리가 진행된다.
+- 스트림은 최종 연산 후 다시 사용할 수 없다.
+- 원본 컬렉션을 변경하지 않고 결과를 생성하는 방식으로 활용할 수 있다.
+
+**JDBC와 Stream의 통합 흐름**
+
+```text
+Oracle Database
+       │
+       ▼
+      JDBC
+       │
+       ▼
+    ResultSet
+       │
+       ▼
+  List<Student>
+       │
+       ▼
+    stream()
+       │
+       ├── filter()
+       ├── sorted()
+       └── map()
+       │
+       ▼
+    최종 연산
+       │
+       ▼
+ 결과 데이터 / API 응답
+```
+
+**핵심**
+
+- JDBC는 데이터베이스에서 데이터를 조회한다.
+- List는 조회한 객체를 메모리에 저장한다.
+- Lambda는 처리 조건과 변환 동작을 정의한다.
+- Stream은 데이터를 필터링, 정렬, 변환, 집계한다.
+
+**주의사항**
+
+- java.util.stream.Stream은 I/O의 InputStream·OutputStream과 목적이 다르다.
+- 모든 데이터를 조회한 뒤 Stream으로 처리하는 것이 항상 효율적인 것은 아니다.
+- 대용량 데이터의 필터링·집계는 가능한 경우 SQL에서 처리하는 방법도 고려한다.
+- Stream의 중간 연산에서 공유 상태를 변경하는 부작용은 피하는 것이 좋다.
+- 병렬 스트림이 항상 일반 스트림보다 빠른 것은 아니다.
+
+### ✅ Day30 핵심 정리
+
+- Java 네트워크 서버는 ServerSocket, Socket, Thread를 조합하여 다중 클라이언트 통신을 처리할 수 있다.
+- 데이터베이스는 체계적으로 관리되는 데이터 집합이다.
+- DBMS는 데이터베이스의 저장·조회·수정 및 무결성 관리를 지원한다.
+- 3단계 스키마는 외부·개념·내부 스키마로 구분된다.
+- 관계형 데이터베이스는 데이터를 테이블의 행과 열로 표현한다.
+- PK는 대표 식별자이며 FK는 테이블 간 참조 관계를 정의한다.
+- 개체·참조·도메인 무결성은 데이터의 일관성을 유지하기 위한 규칙이다.
+- 관계대수는 관계형 데이터에 대한 선택, 추출, 합집합, 차집합, 조인 등의 연산을 정의한다.
+- Oracle Database는 RDBMS이고 SQL Developer는 데이터베이스 작업을 지원하는 도구이다.
+- JDBC는 Java에서 데이터베이스를 연결하고 SQL을 실행하기 위한 표준 API이다.
+- Connection은 DB 연결, PreparedStatement는 매개변수 기반 SQL 실행, ResultSet은 조회 결과 처리를 담당한다.
+- executeQuery()는 조회 결과를 반환하며 executeUpdate()는 변경된 행 수를 반환한다.
+- 트랜잭션은 commit()과 rollback()을 통해 작업 결과를 관리한다.
+- 람다식은 함수형 인터페이스의 동작을 간결하게 표현한다.
+- Supplier, Consumer, Function, Predicate는 대표적인 함수형 인터페이스이다.
+- Stream은 Source, 중간 연산, 최종 연산으로 이루어진 데이터 처리 파이프라인이다.
+- filter()는 조건 검사, map()은 변환, sorted()는 정렬에 사용한다.
+- flatMap()은 중첩 데이터 평탄화, groupingBy()는 데이터 그룹화에 사용한다.
+- JDBC로 조회한 데이터를 컬렉션에 저장하고 Lambda와 Stream으로 가공할 수 있다.
 
 </details>
 
